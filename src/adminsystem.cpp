@@ -34,7 +34,7 @@ CAdminSystem* g_pAdminSystem;
 
 CUtlMap<uint32, FnChatCommandCallback_t> g_CommandList(0, 0, DefLessFunc(uint32));
 
-#define ADMIN_PREFIX "Admin %s has "
+#define ADMIN_PREFIX "管理员 %s "
 
 CON_COMMAND_F(c_reload_admins, "Reload admin config", FCVAR_SPONLY | FCVAR_LINKED_CONCOMMAND)
 {
@@ -83,7 +83,7 @@ CON_COMMAND_CHAT(ban, "ban a player")
 
 	if (!pPlayer->IsAdminFlagSet(ADMFLAG_BAN))
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You don't have access to this command.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你没有权限访问该指令.");
 		return;
 	}
 
@@ -98,13 +98,13 @@ CON_COMMAND_CHAT(ban, "ban a player")
 
 	if (g_playerManager->TargetPlayerString(iCommandPlayer, args[1], iNumClients, pSlot) != ETargetType::PLAYER || iNumClients > 1)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You can only target individual players for banning.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你只能指定一个玩家来封禁.");
 		return;
 	}
 
 	if (!iNumClients)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Target not found.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"未找到玩家.");
 		return;
 	}
 
@@ -113,7 +113,7 @@ CON_COMMAND_CHAT(ban, "ban a player")
 
 	if (*end)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Invalid duration.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"无效时长.");
 		return;
 	}
 
@@ -133,7 +133,7 @@ CON_COMMAND_CHAT(ban, "ban a player")
 	infraction->ApplyInfraction(pTargetPlayer);
 	g_pAdminSystem->SaveInfractions();
 
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "banned %s for %i minutes.", player->GetPlayerName(), pTarget->GetPlayerName(), iDuration);
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "封禁了 %s 持续时长 %i 分钟.", player->GetPlayerName(), pTarget->GetPlayerName(), iDuration);
 }
 
 CON_COMMAND_CHAT(mute, "mutes a player")
@@ -147,7 +147,7 @@ CON_COMMAND_CHAT(mute, "mutes a player")
 
 	if (!pPlayer->IsAdminFlagSet(ADMFLAG_BAN))
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You don't have access to this command.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你没有权限访问该指令.");
 		return;
 	}
 
@@ -164,7 +164,7 @@ CON_COMMAND_CHAT(mute, "mutes a player")
 
 	if (!iNumClients)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Target not found.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"未找到玩家.");
 		return;
 	}
 
@@ -173,7 +173,7 @@ CON_COMMAND_CHAT(mute, "mutes a player")
 
 	if (*end)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Invalid duration.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"无效时长.");
 		return;
 	}
 
@@ -198,7 +198,7 @@ CON_COMMAND_CHAT(mute, "mutes a player")
 		g_pAdminSystem->SaveInfractions();
 
 		if (nType < ETargetType::ALL)
-			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "muted %s for %i minutes.", player->GetPlayerName(), pTarget->GetPlayerName(), iDuration);
+			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "禁言了 %s 持续时长 %i 分钟.", player->GetPlayerName(), pTarget->GetPlayerName(), iDuration);
 	}
 
 	g_pAdminSystem->SaveInfractions();
@@ -206,13 +206,13 @@ CON_COMMAND_CHAT(mute, "mutes a player")
 	switch (nType)
 	{
 	case ETargetType::ALL:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "muted everyone for %i minutes.", player->GetPlayerName(), iDuration);
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "禁言了所有人 持续时长 %i 分钟.", player->GetPlayerName(), iDuration);
 		break;
 	case ETargetType::T:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "muted terrorists for %i minutes.", player->GetPlayerName(), iDuration);
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "禁言了T 持续时长 %i 分钟.", player->GetPlayerName(), iDuration);
 		break;
 	case ETargetType::CT:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "muted counter-terrorists for %i minutes.", player->GetPlayerName(), iDuration);
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "禁言了CT 持续时长 %i 分钟.", player->GetPlayerName(), iDuration);
 		break;
 	}
 }
@@ -228,7 +228,7 @@ CON_COMMAND_CHAT(unmute, "unmutes a player")
 
 	if (!pPlayer->IsAdminFlagSet(ADMFLAG_UNBAN))
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You don't have access to this command.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
 		return;
 	}
 
@@ -245,7 +245,7 @@ CON_COMMAND_CHAT(unmute, "unmutes a player")
 
 	if (!iNumClients)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Target not found.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "未找到玩家.");
 		return;
 	}
 
@@ -263,12 +263,12 @@ CON_COMMAND_CHAT(unmute, "unmutes a player")
 
 		if (!g_pAdminSystem->FindAndRemoveInfraction(pTargetPlayer, CInfractionBase::Mute) && nType < ETargetType::ALL)
 		{
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s is not muted.", pTarget->GetPlayerName());
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s 未被禁言.", pTarget->GetPlayerName());
 			continue;
 		}
 
 		if (nType < ETargetType::ALL)
-			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "unmuted %s.", player->GetPlayerName(), pTarget->GetPlayerName());
+			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "解除了 %s 的禁言.", player->GetPlayerName(), pTarget->GetPlayerName());
 	}
 
 	g_pAdminSystem->SaveInfractions();
@@ -276,13 +276,13 @@ CON_COMMAND_CHAT(unmute, "unmutes a player")
 	switch (nType)
 	{
 	case ETargetType::ALL:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "unmuted everyone.", player->GetPlayerName());
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "解除了所有人的禁言.", player->GetPlayerName());
 		break;
 	case ETargetType::T:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "unmuted terrorists.", player->GetPlayerName());
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "解除了T的禁言.", player->GetPlayerName());
 		break;
 	case ETargetType::CT:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "unmuted counter-terrorists.", player->GetPlayerName());
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "解除了CT的禁言.", player->GetPlayerName());
 		break;
 	}
 }
@@ -298,7 +298,7 @@ CON_COMMAND_CHAT(gag, "gag a player")
 
 	if (!pPlayer->IsAdminFlagSet(ADMFLAG_BAN))
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You don't have access to this command.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
 		return;
 	}
 
@@ -315,7 +315,7 @@ CON_COMMAND_CHAT(gag, "gag a player")
 
 	if (!iNumClients)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Target not found.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "未找到玩家.");
 		return;
 	}
 
@@ -324,7 +324,7 @@ CON_COMMAND_CHAT(gag, "gag a player")
 
 	if (*end)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Invalid duration.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "无效时长.");
 		return;
 	}
 
@@ -348,7 +348,7 @@ CON_COMMAND_CHAT(gag, "gag a player")
 		infraction->ApplyInfraction(pTargetPlayer);
 
 		if (nType < ETargetType::ALL)
-			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "gagged %s for %i minutes.", player->GetPlayerName(), pTarget->GetPlayerName(), iDuration);
+			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "禁麦了 %s 持续时长 %i 分钟.", player->GetPlayerName(), pTarget->GetPlayerName(), iDuration);
 	}
 
 	g_pAdminSystem->SaveInfractions();
@@ -356,13 +356,13 @@ CON_COMMAND_CHAT(gag, "gag a player")
 	switch (nType)
 	{
 	case ETargetType::ALL:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "gagged everyone for %i minutes.", player->GetPlayerName(), iDuration);
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "禁麦了所有人 持续时长 %i 分钟.", player->GetPlayerName(), iDuration);
 		break;
 	case ETargetType::T:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "gagged terrorists for %i minutes.", player->GetPlayerName(), iDuration);
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "禁麦了T 持续时长 %i 分钟.", player->GetPlayerName(), iDuration);
 		break;
 	case ETargetType::CT:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "gagged counter-terrorists for %i minutes.", player->GetPlayerName(), iDuration);
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "禁麦了CT 持续时长 %i 分钟.", player->GetPlayerName(), iDuration);
 		break;
 	}
 }
@@ -378,7 +378,7 @@ CON_COMMAND_CHAT(ungag, "ungags a player")
 
 	if (!pPlayer->IsAdminFlagSet(ADMFLAG_UNBAN))
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You don't have access to this command.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
 		return;
 	}
 
@@ -395,7 +395,7 @@ CON_COMMAND_CHAT(ungag, "ungags a player")
 
 	if (!iNumClients)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Target not found.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "未找到玩家.");
 		return;
 	}
 
@@ -413,12 +413,12 @@ CON_COMMAND_CHAT(ungag, "ungags a player")
 
 		if (!g_pAdminSystem->FindAndRemoveInfraction(pTargetPlayer, CInfractionBase::Gag) && nType < ETargetType::ALL)
 		{
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s is not gagged.", pTarget->GetPlayerName());
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s 未被禁麦.", pTarget->GetPlayerName());
 			continue;
 		}
 
 		if (nType < ETargetType::ALL)
-			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "ungagged %s.", player->GetPlayerName(), pTarget->GetPlayerName());
+			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "解除了 %s 的禁麦.", player->GetPlayerName(), pTarget->GetPlayerName());
 	}
 
 	g_pAdminSystem->SaveInfractions();
@@ -426,13 +426,13 @@ CON_COMMAND_CHAT(ungag, "ungags a player")
 	switch (nType)
 	{
 	case ETargetType::ALL:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "ungagged everyone.", player->GetPlayerName());
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "解除了所有人的禁麦.", player->GetPlayerName());
 		break;
 	case ETargetType::T:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "ungagged terrorists.", player->GetPlayerName());
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "解除了T的禁麦.", player->GetPlayerName());
 		break;
 	case ETargetType::CT:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "ungagged counter-terrorists.", player->GetPlayerName());
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "解除了CT的禁麦.", player->GetPlayerName());
 		break;
 	}
 }
@@ -448,7 +448,7 @@ CON_COMMAND_CHAT(kick, "kick a player")
 
 	if (!pPlayer->IsAdminFlagSet(ADMFLAG_KICK))
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You don't have access to this command.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你没有权限访问该指令.");
 		return;
 	}
 
@@ -465,7 +465,7 @@ CON_COMMAND_CHAT(kick, "kick a player")
 
 	if (!iNumClients)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Target not found.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"未找到玩家.");
 		return;
 	}
 
@@ -480,7 +480,7 @@ CON_COMMAND_CHAT(kick, "kick a player")
 		
 		g_pEngineServer2->DisconnectClient(pTargetPlayer->GetPlayerSlot(), NETWORK_DISCONNECT_KICKED);
 
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "kicked %s.", player->GetPlayerName(), pTarget->GetPlayerName());
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "踢出了 %s.", player->GetPlayerName(), pTarget->GetPlayerName());
 	}
 }
 
@@ -495,7 +495,7 @@ CON_COMMAND_CHAT(slay, "slay a player")
 
 	if (!pPlayer->IsAdminFlagSet(ADMFLAG_SLAY))
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You don't have access to this command.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你没有权限访问该指令.");
 		return;
 	}
 
@@ -512,7 +512,7 @@ CON_COMMAND_CHAT(slay, "slay a player")
 
 	if (!iNumClients)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Target not found.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"未找到目标.");
 		return;
 	}
 
@@ -526,19 +526,19 @@ CON_COMMAND_CHAT(slay, "slay a player")
 		pTarget->GetPawn()->CommitSuicide(false, true);
 
 		if (nType < ETargetType::ALL)
-			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "slayed %s.", player->GetPlayerName(), pTarget->GetPlayerName());
+			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "处死了 %s.", player->GetPlayerName(), pTarget->GetPlayerName());
 	}
 
 	switch (nType)
 	{
 	case ETargetType::ALL:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "slayed everyone.", player->GetPlayerName());
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "处死了所有人.", player->GetPlayerName());
 		break;
 	case ETargetType::T:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "slayed terrorists.", player->GetPlayerName());
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "处死了T.", player->GetPlayerName());
 		break;
 	case ETargetType::CT:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "slayed counter-terrorists.", player->GetPlayerName());
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "处死了CT.", player->GetPlayerName());
 		break;
 	}
 }
@@ -554,7 +554,7 @@ CON_COMMAND_CHAT(goto, "teleport to a player")
 
 	if (!pPlayer->IsAdminFlagSet(ADMFLAG_SLAY))
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You don't have access to this command.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
 		return;
 	}
 
@@ -569,13 +569,13 @@ CON_COMMAND_CHAT(goto, "teleport to a player")
 
 	if (g_playerManager->TargetPlayerString(iCommandPlayer, args[1], iNumClients, pSlots) != ETargetType::PLAYER || iNumClients > 1)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Target too ambiguous.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "目标玩家不明确.");
 		return;
 	}
 
 	if (!iNumClients)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Target not found.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "未找到玩家.");
 		return;
 	}
 
@@ -590,7 +590,7 @@ CON_COMMAND_CHAT(goto, "teleport to a player")
 
 		player->GetPawn()->Teleport(&newOrigin, nullptr, nullptr);
 
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "Teleported to %s.", pTarget->GetPlayerName());
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "传送到 %s.", pTarget->GetPlayerName());
 	}
 }
 
@@ -605,7 +605,7 @@ CON_COMMAND_CHAT(bring, "bring a player")
 
 	if (!pPlayer->IsAdminFlagSet(ADMFLAG_SLAY))
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You don't have access to this command.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
 		return;
 	}
 
@@ -622,7 +622,7 @@ CON_COMMAND_CHAT(bring, "bring a player")
 
 	if (!iNumClients)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Target not found.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "未找到玩家.");
 		return;
 	}
 
@@ -638,19 +638,19 @@ CON_COMMAND_CHAT(bring, "bring a player")
 		pTarget->GetPawn()->Teleport(&newOrigin, nullptr, nullptr);
 
 		if (nType < ETargetType::ALL)
-			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "brought %s.", player->GetPlayerName(), pTarget->GetPlayerName());
+			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "将 %s 传送到身边.", player->GetPlayerName(), pTarget->GetPlayerName());
 	}
 
 	switch (nType)
 	{
 	case ETargetType::ALL:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "brought everyone.", player->GetPlayerName());
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "将所有人传送到身边.", player->GetPlayerName());
 		break;
 	case ETargetType::T:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "brought terrorists.", player->GetPlayerName());
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "将T传送到身边.", player->GetPlayerName());
 		break;
 	case ETargetType::CT:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "brought counter-terrorists.", player->GetPlayerName());
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "将CT传送到身边.", player->GetPlayerName());
 		break;
 	}
 }
@@ -666,7 +666,7 @@ CON_COMMAND_CHAT(map, "change map")
 
 	if (!pPlayer->IsAdminFlagSet(ADMFLAG_CHANGEMAP))
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You don't have access to this command.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你没有权限访问该指令.");
 		return;
 	}
 
@@ -678,7 +678,7 @@ CON_COMMAND_CHAT(map, "change map")
 
 	if (!g_pEngineServer2->IsMapValid(args[1]))
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Invalid map specified.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"指定的地图无效.");
 		return;
 	}
 
@@ -704,7 +704,7 @@ CON_COMMAND_CHAT(hsay, "say something as a hud hint")
 
 	if (!pPlayer->IsAdminFlagSet(ADMFLAG_CHAT))
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You don't have access to this command.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
 		return;
 	}
 

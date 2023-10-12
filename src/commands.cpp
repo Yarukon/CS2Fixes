@@ -79,12 +79,6 @@ WeaponMapEntry_t WeaponMap[] = {
 
 void ParseWeaponCommand(CCSPlayerController *pController, const char *pszWeaponName)
 {
-	if (!pController || !pController->m_hPawn() || pController->m_hPawn()->m_iHealth() <= 0)
-	{
-		ClientPrint(pController, HUD_PRINTTALK, CHAT_PREFIX"You can only buy weapons when alive.");
-		return;
-	}
-
 	CCSPlayerPawn* pPawn = (CCSPlayerPawn*)pController->GetPawn();
 
 	for (int i = 0; i < sizeof(WeaponMap) / sizeof(*WeaponMap); i++)
@@ -93,6 +87,12 @@ void ParseWeaponCommand(CCSPlayerController *pController, const char *pszWeaponN
 
 		if (!V_stricmp(pszWeaponName, weaponEntry.command))
 		{
+			if (!pController || !pController->m_hPawn() || pController->m_hPawn()->m_iHealth() <= 0)
+			{
+				ClientPrint(pController, HUD_PRINTTALK, CHAT_PREFIX"你只能在活着的时候购买武器.");
+				return;
+			}
+
 			CCSPlayer_ItemServices *pItemServices = pPawn->m_pItemServices;
 			int money = pController->m_pInGameMoneyServices->m_iAccount;
 			if (money >= weaponEntry.iPrice)
@@ -108,7 +108,7 @@ void ParseWeaponCommand(CCSPlayerController *pController, const char *pszWeaponN
 						{
 							if (purchase.m_nCount >= weaponEntry.maxAmount)
 							{
-								ClientPrint(pController, HUD_PRINTTALK, CHAT_PREFIX"You cannot use !%s anymore(Max %i)", weaponEntry.command, weaponEntry.maxAmount);
+								ClientPrint(pController, HUD_PRINTTALK, CHAT_PREFIX"你无法再使用 !%s 指令了(最大 %i)", weaponEntry.command, weaponEntry.maxAmount);
 								return;
 							}
 							purchase.m_nCount += 1;
@@ -201,7 +201,7 @@ CON_COMMAND_CHAT(stopsound, "stop weapon sounds")
 
 	pZEPlayer->ToggleStopSound();
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You have toggled weapon effects.");
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你停止播放了音效.");
 }
 
 CON_COMMAND_CHAT(ztele, "teleport to spawn")
@@ -232,13 +232,13 @@ CON_COMMAND_CHAT(ztele, "teleport to spawn")
 	}
 	if (pPawn->m_iHealth() <= 0)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You cannot teleport when dead!");
+		ClientPrint(player, HUD_PRINTTALK, " \7[CS2Fixes]\1 You cannot teleport when dead!");
 		return;
 	}
 	//Get initial player position so we can do distance check
 	Vector initialpos = pPawn->GetAbsOrigin();
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Teleporting to spawn in 5 seconds.");
+	ClientPrint(player, HUD_PRINTTALK, " \7[CS2Fixes]\1 Teleporting to spawn in 5 seconds.");
 
 	//Convert into handle so we can safely pass it into the Timer
 	auto handle = player->GetHandle();
@@ -271,11 +271,11 @@ CON_COMMAND_CHAT(ztele, "teleport to spawn")
 			if (dist < 150.0f)
 			{
 				pPawn2->SetAbsOrigin(spawnpos);
-				ClientPrint(controller, HUD_PRINTTALK, CHAT_PREFIX"You have been teleported to spawn.");
+				ClientPrint(controller, HUD_PRINTTALK, " \7[CS2Fixes]\1 You have been teleported to spawn.");
 			}
 			else
 			{
-				ClientPrint(controller, HUD_PRINTTALK, CHAT_PREFIX"Teleport failed! You moved too far.");
+				ClientPrint(controller, HUD_PRINTTALK, " \7[CS2Fixes]\1 Teleport failed! You moved too far.");
 				return;
 			}
 		});
@@ -299,7 +299,7 @@ CON_COMMAND_CHAT(message, "message someone")
 	const char *pMessage = args.ArgS() + V_strlen(args[1]) + 1;
 
 	char buf[256];
-	V_snprintf(buf, sizeof(buf), CHAT_PREFIX"Private message from %s to %s: \5%s", player->GetPlayerName(), target->GetPlayerName(), pMessage);
+	V_snprintf(buf, sizeof(buf), CHAT_PREFIX"私聊信息从 %s 至 %s: \5%s", player->GetPlayerName(), target->GetPlayerName(), pMessage);
 
 	CSingleRecipientFilter filter(uid);
 
@@ -333,7 +333,7 @@ CON_COMMAND_CHAT(sethealth, "set your health")
 
 	pEnt->m_iHealth = health;
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Your health is now %d", health);
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你的血量设置为 %d", health);
 }
 
 CON_COMMAND_CHAT(test_target, "test string targetting")
@@ -354,7 +354,7 @@ CON_COMMAND_CHAT(test_target, "test string targetting")
 		if (!pTarget)
 			continue;
 
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Targeting %s", pTarget->GetPlayerName());
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"正在瞄准 %s", pTarget->GetPlayerName());
 		Message("Targeting %s\n", pTarget->GetPlayerName());
 	}
 }
@@ -366,7 +366,7 @@ CON_COMMAND_CHAT(getorigin, "get your origin")
 
 	Vector vecAbsOrigin = player->GetPawn()->GetAbsOrigin();
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Your origin is %f %f %f", vecAbsOrigin.x, vecAbsOrigin.y, vecAbsOrigin.z);
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你当前所在坐标为 %f %f %f", vecAbsOrigin.x, vecAbsOrigin.y, vecAbsOrigin.z);
 }
 
 CON_COMMAND_CHAT(setorigin, "set your origin")
@@ -380,7 +380,7 @@ CON_COMMAND_CHAT(setorigin, "set your origin")
 
 	pPawn->SetAbsOrigin(vecNewOrigin);
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Your origin is now %f %f %f", vecNewOrigin.x, vecNewOrigin.y, vecNewOrigin.z);
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你的坐标已设置为 %f %f %f", vecNewOrigin.x, vecNewOrigin.y, vecNewOrigin.z);
 }
 
 CON_COMMAND_CHAT(getstats, "get your stats")
@@ -391,16 +391,16 @@ CON_COMMAND_CHAT(getstats, "get your stats")
 	CSMatchStats_t *stats = &player->m_pActionTrackingServices->m_matchStats();
 
 	ClientPrint(player, HUD_PRINTCENTER, 
-		"Kills: %i\n"
-		"Deaths: %i\n"
-		"Assists: %i\n"
-		"Damage: %i"
+		"击杀: %i\n"
+		"死亡: %i\n"
+		"辅助: %i\n"
+		"伤害: %i"
 		, stats->m_iKills.Get(), stats->m_iDeaths.Get(), stats->m_iAssists.Get(), stats->m_iDamage.Get());
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Kills: %d", stats->m_iKills.Get());
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Deaths: %d", stats->m_iDeaths.Get());
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Assists: %d", stats->m_iAssists.Get());
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Damage: %d", stats->m_iDamage.Get());
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"击杀: %d", stats->m_iKills.Get());
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"死亡: %d", stats->m_iDeaths.Get());
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"辅助: %d", stats->m_iAssists.Get());
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"伤害: %d", stats->m_iDamage.Get());
 }
 
 CON_COMMAND_CHAT(setkills, "set your kills")
@@ -410,7 +410,7 @@ CON_COMMAND_CHAT(setkills, "set your kills")
 
 	player->m_pActionTrackingServices->m_matchStats().m_iKills = atoi(args[1]);
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You have set your kills to %d.", atoi(args[1]));
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你将你的击杀数设置为 %d.", atoi(args[1]));
 }
 
 CON_COMMAND_CHAT(setcollisiongroup, "set a player's collision group")
