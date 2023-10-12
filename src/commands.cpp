@@ -79,6 +79,9 @@ WeaponMapEntry_t WeaponMap[] = {
 
 void ParseWeaponCommand(CCSPlayerController *pController, const char *pszWeaponName)
 {
+	if (!pController || !pController->m_hPawn())
+		return
+
 	CCSPlayerPawn* pPawn = (CCSPlayerPawn*)pController->GetPawn();
 
 	for (int i = 0; i < sizeof(WeaponMap) / sizeof(*WeaponMap); i++)
@@ -87,7 +90,7 @@ void ParseWeaponCommand(CCSPlayerController *pController, const char *pszWeaponN
 
 		if (!V_stricmp(pszWeaponName, weaponEntry.command))
 		{
-			if (!pController || !pController->m_hPawn() || pController->m_hPawn()->m_iHealth() <= 0)
+			if (pController->m_hPawn()->m_iHealth() <= 0)
 			{
 				ClientPrint(pController, HUD_PRINTTALK, CHAT_PREFIX"你只能在活着的时候购买武器.");
 				return;
@@ -201,7 +204,7 @@ CON_COMMAND_CHAT(stopsound, "stop weapon sounds")
 
 	pZEPlayer->ToggleStopSound();
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你停止播放了音效.");
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你%s了武器音效屏蔽.", pZEPlayer->IsUsingStopSound() ? "启用" : "禁用");
 }
 
 CON_COMMAND_CHAT(ztele, "teleport to spawn")
@@ -232,13 +235,13 @@ CON_COMMAND_CHAT(ztele, "teleport to spawn")
 	}
 	if (pPawn->m_iHealth() <= 0)
 	{
-		ClientPrint(player, HUD_PRINTTALK, " \7[CS2Fixes]\1 You cannot teleport when dead!");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你无法在死亡的情况下传送!");
 		return;
 	}
 	//Get initial player position so we can do distance check
 	Vector initialpos = pPawn->GetAbsOrigin();
 
-	ClientPrint(player, HUD_PRINTTALK, " \7[CS2Fixes]\1 Teleporting to spawn in 5 seconds.");
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"5秒后传送至出生点.");
 
 	//Convert into handle so we can safely pass it into the Timer
 	auto handle = player->GetHandle();
@@ -271,11 +274,11 @@ CON_COMMAND_CHAT(ztele, "teleport to spawn")
 			if (dist < 150.0f)
 			{
 				pPawn2->SetAbsOrigin(spawnpos);
-				ClientPrint(controller, HUD_PRINTTALK, " \7[CS2Fixes]\1 You have been teleported to spawn.");
+				ClientPrint(controller, HUD_PRINTTALK, CHAT_PREFIX"你已传送至出生点.");
 			}
 			else
 			{
-				ClientPrint(controller, HUD_PRINTTALK, " \7[CS2Fixes]\1 Teleport failed! You moved too far.");
+				ClientPrint(controller, HUD_PRINTTALK, CHAT_PREFIX"传送失败! 你移动的太远了.");
 				return;
 			}
 		});

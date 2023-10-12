@@ -682,7 +682,7 @@ CON_COMMAND_CHAT(map, "change map")
 		return;
 	}
 
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Changing map to %s...", args[1]);
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"更改地图至 %s...", args[1]);
 
 	char buf[MAX_PATH];
 	V_snprintf(buf, sizeof(buf), "changelevel %s", args[1]);
