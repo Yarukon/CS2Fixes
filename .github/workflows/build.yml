@@ -26,13 +26,6 @@ jobs:
           repository: alliedmodders/metamod-source
           ref: master
           path: metamod-source
-
-      - name: Checking out hl2sdk
-        uses: actions/checkout@v3
-        with:
-          repository: alliedmodders/hl2sdk
-          ref: 11e4a8b7f1af7b8477b17373f75e72e2f23d2986
-          path: hl2sdk-cs2
           
       - name: Checking out own repository
         uses: actions/checkout@v3
@@ -42,7 +35,10 @@ jobs:
 
       - name: Compiling files
         working-directory: cs2fixes
+        shell: powershell
         run: |
+          $env:HL2SDKCS2 = '${{ github.workspace }}/sdk'
+          echo SDK Directory is $env:HL2SDKCS2
           python3 configure.py --enable-optimize --symbol-files --sdks cs2
           ambuild objdir
           
