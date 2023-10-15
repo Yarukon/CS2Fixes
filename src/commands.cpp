@@ -225,7 +225,7 @@ CON_COMMAND_CHAT(toggledecals, "toggle world decals, if you're into having 10 fp
 
 	pZEPlayer->ToggleStopDecals();
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你 %s 了世界贴图", pZEPlayer->IsUsingStopDecals() ? "禁用" : "启用");
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你%s了世界贴图", pZEPlayer->IsUsingStopDecals() ? "禁用" : "启用");
 }
 
 CON_COMMAND_CHAT(ztele, "teleport to spawn")

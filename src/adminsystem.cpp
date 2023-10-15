@@ -666,7 +666,7 @@ CON_COMMAND_CHAT(setteam, "set a player's team")
 
 	if (!pPlayer->IsAdminFlagSet(ADMFLAG_SLAY))
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You don't have access to this command.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
 		return;
 	}
 
@@ -683,7 +683,7 @@ CON_COMMAND_CHAT(setteam, "set a player's team")
 
 	if (!iNumClients)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Target not found.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "未找到玩家.");
 		return;
 	}
 
@@ -691,7 +691,7 @@ CON_COMMAND_CHAT(setteam, "set a player's team")
 
 	if (iTeam < CS_TEAM_NONE || iTeam > CS_TEAM_CT)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Invalid team specified, range is 0-3.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "无效的队伍, 范围在 0-3 之间.");
 		return;
 	}
 
@@ -706,19 +706,19 @@ CON_COMMAND_CHAT(setteam, "set a player's team")
 		pTarget->GetPawn()->m_iTeamNum = iTeam;
 
 		if (nType < ETargetType::ALL)
-			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "moved %s to team %i.", player->GetPlayerName(), pTarget->GetPlayerName(), iTeam);
+			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "移动 %s 到队伍 %i.", player->GetPlayerName(), pTarget->GetPlayerName(), iTeam);
 	}
 
 	switch (nType)
 	{
 	case ETargetType::ALL:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "moved everyone to team %i.", iTeam);
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "移动所有人到队伍 %i.", iTeam);
 		break;
 	case ETargetType::T:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "moved terrorists to team %i.", iTeam);
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "移动T到队伍 %i.", iTeam);
 		break;
 	case ETargetType::CT:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "moved counter-terrorists to team %i.", iTeam);
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "移动CT到队伍 %i.", iTeam);
 		break;
 	}
 }
@@ -745,19 +745,19 @@ CON_COMMAND_CHAT(noclip, "toggle noclip on yourself")
 
 	if (pPawn->m_iHealth() <= 0)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You cannot noclip while dead!");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你无法在死亡的时候使用!");
 		return;
 	}
 
 	if (pPawn->m_MoveType() == MOVETYPE_NOCLIP)
 	{
 		pPawn->m_MoveType = MOVETYPE_WALK;
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "exited noclip.", player->GetPlayerName());
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "禁用了穿墙模式.", player->GetPlayerName());
 	}
 	else
 	{
 		pPawn->m_MoveType = MOVETYPE_NOCLIP;
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "entered noclip.", player->GetPlayerName());
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "启用了穿墙模式.", player->GetPlayerName());
 	}
 }
 
