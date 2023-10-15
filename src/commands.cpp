@@ -204,7 +204,28 @@ CON_COMMAND_CHAT(stopsound, "stop weapon sounds")
 
 	pZEPlayer->ToggleStopSound();
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你%s了武器音效屏蔽.", pZEPlayer->IsUsingStopSound() ? "启用" : "禁用");
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你%s了武器音效屏蔽", pZEPlayer->IsUsingStopSound() ? "启用" : "禁用");
+}
+
+CON_COMMAND_CHAT(toggledecals, "toggle world decals, if you're into having 10 fps in ZE")
+{
+	if (!player)
+		return;
+
+	int iPlayer = player->GetPlayerSlot();
+
+	ZEPlayer *pZEPlayer = g_playerManager->GetPlayer(iPlayer);
+
+	// Something has to really go wrong for this to happen
+	if (!pZEPlayer)
+	{
+		Warning("%s Tried to access a null ZEPlayer!!\n", player->GetPlayerName());
+		return;
+	}
+
+	pZEPlayer->ToggleStopDecals();
+
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你 %s 了世界贴图", pZEPlayer->IsUsingStopDecals() ? "禁用" : "启用");
 }
 
 CON_COMMAND_CHAT(ztele, "teleport to spawn")
