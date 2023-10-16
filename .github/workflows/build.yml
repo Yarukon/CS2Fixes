@@ -6,6 +6,9 @@ jobs:
   windows:
     name: windows build
     runs-on: windows-latest
+    env:
+      HL2SDKCS2: ${{ github.workspace }}/cs2fixes/sdk
+
     steps:
       - name: Prepare env
         shell: bash
@@ -37,7 +40,6 @@ jobs:
         working-directory: cs2fixes
         shell: powershell
         run: |
-          $env:HL2SDKCS2 = '${{ github.workspace }}/cs2fixes/sdk'
           echo "SDK Directory is $env:HL2SDKCS2"
           python3 configure.py --enable-optimize --symbol-files --sdks cs2
           ambuild objdir
