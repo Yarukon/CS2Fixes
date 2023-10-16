@@ -1,5 +1,7 @@
 ## DISCLAIMER: This plugin is *not* meant to be used on a server yet, it is very much a work in progress and thus we are *not* responsible for any issues or breakages caused by the plugin. In addition, we will *not* provide support for building or usage unless you plan on contributing to the project yourself.
 
+## DISCLAIMER 2: This repository's CI Build is only for me to use, if you used and encounterd exploits and crashes, not my business, don't send issue here!
+
 # CS2Fixes
 
 CS2Fixes is a collection of experimental fixes and features aimed but not limited to zombie escape. This project is not production ready and serves as a proof of concept and help for source2mod and other developers.
