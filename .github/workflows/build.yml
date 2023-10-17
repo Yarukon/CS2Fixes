@@ -40,7 +40,6 @@ jobs:
         working-directory: cs2fixes
         shell: powershell
         run: |
-          echo "SDK Directory is $env:HL2SDKCS2"
           python3 configure.py --enable-optimize --symbol-files --sdks cs2
           ambuild objdir
           
