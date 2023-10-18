@@ -82,7 +82,7 @@ WeaponMapEntry_t WeaponMap[] = {
 
 void ParseWeaponCommand(CCSPlayerController *pController, const char *pszWeaponName)
 {
-	if (!pController || !pController->m_hPawn() || pController->GetPawn()->m_iTeamNum != CS_TEAM_CT)
+	if (!pController || !pController->m_hPawn() || ((CCSPlayerPawn*) pController->GetPawn())->m_iTeamNum != CS_TEAM_CT)
 		return;
 
 	CCSPlayerPawn* pPawn = (CCSPlayerPawn*)pController->GetPawn();
