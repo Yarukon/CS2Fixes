@@ -82,7 +82,7 @@ WeaponMapEntry_t WeaponMap[] = {
 
 void ParseWeaponCommand(CCSPlayerController *pController, const char *pszWeaponName)
 {
-	if (!pController || !pController->m_hPawn())
+	if (!pController || !pController->m_hPawn() || pController->GetPawn()->m_iTeamNum != CS_TEAM_CT)
 		return;
 
 	CCSPlayerPawn* pPawn = (CCSPlayerPawn*)pController->GetPawn();
@@ -329,7 +329,7 @@ CON_COMMAND_CHAT(hide, "hides nearby teammates")
 
 	if (distance > g_iMaxHideDistance || distance < 0)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You can only hide players between 0 and %i units away.", g_iMaxHideDistance);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "隐藏的范围只能是 0 至 %i 之间.", g_iMaxHideDistance);
 		return;
 	}
 
@@ -347,9 +347,9 @@ CON_COMMAND_CHAT(hide, "hides nearby teammates")
 	pZEPlayer->SetHideDistance(distance);
 
 	if (distance == 0)
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Hiding teammates is now disabled.", distance);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "队友隐藏已禁用.", distance);
 	else
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Now hiding teammates within %i units.", distance);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "已启用队友隐藏, 隐藏范围为 %i 个单位.", distance);
 }
 
 
