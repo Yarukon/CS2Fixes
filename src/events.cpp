@@ -181,7 +181,7 @@ GAME_EVENT_F(round_end)
 
 	sortedPlayers.Sort(SortPlayerDamage);
 
-	ClientPrintAll(HUD_PRINTTALK, " \x09TOP DEFENDERS");
+	ClientPrintAll(HUD_PRINTTALK, " \x09输出排行");
 
 	char colorMap[] = { '\x10', '\x08', '\x09', '\x0B'};
 
@@ -190,7 +190,7 @@ GAME_EVENT_F(round_end)
 		ZEPlayer* pPlayer = sortedPlayers[i];
 		CCSPlayerController* pController = (CCSPlayerController*)g_pEntitySystem->GetBaseEntity(CEntityIndex(pPlayer->GetPlayerSlot().Get() + 1));
 
-		ClientPrintAll(HUD_PRINTTALK, " %c%i. %s \x01- \x07%i DMG", colorMap[MIN(i, 3)], i + 1, pController->GetPlayerName(), pPlayer->GetTotalDamage());
+		ClientPrintAll(HUD_PRINTTALK, " %c%i. %s \x01- \x07%i 伤害", colorMap[MIN(i, 3)], i + 1, pController->GetPlayerName(), pPlayer->GetTotalDamage());
 		pPlayer->SetTotalDamage(0);
 	}
 }
