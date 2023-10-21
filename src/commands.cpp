@@ -114,7 +114,7 @@ void ParseWeaponCommand(CCSPlayerController *pController, const char *pszWeaponN
 						{
 							if (purchase.m_nCount >= weaponEntry.maxAmount)
 							{
-								ClientPrint(pController, HUD_PRINTTALK, CHAT_PREFIX"你无法再使用 !%s 指令了(最大 %i)", weaponEntry.command, weaponEntry.maxAmount);
+								ClientPrint(pController, HUD_PRINTTALK, CHAT_PREFIX"你无法再使用 !%s 指令了(最多使用 %i 次)", weaponEntry.command, weaponEntry.maxAmount);
 								return;
 							}
 							purchase.m_nCount += 1;
@@ -201,7 +201,7 @@ CON_COMMAND_CHAT(stopsound, "toggle weapon sounds")
 	g_playerManager->SetPlayerStopSound(iPlayer, bSilencedSet);
 	g_playerManager->SetPlayerSilenceSound(iPlayer, !bSilencedSet && !bStopSet);
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You have %s weapon sounds.", bSilencedSet ? "disabled" : !bSilencedSet && !bStopSet ? "silenced" : "enabled");
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你 %s 了武器声效.", bSilencedSet ? "禁用" : !bSilencedSet && !bStopSet ? "静音" : "启用");
 }
 
 CON_COMMAND_CHAT(toggledecals, "toggle world decals, if you're into having 10 fps in ZE")
@@ -214,7 +214,7 @@ CON_COMMAND_CHAT(toggledecals, "toggle world decals, if you're into having 10 fp
 
 	g_playerManager->SetPlayerStopDecals(iPlayer, bSet);
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You have %s world decals.", bSet ? "disabled" : "enabled");
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你 %s 了世界贴图.", bSet ? "禁用" : "启用");
 }
 
 CON_COMMAND_CHAT(myuid, "test")
@@ -224,7 +224,7 @@ CON_COMMAND_CHAT(myuid, "test")
 
 	int iPlayer = player->GetPlayerSlot();
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Your userid is %i, slot: %i, retrieved slot: %i", g_pEngineServer2->GetPlayerUserId(iPlayer).Get(), iPlayer, g_playerManager->GetSlotFromUserId(g_pEngineServer2->GetPlayerUserId(iPlayer).Get()));
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你的 userid 为 %i, slot: %i, 获取到的 slot: %i", g_pEngineServer2->GetPlayerUserId(iPlayer).Get(), iPlayer, g_playerManager->GetSlotFromUserId(g_pEngineServer2->GetPlayerUserId(iPlayer).Get()));
 }
 
 CON_COMMAND_CHAT(ztele, "teleport to spawn")
