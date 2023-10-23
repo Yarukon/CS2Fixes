@@ -14,6 +14,7 @@ jobs:
         shell: bash
         run: |
           echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
       - name: Setting up Python
         uses: actions/setup-python@v4
         with:
@@ -23,12 +24,19 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip setuptools wheel
           pip install git+https://github.com/alliedmodders/ambuild
+
       - name: Checking out MM:Source
         uses: actions/checkout@v3
         with:
           repository: alliedmodders/metamod-source
           ref: master
           path: mmsource-2.0
+          submodules: recursive
+
+      - name: Checking out repository
+        uses: actions/checkout@v3
+        with:
+          path: cs2fixes
           submodules: recursive
 
       - name: Compiling files
