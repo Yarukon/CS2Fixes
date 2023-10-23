@@ -303,13 +303,13 @@ CON_COMMAND_CHAT(hide, "hides nearby teammates")
 {
 	if (!player)
 	{
-		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "You cannot use this command from the server console.");
+		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "你无法在控制台执行该指令.");
 		return;
 	}
 
 	if (args.ArgC() < 2)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !hide <distance> (0 to disable)");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "指令格式: !hide <距离> (0 为禁用)");
 		return;
 	}
 
