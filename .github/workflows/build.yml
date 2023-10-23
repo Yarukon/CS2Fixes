@@ -1,4 +1,4 @@
-name: Build
+name: Build Plugin
 
 on: workflow_dispatch
 
@@ -35,11 +35,12 @@ jobs:
         working-directory: cs2fixes
         shell: powershell
         run: |
+          mkdir build && cd build
           python3 configure.py --enable-optimize --symbol-files --sdks cs2
-          ambuild objdir
+          ambuild
           
       - name: Uploading package
         uses: actions/upload-artifact@v3
         with:
           name: cs2fixes-windows-${{ env.GITHUB_SHA_SHORT }}
-          path: cs2fixes/objdir/package
+          path: cs2fixes/build/package
