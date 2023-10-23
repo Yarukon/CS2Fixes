@@ -33,6 +33,7 @@ jobs:
 
       - name: Compiling files
         working-directory: cs2fixes
+        shell: cmd
         run: |
           mkdir build && cd build
           python3 ..\configure.py --enable-optimize --symbol-files --sdks cs2
