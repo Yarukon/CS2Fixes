@@ -35,7 +35,7 @@ jobs:
         working-directory: cs2fixes
         run: |
           mkdir build && cd build
-          python3 configure.py --enable-optimize --symbol-files --sdks cs2
+          python3 ..\configure.py --enable-optimize --symbol-files --sdks cs2
           ambuild
           
       - name: Uploading package
