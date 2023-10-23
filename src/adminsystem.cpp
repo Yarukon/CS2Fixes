@@ -36,12 +36,33 @@ CUtlMap<uint32, FnChatCommandCallback_t> g_CommandList(0, 0, DefLessFunc(uint32)
 
 #define ADMIN_PREFIX "管理员 %s "
 
+void PrintSingleAdminAction(const char *pszAdminName, const char *pszTargetName, const char *pszAction, const char *pszAction2 = "")
+{
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "%s %s%s.", pszAdminName, pszAction, pszTargetName, pszAction2);
+}
+
+void PrintMultiAdminAction(ETargetType nType, const char *pszAdminName, const char *pszAction, const char *pszAction2 = "")
+{
+	switch (nType)
+	{
+	case ETargetType::ALL:
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "%s everyone%s.", pszAdminName, pszAction, pszAction2);
+		break;
+	case ETargetType::T:
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "%s terrorists%s.", pszAdminName, pszAction, pszAction2);
+		break;
+	case ETargetType::CT:
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "%s counter-terrorists%s.", pszAdminName, pszAction, pszAction2);
+		break;
+	}
+}
+
 CON_COMMAND_F(c_reload_admins, "Reload admin config", FCVAR_SPONLY | FCVAR_LINKED_CONCOMMAND)
 {
 	if (!g_pAdminSystem->LoadAdmins())
 		return;
 
-	for (int i = 0; i < MAXPLAYERS; i++)
+	for (int i = 0; i < g_playerManager->GetMaxPlayers(); i++)
 	{
 		ZEPlayer* pPlayer = g_playerManager->GetPlayer(i);
 
@@ -59,7 +80,7 @@ CON_COMMAND_F(c_reload_infractions, "Reload infractions file", FCVAR_SPONLY | FC
 	if (!g_pAdminSystem->LoadInfractions())
 		return;
 
-	for (int i = 0; i < MAXPLAYERS; i++)
+	for (int i = 0; i < g_playerManager->GetMaxPlayers(); i++)
 	{
 		ZEPlayer* pPlayer = g_playerManager->GetPlayer(i);
 
@@ -74,22 +95,24 @@ CON_COMMAND_F(c_reload_infractions, "Reload infractions file", FCVAR_SPONLY | FC
 
 CON_COMMAND_CHAT(ban, "ban a player")
 {
-	if (!player)
-		return;
+	int iCommandPlayer = -1;
 
-	int iCommandPlayer = player->GetPlayerSlot();
-
-	ZEPlayer *pPlayer = g_playerManager->GetPlayer(iCommandPlayer);
-
-	if (!pPlayer->IsAdminFlagSet(ADMFLAG_BAN))
+	if (player)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你没有权限访问该指令.");
-		return;
+		iCommandPlayer = player->GetPlayerSlot();
+
+		ZEPlayer *pPlayer = g_playerManager->GetPlayer(iCommandPlayer);
+
+		if (!pPlayer->IsAdminFlagSet(ADMFLAG_BAN))
+		{
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
+			return;
+		}
 	}
 
 	if (args.ArgC() < 3)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Usage: !ban <name> <duration/0 (permanent)>");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !ban <name> <duration/0 (permanent)>");
 		return;
 	}
 
@@ -108,10 +131,9 @@ CON_COMMAND_CHAT(ban, "ban a player")
 		return;
 	}
 
-	char* end;
-	int iDuration = strtol(args[2], &end, 10);
+	int iDuration = V_StringToInt32(args[2], -1);
 
-	if (*end)
+	if (iDuration == -1)
 	{
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"无效时长.");
 		return;
@@ -133,27 +155,42 @@ CON_COMMAND_CHAT(ban, "ban a player")
 	infraction->ApplyInfraction(pTargetPlayer);
 	g_pAdminSystem->SaveInfractions();
 
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "封禁了 %s 持续时长 %i 分钟.", player->GetPlayerName(), pTarget->GetPlayerName(), iDuration);
+	const char *pszCommandPlayerName = player ? player->GetPlayerName() : "Console";
+
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "banned %s for %i minutes.", pszCommandPlayerName, pTarget->GetPlayerName(), iDuration);
+
+	if (iDuration > 0)
+	{
+		char szAction[64];
+		V_snprintf(szAction, sizeof(szAction), " for %i minutes", iDuration);
+		PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "banned", szAction);
+	}
+	else
+	{
+		PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "permanently banned");
+	}
 }
 
 CON_COMMAND_CHAT(mute, "mutes a player")
 {
-	if (!player)
-		return;
+	int iCommandPlayer = -1;
 
-	int iCommandPlayer = player->GetPlayerSlot();
-
-	ZEPlayer* pPlayer = g_playerManager->GetPlayer(player->GetPlayerSlot());
-
-	if (!pPlayer->IsAdminFlagSet(ADMFLAG_BAN))
+	if (player)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你没有权限访问该指令.");
-		return;
+		iCommandPlayer = player->GetPlayerSlot();
+
+		ZEPlayer *pPlayer = g_playerManager->GetPlayer(iCommandPlayer);
+
+		if (!pPlayer->IsAdminFlagSet(ADMFLAG_BAN))
+		{
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
+			return;
+		}
 	}
 
 	if (args.ArgC() < 3)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Usage: !mute <name> <duration/0 (permanent)>");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !mute <name> <duration/0 (permanent)>");
 		return;
 	}
 
@@ -164,18 +201,28 @@ CON_COMMAND_CHAT(mute, "mutes a player")
 
 	if (!iNumClients)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"未找到玩家.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "未找到玩家.");
 		return;
 	}
 
-	char* end;
-	int iDuration = strtol(args[2], &end, 10);
+	int iDuration = V_StringToInt32(args[2], -1);
 
-	if (*end)
+	if (iDuration < 0)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"无效时长.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "无效时长.");
 		return;
 	}
+
+	if (iDuration == 0 && nType >= ETargetType::ALL)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You may only permanently mute individuals.");
+		return;
+	}
+
+	const char *pszCommandPlayerName = player ? player->GetPlayerName() : "Console";
+
+	char szAction[64];
+	V_snprintf(szAction, sizeof(szAction), " for %i minutes", iDuration);
 
 	for (int i = 0; i < iNumClients; i++)
 	{
@@ -197,39 +244,32 @@ CON_COMMAND_CHAT(mute, "mutes a player")
 		infraction->ApplyInfraction(pTargetPlayer);
 		g_pAdminSystem->SaveInfractions();
 
-		if (nType < ETargetType::ALL)
-			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "禁言了 %s 持续时长 %i 分钟.", player->GetPlayerName(), pTarget->GetPlayerName(), iDuration);
+		if (iDuration > 0)
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "muted", szAction);
+		else
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "permanently muted");
 	}
 
 	g_pAdminSystem->SaveInfractions();
 
-	switch (nType)
-	{
-	case ETargetType::ALL:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "禁言了所有人 持续时长 %i 分钟.", player->GetPlayerName(), iDuration);
-		break;
-	case ETargetType::T:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "禁言了T 持续时长 %i 分钟.", player->GetPlayerName(), iDuration);
-		break;
-	case ETargetType::CT:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "禁言了CT 持续时长 %i 分钟.", player->GetPlayerName(), iDuration);
-		break;
-	}
+	PrintMultiAdminAction(nType, pszCommandPlayerName, "muted", szAction);
 }
 
 CON_COMMAND_CHAT(unmute, "unmutes a player")
 {
-	if (!player)
-		return;
+	int iCommandPlayer = -1;
 
-	int iCommandPlayer = player->GetPlayerSlot();
-
-	ZEPlayer *pPlayer = g_playerManager->GetPlayer(player->GetPlayerSlot());
-
-	if (!pPlayer->IsAdminFlagSet(ADMFLAG_UNBAN))
+	if (player)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
-		return;
+		iCommandPlayer = player->GetPlayerSlot();
+
+		ZEPlayer *pPlayer = g_playerManager->GetPlayer(iCommandPlayer);
+
+		if (!pPlayer->IsAdminFlagSet(ADMFLAG_UNBAN))
+		{
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
+			return;
+		}
 	}
 
 	if (args.ArgC() < 2)
@@ -248,6 +288,8 @@ CON_COMMAND_CHAT(unmute, "unmutes a player")
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "未找到玩家.");
 		return;
 	}
+
+	const char *pszCommandPlayerName = player ? player->GetPlayerName() : "Console";
 
 	for (int i = 0; i < iNumClients; i++)
 	{
@@ -268,38 +310,29 @@ CON_COMMAND_CHAT(unmute, "unmutes a player")
 		}
 
 		if (nType < ETargetType::ALL)
-			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "解除了 %s 的禁言.", player->GetPlayerName(), pTarget->GetPlayerName());
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "unmuted");
 	}
 
 	g_pAdminSystem->SaveInfractions();
 
-	switch (nType)
-	{
-	case ETargetType::ALL:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "解除了所有人的禁言.", player->GetPlayerName());
-		break;
-	case ETargetType::T:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "解除了T的禁言.", player->GetPlayerName());
-		break;
-	case ETargetType::CT:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "解除了CT的禁言.", player->GetPlayerName());
-		break;
-	}
+	PrintMultiAdminAction(nType, pszCommandPlayerName, "unmuted");
 }
 
 CON_COMMAND_CHAT(gag, "gag a player")
 {
-	if (!player)
-		return;
+	int iCommandPlayer = -1;
 
-	int iCommandPlayer = player->GetPlayerSlot();
-
-	ZEPlayer *pPlayer = g_playerManager->GetPlayer(player->GetPlayerSlot());
-
-	if (!pPlayer->IsAdminFlagSet(ADMFLAG_BAN))
+	if (player)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
-		return;
+		iCommandPlayer = player->GetPlayerSlot();
+
+		ZEPlayer *pPlayer = g_playerManager->GetPlayer(iCommandPlayer);
+
+		if (!pPlayer->IsAdminFlagSet(ADMFLAG_BAN))
+		{
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
+			return;
+		}
 	}
 
 	if (args.ArgC() < 3)
@@ -319,14 +352,24 @@ CON_COMMAND_CHAT(gag, "gag a player")
 		return;
 	}
 
-	char *end;
-	int iDuration = strtol(args[2], &end, 10);
+	int iDuration = V_StringToInt32(args[2], -1);
 
-	if (*end)
+	if (iDuration < 0)
 	{
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "无效时长.");
 		return;
 	}
+
+	if (iDuration == 0 && nType >= ETargetType::ALL)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You may only permanently gag individuals.");
+		return;
+	}
+
+	const char *pszCommandPlayerName = player ? player->GetPlayerName() : "Console";
+
+	char szAction[64];
+	V_snprintf(szAction, sizeof(szAction), " for %i minutes", iDuration);
 
 	for (int i = 0; i < iNumClients; i++)
 	{
@@ -347,39 +390,35 @@ CON_COMMAND_CHAT(gag, "gag a player")
 		g_pAdminSystem->AddInfraction(infraction);
 		infraction->ApplyInfraction(pTargetPlayer);
 
-		if (nType < ETargetType::ALL)
-			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "禁麦了 %s 持续时长 %i 分钟.", player->GetPlayerName(), pTarget->GetPlayerName(), iDuration);
+		if (nType >= ETargetType::ALL)
+			continue;
+
+		if (iDuration > 0)
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "gagged", szAction);
+		else
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "permanently gagged");
 	}
 
 	g_pAdminSystem->SaveInfractions();
 
-	switch (nType)
-	{
-	case ETargetType::ALL:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "禁麦了所有人 持续时长 %i 分钟.", player->GetPlayerName(), iDuration);
-		break;
-	case ETargetType::T:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "禁麦了T 持续时长 %i 分钟.", player->GetPlayerName(), iDuration);
-		break;
-	case ETargetType::CT:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "禁麦了CT 持续时长 %i 分钟.", player->GetPlayerName(), iDuration);
-		break;
-	}
+	PrintMultiAdminAction(nType, pszCommandPlayerName, "gagged", szAction);
 }
 
 CON_COMMAND_CHAT(ungag, "ungags a player")
 {
-	if (!player)
-		return;
+	int iCommandPlayer = -1;
 
-	int iCommandPlayer = player->GetPlayerSlot();
-
-	ZEPlayer *pPlayer = g_playerManager->GetPlayer(player->GetPlayerSlot());
-
-	if (!pPlayer->IsAdminFlagSet(ADMFLAG_UNBAN))
+	if (player)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
-		return;
+		iCommandPlayer = player->GetPlayerSlot();
+
+		ZEPlayer *pPlayer = g_playerManager->GetPlayer(iCommandPlayer);
+
+		if (!pPlayer->IsAdminFlagSet(ADMFLAG_UNBAN))
+		{
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
+			return;
+		}
 	}
 
 	if (args.ArgC() < 2)
@@ -398,6 +437,8 @@ CON_COMMAND_CHAT(ungag, "ungags a player")
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "未找到玩家.");
 		return;
 	}
+
+	const char *pszCommandPlayerName = player ? player->GetPlayerName() : "Console";
 
 	for (int i = 0; i < iNumClients; i++)
 	{
@@ -418,43 +459,34 @@ CON_COMMAND_CHAT(ungag, "ungags a player")
 		}
 
 		if (nType < ETargetType::ALL)
-			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "解除了 %s 的禁麦.", player->GetPlayerName(), pTarget->GetPlayerName());
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "ungagged");
 	}
 
 	g_pAdminSystem->SaveInfractions();
 
-	switch (nType)
-	{
-	case ETargetType::ALL:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "解除了所有人的禁麦.", player->GetPlayerName());
-		break;
-	case ETargetType::T:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "解除了T的禁麦.", player->GetPlayerName());
-		break;
-	case ETargetType::CT:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "解除了CT的禁麦.", player->GetPlayerName());
-		break;
-	}
+	PrintMultiAdminAction(nType, pszCommandPlayerName, "ungagged");
 }
 
 CON_COMMAND_CHAT(kick, "kick a player")
 {
-	if (!player)
-		return;
+	int iCommandPlayer = -1;
 
-	int iCommandPlayer = player->GetPlayerSlot();
-
-	ZEPlayer* pPlayer = g_playerManager->GetPlayer(player->GetPlayerSlot());
-
-	if (!pPlayer->IsAdminFlagSet(ADMFLAG_KICK))
+	if (player)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你没有权限访问该指令.");
-		return;
+		iCommandPlayer = player->GetPlayerSlot();
+
+		ZEPlayer *pPlayer = g_playerManager->GetPlayer(iCommandPlayer);
+
+		if (!pPlayer->IsAdminFlagSet(ADMFLAG_KICK))
+		{
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
+			return;
+		}
 	}
 
 	if (args.ArgC() < 2)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Usage: !kick <name>");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !kick <name>");
 		return;
 	}
 
@@ -469,6 +501,8 @@ CON_COMMAND_CHAT(kick, "kick a player")
 		return;
 	}
 
+	const char *pszCommandPlayerName = player ? player->GetPlayerName() : "Console";
+
 	for (int i = 0; i < iNumClients; i++)
 	{
 		CBasePlayerController* pTarget = (CBasePlayerController*)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pSlot[i] + 1));
@@ -480,28 +514,30 @@ CON_COMMAND_CHAT(kick, "kick a player")
 		
 		g_pEngineServer2->DisconnectClient(pTargetPlayer->GetPlayerSlot(), NETWORK_DISCONNECT_KICKED);
 
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "踢出了 %s.", player->GetPlayerName(), pTarget->GetPlayerName());
+		PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "kicked");
 	}
 }
 
 CON_COMMAND_CHAT(slay, "slay a player")
 {
-	if (!player)
-		return;
+	int iCommandPlayer = -1;
 
-	int iCommandPlayer = player->GetPlayerSlot();
-
-	ZEPlayer *pPlayer = g_playerManager->GetPlayer(player->GetPlayerSlot());
-
-	if (!pPlayer->IsAdminFlagSet(ADMFLAG_SLAY))
+	if (player)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你没有权限访问该指令.");
-		return;
+		iCommandPlayer = player->GetPlayerSlot();
+
+		ZEPlayer *pPlayer = g_playerManager->GetPlayer(iCommandPlayer);
+
+		if (!pPlayer->IsAdminFlagSet(ADMFLAG_SLAY))
+		{
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
+			return;
+		}
 	}
 
 	if (args.ArgC() < 2)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Usage: !slay <name>");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !slay <name>");
 		return;
 	}
 
@@ -516,6 +552,8 @@ CON_COMMAND_CHAT(slay, "slay a player")
 		return;
 	}
 
+	const char *pszCommandPlayerName = player ? player->GetPlayerName() : "Console";
+
 	for (int i = 0; i < iNumClients; i++)
 	{
 		CBasePlayerController *pTarget = (CBasePlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pSlots[i] + 1));
@@ -526,31 +564,24 @@ CON_COMMAND_CHAT(slay, "slay a player")
 		pTarget->GetPawn()->CommitSuicide(false, true);
 
 		if (nType < ETargetType::ALL)
-			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "处死了 %s.", player->GetPlayerName(), pTarget->GetPlayerName());
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "slayed");
 	}
 
-	switch (nType)
-	{
-	case ETargetType::ALL:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "处死了所有人.", player->GetPlayerName());
-		break;
-	case ETargetType::T:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "处死了T.", player->GetPlayerName());
-		break;
-	case ETargetType::CT:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "处死了CT.", player->GetPlayerName());
-		break;
-	}
+	PrintMultiAdminAction(nType, pszCommandPlayerName, "slayed");
 }
 
 CON_COMMAND_CHAT(goto, "teleport to a player")
 {
+	// Only players can use this command at all
 	if (!player)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You cannot use this command from the server console.");
 		return;
+	}
 
 	int iCommandPlayer = player->GetPlayerSlot();
 
-	ZEPlayer *pPlayer = g_playerManager->GetPlayer(player->GetPlayerSlot());
+	ZEPlayer *pPlayer = g_playerManager->GetPlayer(iCommandPlayer);
 
 	if (!pPlayer->IsAdminFlagSet(ADMFLAG_SLAY))
 	{
@@ -590,14 +621,17 @@ CON_COMMAND_CHAT(goto, "teleport to a player")
 
 		player->GetPawn()->Teleport(&newOrigin, nullptr, nullptr);
 
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "传送到 %s.", pTarget->GetPlayerName());
+		PrintSingleAdminAction(player->GetPlayerName(), pTarget->GetPlayerName(), "teleported to");
 	}
 }
 
 CON_COMMAND_CHAT(bring, "bring a player")
 {
 	if (!player)
+	{
+		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "You cannot use this command from the server console.");
 		return;
+	}
 
 	int iCommandPlayer = player->GetPlayerSlot();
 
@@ -638,42 +672,33 @@ CON_COMMAND_CHAT(bring, "bring a player")
 		pTarget->GetPawn()->Teleport(&newOrigin, nullptr, nullptr);
 
 		if (nType < ETargetType::ALL)
-			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "将 %s 传送到身边.", player->GetPlayerName(), pTarget->GetPlayerName());
+			PrintSingleAdminAction(player->GetPlayerName(), pTarget->GetPlayerName(), "brought");
 	}
 
-	switch (nType)
-	{
-	case ETargetType::ALL:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "将所有人传送到身边.", player->GetPlayerName());
-		break;
-	case ETargetType::T:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "将T传送到身边.", player->GetPlayerName());
-		break;
-	case ETargetType::CT:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "将CT传送到身边.", player->GetPlayerName());
-		break;
-	}
+	PrintMultiAdminAction(nType, player->GetPlayerName(), "brought");
 }
 
 CON_COMMAND_CHAT(setteam, "set a player's team")
 {
-	if (!player)
-		return;
+	int iCommandPlayer = -1;
 
-	int iCommandPlayer = player->GetPlayerSlot();
-
-	ZEPlayer *pPlayer = g_playerManager->GetPlayer(player->GetPlayerSlot());
-
-	if (!pPlayer->IsAdminFlagSet(ADMFLAG_SLAY))
+	if (player)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
-		return;
-	}
+		iCommandPlayer = player->GetPlayerSlot();
 
-	if (args.ArgC() < 3)
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !setteam <name> <team (0-3)>");
-		return;
+		ZEPlayer *pPlayer = g_playerManager->GetPlayer(player->GetPlayerSlot());
+
+		if (!pPlayer->IsAdminFlagSet(ADMFLAG_SLAY))
+		{
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
+			return;
+		}
+
+		if (args.ArgC() < 3)
+		{
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !setteam <name> <team (0-3)>");
+			return;
+		}
 	}
 
 	int iNumClients = 0;
@@ -695,38 +720,36 @@ CON_COMMAND_CHAT(setteam, "set a player's team")
 		return;
 	}
 
+	const char *pszCommandPlayerName = player ? player->GetPlayerName() : "Console";
+
+	constexpr const char *teams[] = {"none", "spectators", "terrorists", "counter-terrorists"};
+
+	char szAction[64];
+	V_snprintf(szAction, sizeof(szAction), " to %s.", teams[iTeam]);
+
 	for (int i = 0; i < iNumClients; i++)
 	{
-		CBasePlayerController *pTarget = (CBasePlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pSlots[i] + 1));
+		CCSPlayerController *pTarget = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pSlots[i] + 1));
 
 		if (!pTarget)
 			continue;
 
-		pTarget->m_iTeamNum = iTeam;
-		pTarget->GetPawn()->m_iTeamNum = iTeam;
+		addresses::CCSPlayerController_SwitchTeam(pTarget, iTeam);
 
 		if (nType < ETargetType::ALL)
-			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "移动 %s 到队伍 %i.", player->GetPlayerName(), pTarget->GetPlayerName(), iTeam);
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "moved", szAction);
 	}
 
-	switch (nType)
-	{
-	case ETargetType::ALL:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "移动所有人到队伍 %i.", iTeam);
-		break;
-	case ETargetType::T:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "移动T到队伍 %i.", iTeam);
-		break;
-	case ETargetType::CT:
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "移动CT到队伍 %i.", iTeam);
-		break;
-	}
+	PrintMultiAdminAction(nType, pszCommandPlayerName, "moved", szAction);
 }
 
 CON_COMMAND_CHAT(noclip, "toggle noclip on yourself")
 {
 	if (!player)
+	{
+		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "You cannot use this command from the server console.");
 		return;
+	}
 
 	int iCommandPlayer = player->GetPlayerSlot();
 
@@ -763,17 +786,19 @@ CON_COMMAND_CHAT(noclip, "toggle noclip on yourself")
 
 CON_COMMAND_CHAT(map, "change map")
 {
-	if (!player)
-		return;
+	int iCommandPlayer = -1;
 
-	int iCommandPlayer = player->GetPlayerSlot();
-
-	ZEPlayer *pPlayer = g_playerManager->GetPlayer(iCommandPlayer);
-
-	if (!pPlayer->IsAdminFlagSet(ADMFLAG_CHANGEMAP))
+	if (player)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你没有权限访问该指令.");
-		return;
+		iCommandPlayer = player->GetPlayerSlot();
+
+		ZEPlayer *pPlayer = g_playerManager->GetPlayer(iCommandPlayer);
+
+		if (!pPlayer->IsAdminFlagSet(ADMFLAG_CHANGEMAP))
+		{
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
+			return;
+		}
 	}
 
 	if (args.ArgC() < 2)
@@ -801,26 +826,53 @@ CON_COMMAND_CHAT(map, "change map")
 
 CON_COMMAND_CHAT(hsay, "say something as a hud hint")
 {
+	if (player)
+	{
+		int iCommandPlayer = player->GetPlayerSlot();
+
+		ZEPlayer *pPlayer = g_playerManager->GetPlayer(iCommandPlayer);
+
+		if (!pPlayer->IsAdminFlagSet(ADMFLAG_CHAT))
+		{
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
+			return;
+		}
+
+		if (args.ArgC() < 2)
+		{
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !hsay <message>");
+			return;
+		}
+	}
+
+	ClientPrintAll(HUD_PRINTCENTER, "%s", args.ArgS());
+}
+
+CON_COMMAND_CHAT(rcon, "send a command to server console")
+{
 	if (!player)
+	{
+		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "You are already on the server console.");
 		return;
+	}
 
 	int iCommandPlayer = player->GetPlayerSlot();
 
-	ZEPlayer *pPlayer = g_playerManager->GetPlayer(iCommandPlayer);
+	ZEPlayer* pPlayer = g_playerManager->GetPlayer(iCommandPlayer);
 
-	if (!pPlayer->IsAdminFlagSet(ADMFLAG_CHAT))
+	if (!pPlayer->IsAdminFlagSet(ADMFLAG_RCON))
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You don't have access to this command.");
 		return;
 	}
 
 	if (args.ArgC() < 2)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !hsay <message>");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !rcon <command>");
 		return;
 	}
 
-	ClientPrintAll(HUD_PRINTCENTER, "%s", args.ArgS());
+	g_pEngineServer2->ServerCommand(args.ArgS());
 }
 
 bool CAdminSystem::LoadAdmins()

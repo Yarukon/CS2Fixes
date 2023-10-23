@@ -28,12 +28,7 @@ jobs:
         with:
           repository: alliedmodders/metamod-source
           ref: master
-          path: metamod-source
-          
-      - name: Checking out own repository
-        uses: actions/checkout@v3
-        with:
-          path: cs2fixes
+          path: mmsource-2.0
           submodules: recursive
 
       - name: Compiling files

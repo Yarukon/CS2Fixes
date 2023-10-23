@@ -145,7 +145,7 @@ void ParseWeaponCommand(CCSPlayerController *pController, const char *pszWeaponN
 
 void ParseChatCommand(const char *pMessage, CCSPlayerController *pController)
 {
-	if (!pController)
+	if (!pController || !pController->IsConnected())
 		return;
 
 	CCommand args;
@@ -174,6 +174,7 @@ void ClientPrintAll(int hud_dest, const char *msg, ...)
 	va_end(args);
 
 	addresses::UTIL_ClientPrintAll(hud_dest, buf, nullptr, nullptr, nullptr, nullptr);
+	ConMsg("%s\n", buf);
 }
 
 void ClientPrint(CBasePlayerController *player, int hud_dest, const char *msg, ...)
@@ -186,7 +187,10 @@ void ClientPrint(CBasePlayerController *player, int hud_dest, const char *msg, .
 
 	va_end(args);
 
-	addresses::ClientPrint(player, hud_dest, buf, nullptr, nullptr, nullptr, nullptr);
+	if (player)
+		addresses::ClientPrint(player, hud_dest, buf, nullptr, nullptr, nullptr, nullptr);
+	else
+		ConMsg("%s\n", buf);
 }
 
 CON_COMMAND_CHAT(stopsound, "toggle weapon sounds")
@@ -227,10 +231,16 @@ CON_COMMAND_CHAT(myuid, "test")
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你的 userid 为 %i, slot: %i, 获取到的 slot: %i", g_pEngineServer2->GetPlayerUserId(iPlayer).Get(), iPlayer, g_playerManager->GetSlotFromUserId(g_pEngineServer2->GetPlayerUserId(iPlayer).Get()));
 }
 
+// CONVAR_TODO
+static constexpr float g_flMaxZteleDistance = 150.0f;
+
 CON_COMMAND_CHAT(ztele, "teleport to spawn")
 {
 	if (!player)
+	{
+		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "You cannot use this command from the server console.");
 		return;
+	}
 
 	//Count spawnpoints (info_player_counterterrorist & info_player_terrorist)
 	SpawnPoint* spawn = nullptr;
@@ -238,9 +248,7 @@ CON_COMMAND_CHAT(ztele, "teleport to spawn")
 	while (nullptr != (spawn = (SpawnPoint*)UTIL_FindEntityByClassname(spawn, "info_player_")))
 	{
 		if (spawn->m_bEnabled())
-		{
 			spawns.AddToTail(spawn);
-		}
 	}
 
 	//Pick and get position of random spawnpoint
@@ -248,62 +256,56 @@ CON_COMMAND_CHAT(ztele, "teleport to spawn")
 	Vector spawnpos = spawns[randomindex]->GetAbsOrigin();
 
 	//Here's where the mess starts
-	CBasePlayerPawn* pPawn = player->m_hPawn();
+	CBasePlayerPawn* pPawn = player->GetPawn();
+
 	if (!pPawn)
-	{
 		return;
-	}
-	if (pPawn->m_iHealth() <= 0)
+
+	if (!pPawn->IsAlive())
 	{
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你无法在死亡的情况下传送!");
 		return;
 	}
+
 	//Get initial player position so we can do distance check
 	Vector initialpos = pPawn->GetAbsOrigin();
 
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"5秒后传送至出生点.");
 
-	//Convert into handle so we can safely pass it into the Timer
-	auto handle = player->GetHandle();
+	CHandle<CBasePlayerPawn> handle = pPawn->GetHandle();
+
 	new CTimer(5.0f, false, false, [spawnpos, handle, initialpos]()
+	{
+		CBasePlayerPawn *pPawn = handle.Get();
+
+		if (!pPawn)
+			return;
+
+		Vector endpos = pPawn->GetAbsOrigin();
+
+		if (initialpos.DistTo(endpos) < g_flMaxZteleDistance)
 		{
-			//Convert handle into controller so we can use it again, and check it isn't invalid
-			CCSPlayerController* controller = (CCSPlayerController*)Z_CBaseEntity::EntityFromHandle(handle);
-
-			if (!controller || controller->m_iConnected() != PlayerConnectedState::PlayerConnected)
-				return;
-
-			//Get pawn (again) so we can do shit
-			CBasePlayerPawn* pPawn2 = controller->m_hPawn();
-
-			//Get player origin after 5secs
-			Vector endpos = pPawn2->GetAbsOrigin();
-
-			//Get distance between initial and end positions
-			float dist = initialpos.DistTo(endpos);
-
-			//Check le dist
-			//ConMsg("Distance was %f \n", dist);
-			if (dist < 150.0f)
-			{
-				pPawn2->SetAbsOrigin(spawnpos);
-				ClientPrint(controller, HUD_PRINTTALK, CHAT_PREFIX"你已传送至出生点.");
-			}
-			else
-			{
-				ClientPrint(controller, HUD_PRINTTALK, CHAT_PREFIX"传送失败! 你移动的太远了.");
-				return;
-			}
-		});
+			pPawn->SetAbsOrigin(spawnpos);
+			ClientPrint(pPawn->GetController(), HUD_PRINTTALK, CHAT_PREFIX "你已传送至出生点.");
+		}
+		else
+		{
+			ClientPrint(pPawn->GetController(), HUD_PRINTTALK, CHAT_PREFIX "传送失败! 你移动的太远了.");
+			return;
+		}
+	});
 }
 
-// TODO: Make this a convar when it's possible to do so
+// CONVAR_TODO
 static constexpr int g_iMaxHideDistance = 2000;
 
 CON_COMMAND_CHAT(hide, "hides nearby teammates")
 {
 	if (!player)
+	{
+		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "You cannot use this command from the server console.");
 		return;
+	}
 
 	if (args.ArgC() < 2)
 	{
@@ -333,7 +335,7 @@ CON_COMMAND_CHAT(hide, "hides nearby teammates")
 	pZEPlayer->SetHideDistance(distance);
 
 	if (distance == 0)
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "队友隐藏已禁用.", distance);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "队友隐藏已禁用.");
 	else
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "已启用队友隐藏, 隐藏范围为 %i 个单位.", distance);
 }
