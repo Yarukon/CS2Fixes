@@ -440,7 +440,7 @@ CON_COMMAND_CHAT_FLAGS(slay, "slay a player", ADMFLAG_SLAY)
 {
 	if (args.ArgC() < 2)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !slay <name>");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "指令格式: !slay <name>");
 		return;
 	}
 
@@ -452,11 +452,11 @@ CON_COMMAND_CHAT_FLAGS(slay, "slay a player", ADMFLAG_SLAY)
 
 	if (!iNumClients)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Target not found.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"未找到玩家.");
 		return;
 	}
 
-	const char *pszCommandPlayerName = player ? player->GetPlayerName() : "Console";
+	const char *pszCommandPlayerName = player ? player->GetPlayerName() : "控制台";
 
 	for (int i = 0; i < iNumClients; i++)
 	{
@@ -468,17 +468,17 @@ CON_COMMAND_CHAT_FLAGS(slay, "slay a player", ADMFLAG_SLAY)
 		pTarget->GetPawn()->CommitSuicide(false, true);
 
 		if (nType < ETargetType::ALL)
-			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "slayed");
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "处死了");
 	}
 
-	PrintMultiAdminAction(nType, pszCommandPlayerName, "slayed");
+	PrintMultiAdminAction(nType, pszCommandPlayerName, "处死了");
 }
 
 CON_COMMAND_CHAT_FLAGS(slap, "slap a player", ADMFLAG_SLAY)
 {
 	if (args.ArgC() < 2)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !slap <name> <optional damage>");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "指令格式: !slap <name> <optional damage>");
 		return;
 	}
 
@@ -490,7 +490,7 @@ CON_COMMAND_CHAT_FLAGS(slap, "slap a player", ADMFLAG_SLAY)
 
 	if (!iNumClients)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Target not found.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "未找到玩家.");
 		return;
 	}
 
@@ -521,10 +521,10 @@ CON_COMMAND_CHAT_FLAGS(slap, "slap a player", ADMFLAG_SLAY)
 			pPawn->TakeDamage(iDamage);
 
 		if (nType < ETargetType::ALL)
-			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "slapped");
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "打了", "的脸");
 	}
 
-	PrintMultiAdminAction(nType, pszCommandPlayerName, "slapped");
+	PrintMultiAdminAction(nType, pszCommandPlayerName, "打了", "的脸");
 }
 
 CON_COMMAND_CHAT_FLAGS(goto, "teleport to a player", ADMFLAG_SLAY)
@@ -619,7 +619,7 @@ CON_COMMAND_CHAT_FLAGS(setteam, "set a player's team", ADMFLAG_SLAY)
 {
 	if (args.ArgC() < 3)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !setteam <name> <team (0-3)>");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "指令格式: !setteam <name> <team (0-3)>");
 		return;
 	}
 
@@ -648,7 +648,7 @@ CON_COMMAND_CHAT_FLAGS(setteam, "set a player's team", ADMFLAG_SLAY)
 	constexpr const char *teams[] = {"无", "观察者", "terrorists", "counter-terrorists"};
 
 	char szAction[64];
-	V_snprintf(szAction, sizeof(szAction), " to %s", teams[iTeam]);
+	V_snprintf(szAction, sizeof(szAction), " 至队伍 %s", teams[iTeam]);
 
 	for (int i = 0; i < iNumClients; i++)
 	{
@@ -701,7 +701,7 @@ CON_COMMAND_CHAT_FLAGS(entfire, "fire outputs at entities", ADMFLAG_RCON)
 {
 	if (args.ArgC() < 3)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !entfire <name> <input> <optional parameter>");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "指令格式: !entfire <name> <input> <optional parameter>");
 		return;
 	}
 
@@ -755,16 +755,16 @@ CON_COMMAND_CHAT_FLAGS(entfire, "fire outputs at entities", ADMFLAG_RCON)
 	}
 
 	if (!iFoundEnts)
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Target not found.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "未找到目标实体.");
 	else
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Input successful on %i entities.", iFoundEnts);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "成功在 %i 个实体上执行了输入.", iFoundEnts);
 }
 
 CON_COMMAND_CHAT_FLAGS(entfirepawn, "fire outputs at player pawns", ADMFLAG_RCON)
 {
 	if (args.ArgC() < 3)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !entfirepawn <name> <input> <optional parameter>");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "指令格式: !entfirepawn <name> <input> <optional parameter>");
 		return;
 	}
 
@@ -776,7 +776,7 @@ CON_COMMAND_CHAT_FLAGS(entfirepawn, "fire outputs at player pawns", ADMFLAG_RCON
 
 	if (!iNumClients)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Target not found.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "未找到玩家.");
 		return;
 	}
 
@@ -795,14 +795,14 @@ CON_COMMAND_CHAT_FLAGS(entfirepawn, "fire outputs at player pawns", ADMFLAG_RCON
 		iFoundEnts++;
 	}
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Input successful on %i player pawns.", iFoundEnts);
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "成功在 %i 个玩家上执行了pawn输入.", iFoundEnts);
 }
 
 CON_COMMAND_CHAT_FLAGS(entfirecontroller, "fire outputs at player controllers", ADMFLAG_RCON)
 {
 	if (args.ArgC() < 3)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !entfirecontroller <name> <input> <optional parameter>");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "指令格式: !entfirecontroller <name> <input> <optional parameter>");
 		return;
 	}
 
@@ -814,7 +814,7 @@ CON_COMMAND_CHAT_FLAGS(entfirecontroller, "fire outputs at player controllers", 
 
 	if (!iNumClients)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Target not found.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "未找到玩家.");
 		return;
 	}
 
@@ -833,7 +833,7 @@ CON_COMMAND_CHAT_FLAGS(entfirecontroller, "fire outputs at player controllers", 
 		iFoundEnts++;
 	}
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Input successful on %i player controllers.", iFoundEnts);
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "成功在 %i 个玩家上执行了controller输入.", iFoundEnts);
 }
 
 CON_COMMAND_CHAT_FLAGS(map, "change map", ADMFLAG_CHANGEMAP)
@@ -849,11 +849,11 @@ CON_COMMAND_CHAT_FLAGS(map, "change map", ADMFLAG_CHANGEMAP)
 
 	if (!g_pEngineServer2->IsMapValid(szMapName))
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Invalid map specified.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"无效地图.");
 		return;
 	}
 
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "Changing map to %s...", szMapName);
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "更改地图至 %s...", szMapName);
 
 	new CTimer(5.0f, false, [szMapName]()
 	{
@@ -883,7 +883,7 @@ CON_COMMAND_CHAT_FLAGS(rcon, "send a command to server console", ADMFLAG_RCON)
 
 	if (args.ArgC() < 2)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !rcon <command>");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "指令格式: !rcon <command>");
 		return;
 	}
 
@@ -894,7 +894,7 @@ CON_COMMAND_CHAT_FLAGS(extend, "extend current map (negative value reduces map d
 {
 	if (args.ArgC() < 3)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !extend <minutes>");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "指令格式: !extend <minutes>");
 		return;
 	}
 
