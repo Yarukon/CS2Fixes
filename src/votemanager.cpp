@@ -113,7 +113,7 @@ CON_COMMAND_CHAT(rtv, "Vote to end the current map sooner.")
 {
 	if (!player)
 	{
-		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "You cannot use this command from the server console.");
+		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "你无法从控制台使用该指令.");
 		return;
 	}
 
@@ -131,16 +131,16 @@ CON_COMMAND_CHAT(rtv, "Vote to end the current map sooner.")
 	switch (g_RTVState)
 	{
 	case ERTVState::MAP_START:
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "RTV is not open yet.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "RTV 还未开放.");
 		return;
 	case ERTVState::POST_RTV_SUCCESSFULL:
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "RTV vote already succeeded.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "RTV 投票已经完成.");
 		return;
 	case ERTVState::POST_LAST_ROUND_END:
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "RTV is closed during next map selection.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "RTV 在选择下一张地图时禁用.");
 		return;
 	case ERTVState::BLOCKED_BY_ADMIN:
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "RTV has been blocked by an Admin.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "RTV 已被管理员禁用.");
 		return;
 	}
 
@@ -149,14 +149,14 @@ CON_COMMAND_CHAT(rtv, "Vote to end the current map sooner.")
 
 	if (pPlayer->GetRTVVote())
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You have already rocked the vote (%i voted, %i needed).", iCurrentRTVCount, iNeededRTVCount);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你已经投过票了 (%i 已投票, %i 需要).", iCurrentRTVCount, iNeededRTVCount);
 		return;
 	}
 
 	if (iCurrentRTVCount + 1 >= iNeededRTVCount)
 	{
 		g_RTVState = ERTVState::POST_RTV_SUCCESSFULL;
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "RTV succeeded! This is the last round of the map!");
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "RTV 成功! 这是这张地图的最后一回合!");
 		// CONVAR_TODO
 		g_pEngineServer2->ServerCommand("mp_timelimit 1");
 
@@ -171,14 +171,14 @@ CON_COMMAND_CHAT(rtv, "Vote to end the current map sooner.")
 	}
 
 	pPlayer->SetRTVVote(true);
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s wants to rock the vote (%i voted, %i needed).", player->GetPlayerName(), iCurrentRTVCount+1, iNeededRTVCount);
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s 想要投票换图 (%i 已投票, %i 需要).", player->GetPlayerName(), iCurrentRTVCount + 1, iNeededRTVCount);
 }
 
 CON_COMMAND_CHAT(unrtv, "Remove your vote to end the current map sooner.")
 {
 	if (!player)
 	{
-		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "You cannot use this command from the server console.");
+		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "你无法从控制台使用该指令.");
 		return;
 	}
 
@@ -195,12 +195,12 @@ CON_COMMAND_CHAT(unrtv, "Remove your vote to end the current map sooner.")
 
 	if (!pPlayer->GetRTVVote())
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You have not voted to RTV current map.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你还没有投票.");
 		return;
 	}
 
 	pPlayer->SetRTVVote(false);
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You no longer want to RTV current map.");
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你取消了换图投票.");
 }
 
 
@@ -208,7 +208,7 @@ CON_COMMAND_CHAT(ve, "Vote to extend the current map.")
 {
 	if (!player)
 	{
-		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "You cannot use this command from the server console.");
+		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "你无法从控制台使用该指令.");
 		return;
 	}
 
@@ -226,19 +226,19 @@ CON_COMMAND_CHAT(ve, "Vote to extend the current map.")
 	switch (g_ExtendState)
 	{
 	case EExtendState::MAP_START:
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Extend vote is not open yet.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "投票延长还未开放.");
 		return;
 	case EExtendState::POST_EXTEND_COOLDOWN:
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Extend vote is not open yet.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "投票延长还未开放.");
 		return;
 	case EExtendState::POST_EXTEND_NO_EXTENDS_LEFT:
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "There are no extends left for the current map.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "该地图已经没有延长次数.");
 		return;
 	case EExtendState::POST_LAST_ROUND_END:
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Extend vote is closed during next map selection.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "投票延长在选择下一张地图时禁用.");
 		return;
 	case EExtendState::NO_EXTENDS:
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Extend vote is not allowed for current map.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "当前地图不支持投票延长.");
 		return;
 	}
 
@@ -247,7 +247,7 @@ CON_COMMAND_CHAT(ve, "Vote to extend the current map.")
 
 	if (pPlayer->GetExtendVote())
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You have already voted to extend the map (%i voted, %i needed).", iCurrentExtendCount, iNeededExtendCount);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你已经投过票了 (%i 已投票, %i 需要).", iCurrentExtendCount, iNeededExtendCount);
 		return;
 	}
 
@@ -304,20 +304,20 @@ CON_COMMAND_CHAT(ve, "Vote to extend the current map.")
 		}
 
 		g_ExtendsLeft--;
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "Extend vote succeeded! Current map has been extended by %i minutes.", g_ExtendTimeToAdd);
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "延长投票完成! 当前地图已延长 %i 分钟.", g_ExtendTimeToAdd);
 
 		return;
 	}
 
 	pPlayer->SetExtendVote(true);
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s wants to extend the map (%i voted, %i needed).", player->GetPlayerName(), iCurrentExtendCount+1, iNeededExtendCount);
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s 想要延长地图 (%i 已投票, %i 需要).", player->GetPlayerName(), iCurrentExtendCount+1, iNeededExtendCount);
 }
 
 CON_COMMAND_CHAT(unve, "Remove your vote to extend current map.")
 {
 	if (!player)
 	{
-		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "You cannot use this command from the server console.");
+		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "你无法从控制台使用该指令.");
 		return;
 	}
 
@@ -334,12 +334,12 @@ CON_COMMAND_CHAT(unve, "Remove your vote to extend current map.")
 
 	if (!pPlayer->GetExtendVote())
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You have not voted to extend current map.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你还未投票.");
 		return;
 	}
 
 	pPlayer->SetExtendVote(false);
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You no longer want to extend current map.");
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你取消了延长投票.");
 }
 
 CON_COMMAND_CHAT_FLAGS(blockrtv, "Block the ability for players to vote to end current map sooner.", ADMFLAG_CHANGEMAP)
@@ -347,17 +347,17 @@ CON_COMMAND_CHAT_FLAGS(blockrtv, "Block the ability for players to vote to end c
 	if (g_RTVState == ERTVState::BLOCKED_BY_ADMIN)
 	{
 		if (player)
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "RTV is already blocked.");
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "RTV 已经被禁用.");
 		else
-			ConMsg("RTV is already blocked.");
+			ConMsg("RTV 已经被禁用.");
 		return;
 	}
 
-	const char* pszCommandPlayerName = player ? player->GetPlayerName() : "Console";
+	const char* pszCommandPlayerName = player ? player->GetPlayerName() : "控制台";
 
 	g_RTVState = ERTVState::BLOCKED_BY_ADMIN;
 
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "blocked vote for RTV.", pszCommandPlayerName);
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "禁用了RTV.", pszCommandPlayerName);
 }
 
 CON_COMMAND_CHAT_FLAGS(unblockrtv, "Restore the ability for players to vote to end current map sooner.", ADMFLAG_CHANGEMAP)
@@ -365,29 +365,29 @@ CON_COMMAND_CHAT_FLAGS(unblockrtv, "Restore the ability for players to vote to e
 	if (g_RTVState == ERTVState::RTV_ALLOWED)
 	{
 		if (player)
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "RTV is not blocked.");
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "RTV 未被禁用.");
 		else
-			ConMsg("RTV is not blocked.");
+			ConMsg("RTV 未被禁用.");
 		return;
 	}
 
-	const char* pszCommandPlayerName = player ? player->GetPlayerName() : "Console";
+	const char* pszCommandPlayerName = player ? player->GetPlayerName() : "控制台";
 
 	g_RTVState = ERTVState::RTV_ALLOWED;
 
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "restored vote for RTV.", pszCommandPlayerName);
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "启用了RTV.", pszCommandPlayerName);
 }
 
 CON_COMMAND_CHAT_FLAGS(addextend, "Add another extend to the current map for players to vote.", ADMFLAG_CHANGEMAP)
 {
-	const char* pszCommandPlayerName = player ? player->GetPlayerName() : "Console";
+	const char* pszCommandPlayerName = player ? player->GetPlayerName() : "量子套";
 
 	if (g_ExtendState == EExtendState::POST_EXTEND_NO_EXTENDS_LEFT || g_ExtendState == EExtendState::NO_EXTENDS)
 		g_ExtendState = EExtendState::EXTEND_ALLOWED;
 	
 	g_ExtendsLeft += 1;
 
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "allowed for an additional extend.", pszCommandPlayerName);
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "增加了一次延长投票的机会.", pszCommandPlayerName);
 }
 
 CON_COMMAND_CHAT(extendsleft, "Display amount of extends left for the current map")
@@ -397,13 +397,13 @@ CON_COMMAND_CHAT(extendsleft, "Display amount of extends left for the current ma
 	switch (g_ExtendsLeft)
 	{
 	case 0:
-		strcpy(message, "There are no extends left.");
+		strcpy(message, "没有延长机会了.");
 		break;
 	case 1:
-		strcpy(message, "There's 1 extend left");
+		strcpy(message, "剩余 1 次延长机会.");
 		break;
 	default:
-		V_snprintf(message, sizeof(message), "There are %i extends left.", g_ExtendsLeft);
+		V_snprintf(message, sizeof(message), "剩余 %i 次延长机会.", g_ExtendsLeft);
 		break;
 	}
 
@@ -417,7 +417,7 @@ CON_COMMAND_CHAT(timeleft, "Display time left to end of current map.")
 {
 	if (!player)
 	{
-		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "You cannot use this command from the server console.");
+		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "你无法从控制台使用该指令.");
 		return;
 	}
 
@@ -429,7 +429,7 @@ CON_COMMAND_CHAT(timeleft, "Display time left to end of current map.")
 
 	if (flTimelimit == 0)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "No time limit");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "当前地图没有时间限制.");
 		return;
 	}
 
@@ -437,7 +437,7 @@ CON_COMMAND_CHAT(timeleft, "Display time left to end of current map.")
 
 	if (iTimeleft < 0)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Last round!");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "已经是最后一回合了!");
 		return;
 	}
 
@@ -446,7 +446,7 @@ CON_COMMAND_CHAT(timeleft, "Display time left to end of current map.")
 	int iSecondsLeft = div.rem;
 	
 	if (iMinutesLeft > 0)
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Timeleft: %i minutes %i seconds", iMinutesLeft, iSecondsLeft);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "剩余时间: %i 分 %i 秒", iMinutesLeft, iSecondsLeft);
 	else
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Timeleft: %i seconds", iSecondsLeft);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "剩余时间: %i 秒", iSecondsLeft);
 }
