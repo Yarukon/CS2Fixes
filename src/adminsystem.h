@@ -51,7 +51,7 @@
 #define ADMFLAG_CUSTOM11	(1 << 24) // y
 #define ADMFLAG_ROOT		(1 << 25) // z
 
-#define ADMIN_PREFIX "Admin %s has "
+#define ADMIN_PREFIX "管理员 %s "
 
 class CInfractionBase
 {
