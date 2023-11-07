@@ -91,7 +91,12 @@ bool CPlayerManager::OnClientConnected(CPlayerSlot slot)
 	m_vecPlayers[slot.Get()] = pPlayer;
 
 	ResetPlayerFlags(slot.Get());
-	
+
+	// Enable stopsound by default
+	SetPlayerStopSound(slot.Get(), true);
+	// Set hide distance to 256 by default
+	pPlayer->SetHideDistance(256);
+
 	return true;
 }
 
