@@ -325,6 +325,7 @@ CON_COMMAND_CHAT(ztele, "teleport to spawn")
 }
 
 // CONVAR_TODO
+static constexpr int g_iDefaultHideDistance = 250;
 static constexpr int g_iMaxHideDistance = 2000;
 
 CON_COMMAND_CHAT(hide, "hides nearby teammates")
@@ -335,13 +336,12 @@ CON_COMMAND_CHAT(hide, "hides nearby teammates")
 		return;
 	}
 
-	if (args.ArgC() < 2)
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "指令格式: !hide <距离> (0 为禁用)");
-		return;
-	}
+	int distance;
 
-	int distance = V_StringToInt32(args[1], -1);
+	if (args.ArgC() < 2)
+		distance = g_iDefaultHideDistance;
+	else
+		distance = V_StringToInt32(args[1], -1);
 
 	if (distance > g_iMaxHideDistance || distance < 0)
 	{
@@ -360,7 +360,7 @@ CON_COMMAND_CHAT(hide, "hides nearby teammates")
 		return;
 	}
 
-	// allows for toggling hide with a bind by turning off when hide distance matches.
+	// allows for toggling hide by turning off when hide distance matches.
 	if (pZEPlayer->GetHideDistance() == distance)
 		distance = 0;
 
