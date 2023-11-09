@@ -117,69 +117,69 @@ CON_COMMAND_CHAT(rtv, "Vote to end the current map sooner.")
 		return;
 	}
 
-	int iPlayer = player->GetPlayerSlot();
+	//int iPlayer = player->GetPlayerSlot();
 
-	ZEPlayer* pPlayer = g_playerManager->GetPlayer(iPlayer);
+	//ZEPlayer* pPlayer = g_playerManager->GetPlayer(iPlayer);
 
-	// Something has to really go wrong for this to happen
-	if (!pPlayer)
-	{
-		Warning("%s Tried to access a null ZEPlayer!!\n", player->GetPlayerName());
-		return;
-	}
+	//// Something has to really go wrong for this to happen
+	//if (!pPlayer)
+	//{
+	//	Warning("%s Tried to access a null ZEPlayer!!\n", player->GetPlayerName());
+	//	return;
+	//}
 
-	switch (g_RTVState)
-	{
-	case ERTVState::MAP_START:
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "RTV 还未开放.");
-		return;
-	case ERTVState::POST_RTV_SUCCESSFULL:
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "RTV 投票已经完成.");
-		return;
-	case ERTVState::POST_LAST_ROUND_END:
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "RTV 在选择下一张地图时禁用.");
-		return;
-	case ERTVState::BLOCKED_BY_ADMIN:
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "RTV 已被管理员禁用.");
-		return;
-	}
+	//switch (g_RTVState)
+	//{
+	//case ERTVState::MAP_START:
+	//	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "RTV 还未开放.");
+	//	return;
+	//case ERTVState::POST_RTV_SUCCESSFULL:
+	//	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "RTV 投票已经完成.");
+	//	return;
+	//case ERTVState::POST_LAST_ROUND_END:
+	//	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "RTV 在选择下一张地图时禁用.");
+	//	return;
+	//case ERTVState::BLOCKED_BY_ADMIN:
+	//	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "RTV 已被管理员禁用.");
+	//	return;
+	//}
 
-	int iCurrentRTVCount = GetCurrentRTVCount();
-	int iNeededRTVCount = GetNeededRTVCount();
+	//int iCurrentRTVCount = GetCurrentRTVCount();
+	//int iNeededRTVCount = GetNeededRTVCount();
 
-	if (pPlayer->GetRTVVote())
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你已经投过票了 (%i 已投票, %i 需要).", iCurrentRTVCount, iNeededRTVCount);
-		return;
-	}
+	//if (pPlayer->GetRTVVote())
+	//{
+	//	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你已经投过票了 (%i 已投票, %i 需要).", iCurrentRTVCount, iNeededRTVCount);
+	//	return;
+	//}
 
-	if (pPlayer->GetRTVVoteTime() + 60.0f > gpGlobals->curtime)
-	{
-		int iRemainingTime = (int)(pPlayer->GetRTVVoteTime() + 60.0f - gpGlobals->curtime);
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Wait %i seconds before you can RTV again.", iRemainingTime);
-		return;
-	}
+	//if (pPlayer->GetRTVVoteTime() + 60.0f > gpGlobals->curtime)
+	//{
+	//	int iRemainingTime = (int)(pPlayer->GetRTVVoteTime() + 60.0f - gpGlobals->curtime);
+	//	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Wait %i seconds before you can RTV again.", iRemainingTime);
+	//	return;
+	//}
 
-	if (iCurrentRTVCount + 1 >= iNeededRTVCount)
-	{
-		g_RTVState = ERTVState::POST_RTV_SUCCESSFULL;
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "RTV 成功! 这是这张地图的最后一回合!");
-		// CONVAR_TODO
-		g_pEngineServer2->ServerCommand("mp_timelimit 1");
+	//if (iCurrentRTVCount + 1 >= iNeededRTVCount)
+	//{
+	//	g_RTVState = ERTVState::POST_RTV_SUCCESSFULL;
+	//	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "RTV 成功! 这是这张地图的最后一回合!");
+	//	// CONVAR_TODO
+	//	g_pEngineServer2->ServerCommand("mp_timelimit 1");
 
-		for (int i = 0; i < gpGlobals->maxClients; i++)
-		{
-			ZEPlayer* pPlayer2 = g_playerManager->GetPlayer(i);
-			if (pPlayer2)
-				pPlayer2->SetRTVVote(false);
-		}
+	//	for (int i = 0; i < gpGlobals->maxClients; i++)
+	//	{
+	//		ZEPlayer* pPlayer2 = g_playerManager->GetPlayer(i);
+	//		if (pPlayer2)
+	//			pPlayer2->SetRTVVote(false);
+	//	}
 
-		return;
-	}
+	//	return;
+	//}
 
-	pPlayer->SetRTVVote(true);
-	pPlayer->SetRTVVoteTime(gpGlobals->curtime);
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s 想要投票换图 (%i 已投票, %i 需要).", player->GetPlayerName(), iCurrentRTVCount + 1, iNeededRTVCount);
+	//pPlayer->SetRTVVote(true);
+	//pPlayer->SetRTVVoteTime(gpGlobals->curtime);
+	//ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s 想要投票换图 (%i 已投票, %i 需要).", player->GetPlayerName(), iCurrentRTVCount + 1, iNeededRTVCount);
 }
 
 CON_COMMAND_CHAT(unrtv, "Remove your vote to end the current map sooner.")

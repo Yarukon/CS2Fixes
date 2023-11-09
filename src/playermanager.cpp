@@ -96,8 +96,8 @@ bool CPlayerManager::OnClientConnected(CPlayerSlot slot)
 	SetPlayerSilenceSound(slot.Get(), false);
 	SetPlayerStopSound(slot.Get(), true);
 
-	// Set hide distance to 256 by default
-	pPlayer->SetHideDistance(256);
+	// Set hide distance to 100 by default
+	pPlayer->SetHideDistance(100);
 
 	return true;
 }
