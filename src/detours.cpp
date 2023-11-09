@@ -316,9 +316,9 @@ bool InitDetours(CGameConfig *gameConfig)
 		success = false;
 	UTIL_SayText2Filter.EnableDetour();
 
-	if (!Host_Say.CreateDetour(gameConfig))
-		success = false;
-	Host_Say.EnableDetour();
+	//if (!Host_Say.CreateDetour(gameConfig))
+	//	success = false;
+	//Host_Say.EnableDetour();
 
 	if (!IsHearingClient.CreateDetour(gameConfig))
 		success = false;
