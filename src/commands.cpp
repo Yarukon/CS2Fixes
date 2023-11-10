@@ -173,7 +173,7 @@ bool CChatCommand::CheckCommandAccess(CBasePlayerController *pPlayer, uint64 fla
 
 	if (!pZEPlayer->IsAdminFlagSet(flags))
 	{
-		ClientPrint(pPlayer, HUD_PRINTTALK, CHAT_PREFIX "You don't have access to this command.");
+		ClientPrint(pPlayer, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
 		return false;
 	}
 
@@ -255,7 +255,7 @@ CON_COMMAND_CHAT(ztele, "teleport to spawn")
 {
 	if (!player)
 	{
-		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "You cannot use this command from the server console.");
+		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "你无法在控制台执行该指令.");
 		return;
 	}
 
@@ -272,7 +272,7 @@ CON_COMMAND_CHAT(ztele, "teleport to spawn")
 	// But I ran into this when I switched to the real FindEntityByClassname and forgot to insert a *
 	if (spawns.Count() == 0)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"There are no spawns!");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"找不到出生点!");
 		Panic("ztele used while there are no spawns!\n");
 		return;
 	}
@@ -372,7 +372,7 @@ CON_COMMAND_CHAT(hide, "hides nearby teammates")
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "已启用队友隐藏, 隐藏范围为 %i 个单位.", distance);
 }
 
-CON_COMMAND_F(player_msg, "Send message to player", FCVAR_SPONLY | FCVAR_LINKED_CONCOMMAND)
+CON_COMMAND_F(player_msg, "send message to player", FCVAR_SPONLY | FCVAR_LINKED_CONCOMMAND)
 {
 	int uid = atoi(args[1]);
 
