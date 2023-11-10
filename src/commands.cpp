@@ -372,6 +372,20 @@ CON_COMMAND_CHAT(hide, "hides nearby teammates")
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "已启用队友隐藏, 隐藏范围为 %i 个单位.", distance);
 }
 
+CON_COMMAND_F(player_msg, "Send message to player", FCVAR_SPONLY | FCVAR_LINKED_CONCOMMAND)
+{
+	int uid = atoi(args[1]);
+
+	CCSPlayerController* pTarget = CCSPlayerController::FromSlot(uid);
+
+	if (!pTarget)
+		return;
+
+	// skipping the id and space, it's dumb but w/e
+	const char* pMessage = args.ArgS() + V_strlen(args[1]) + 1;
+
+	ClientPrint(pTarget, HUD_PRINTTALK, pMessage);
+}
 
 #if _DEBUG
 CON_COMMAND_CHAT(message, "message someone")
