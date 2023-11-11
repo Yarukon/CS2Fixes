@@ -252,13 +252,10 @@ void FASTCALL Detour_Host_Say(CCSPlayerController *pController, CCommand &args, 
 		ParseChatCommand(args.ArgS() + 1, pController); // The string returned by ArgS() starts with a \, so skip it
 
 	// Add support for "rtv" command
-	if (strncmp(args.ArgS() + 1, "rtv", 3) == 0)
-	{
-		if (pController && pController->IsConnected()) {
-			uint16 index = g_CommandList.Find(hash_32_fnv1a_const("rtv"));
-			if (g_CommandList.IsValidIndex(index))
-				(*g_CommandList[index])(args, pController);
-		}
+	if (pController && pController->IsConnected() && strncmp(args.ArgS() + 1, "rtv", 3) == 0) {
+		uint16 index = g_CommandList.Find(hash_32_fnv1a_const("rtv"));
+		if (g_CommandList.IsValidIndex(index))
+			(*g_CommandList[index])(args, pController);
 	}
 }
 
