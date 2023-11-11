@@ -209,7 +209,7 @@ void FASTCALL Detour_UTIL_SayText2Filter(
 	const char *param4)
 {
 #ifdef _DEBUG
-    CPlayerSlot slot = filter.GetRecipientIndex(0);
+	CPlayerSlot slot = filter.GetRecipientIndex(0);
 	CCSPlayerController* target = CCSPlayerController::FromSlot(slot);
 
 	if (target)
@@ -245,11 +245,21 @@ void FASTCALL Detour_Host_Say(CCSPlayerController *pController, CCommand &args, 
 	else if (bFlooding)
 	{
 		if (pController)
-			ClientPrint(pController, HUD_PRINTTALK, CHAT_PREFIX "You are flooding the server!");
+			ClientPrint(pController, HUD_PRINTTALK, CHAT_PREFIX "发送消息过于频繁, 请稍后再试!");
 	}
 
 	if (*args[1] == '!' || *args[1] == '/')
 		ParseChatCommand(args.ArgS() + 1, pController); // The string returned by ArgS() starts with a \, so skip it
+
+	// Add support for "rtv" command
+	if (strncmp(args.ArgS() + 1, "rtv", 3) == 0)
+	{
+		if (pController && pController->IsConnected()) {
+			uint16 index = g_CommandList.Find(hash_32_fnv1a_const("rtv"));
+			if (g_CommandList.IsValidIndex(index))
+				(*g_CommandList[index])(args, pController);
+		}
+	}
 }
 
 void Detour_Log()
