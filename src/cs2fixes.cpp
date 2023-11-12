@@ -326,7 +326,7 @@ void CS2Fixes::Hook_DispatchConCommand(ConCommandHandle cmdHandle, const CComman
 		else if (bFlooding)
 		{
 			if (pController)
-				ClientPrint(pController, HUD_PRINTTALK, CHAT_PREFIX "You are flooding the server!");
+				ClientPrint(pController, HUD_PRINTTALK, CHAT_PREFIX "发送消息过于频繁, 请稍后再试!");
 		}
 		else if (bAdminChat) // Admin chat can be sent by anyone but only seen by admins, use flood protection here too
 		{
@@ -342,7 +342,7 @@ void CS2Fixes::Hook_DispatchConCommand(ConCommandHandle cmdHandle, const CComman
 				if (!pPlayer || !pPlayer->IsAdminFlagSet(ADMFLAG_GENERIC))
 					continue;
 
-				ClientPrint(CCSPlayerController::FromSlot(i), HUD_PRINTTALK, " \4(ADMINS) %s:\1 %s", pController->GetPlayerName(), pszMessage);
+				ClientPrint(CCSPlayerController::FromSlot(i), HUD_PRINTTALK, " \4(管理员频道) %s:\1 %s", pController->GetPlayerName(), pszMessage);
 			}
 		}
 
@@ -357,6 +357,13 @@ void CS2Fixes::Hook_DispatchConCommand(ConCommandHandle cmdHandle, const CComman
 				pszMessage[V_strlen(pszMessage) - 1] = 0;
 
 			ParseChatCommand(pszMessage, pController);
+		}
+
+		// Add support for "rtv" command
+		if (pController && pController->IsConnected() && strncmp(args.ArgS() + 1, "rtv", 3) == 0) {
+			uint16 index = g_CommandList.Find(hash_32_fnv1a_const("rtv"));
+			if (g_CommandList.IsValidIndex(index))
+				(*g_CommandList[index])(args, pController);
 		}
 
 		RETURN_META(MRES_SUPERCEDE);
