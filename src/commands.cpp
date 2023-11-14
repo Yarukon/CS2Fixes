@@ -267,7 +267,7 @@ CON_COMMAND_CHAT(ztele, "teleport to spawn")
 	// Check if command is enabled for humans
 	if (!g_bZteleHuman && player->m_iTeamNum() == CS_TEAM_CT)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You cannot use this command as a human.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "人类无法使用该指令.");
 		return;
 	}
 
