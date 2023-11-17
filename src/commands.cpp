@@ -243,7 +243,7 @@ CON_COMMAND_CHAT(stopsound, "toggle weapon sounds")
 
 	if (!player)
 	{
-		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "You cannot use this command from the server console.");
+		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "你无法在控制台执行该指令.");
 		return;
 	}
 
@@ -261,7 +261,7 @@ CON_COMMAND_CHAT(toggledecals, "toggle world decals, if you're into having 10 fp
 {
 	if (!player)
 	{
-		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "You cannot use this command from the server console.");
+		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "你无法在控制台执行该指令.");
 		return;
 	}
 

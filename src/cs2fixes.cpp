@@ -319,7 +319,7 @@ void CS2Fixes::Hook_DispatchConCommand(ConCommandHandle cmdHandle, const CComman
 
 		//	if (pEvent)
 		//	{
-		//		pEvent->SetBool("teamonly", isTeamSay);
+		//		pEvent->SetBool("teamonly", bTeamSay);
 		//		pEvent->SetInt("userid", pController->GetPlayerSlot());
 		//		pEvent->SetString("text", args[1]);
 
@@ -353,7 +353,7 @@ void CS2Fixes::Hook_DispatchConCommand(ConCommandHandle cmdHandle, const CComman
 				if (pPlayer->IsAdminFlagSet(ADMFLAG_GENERIC))
 					ClientPrint(CCSPlayerController::FromSlot(i), HUD_PRINTTALK, " \4(管理员频道) %s:\1 %s", pController->GetPlayerName(), pszMessage);
 				else if (i == iCommandPlayerSlot.Get()) // Sender is not an admin
-					ClientPrint(pController, HUD_PRINTTALK, " \4(TO ADMINS) %s:\1 %s", pController->GetPlayerName(), pszMessage);
+					ClientPrint(pController, HUD_PRINTTALK, " \4(发送至管理员) %s:\1 %s", pController->GetPlayerName(), pszMessage);
 			}
 		}
 

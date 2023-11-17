@@ -178,14 +178,14 @@ CON_COMMAND_CHAT(rtv, "Vote to end the current map sooner.")
 
 	if (pPlayer->GetRTVVote())
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你已经投过票了 (%i 已投票, %i 需要).", iCurrentRTVCount, iNeededRTVCount);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你已经投过票了 (%i 已投票, 需要 %i 票).", iCurrentRTVCount, iNeededRTVCount);
 		return;
 	}
 
 	if (pPlayer->GetRTVVoteTime() + 60.0f > gpGlobals->curtime)
 	{
 		int iRemainingTime = (int)(pPlayer->GetRTVVoteTime() + 60.0f - gpGlobals->curtime);
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Wait %i seconds before you can RTV again.", iRemainingTime);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "再次投票换图前请等待 %i 秒.", iRemainingTime);
 		return;
 	}
 
@@ -208,7 +208,7 @@ CON_COMMAND_CHAT(rtv, "Vote to end the current map sooner.")
 
 	pPlayer->SetRTVVote(true);
 	pPlayer->SetRTVVoteTime(gpGlobals->curtime);
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s 想要投票换图 (%i 已投票, %i 需要).", player->GetPlayerName(), iCurrentRTVCount + 1, iNeededRTVCount);
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s 想要投票换图 (%i 已投票, 需要 %i 票).", player->GetPlayerName(), iCurrentRTVCount + 1, iNeededRTVCount);
 }
 
 CON_COMMAND_CHAT(unrtv, "Remove your vote to end the current map sooner.")
@@ -291,7 +291,7 @@ CON_COMMAND_CHAT(ve, "Vote to extend the current map.")
 	if (pPlayer->GetExtendVoteTime() + 60.0f > gpGlobals->curtime)
 	{
 		int iRemainingTime = (int)(pPlayer->GetExtendVoteTime() + 60.0f - gpGlobals->curtime);
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Wait %i seconds before you can vote extend again.", iRemainingTime);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "再次投票延长前请先等待 %i 秒.", iRemainingTime);
 		return;
 	}
 
@@ -425,7 +425,7 @@ CON_COMMAND_CHAT_FLAGS(unblockrtv, "Restore the ability for players to vote to e
 
 CON_COMMAND_CHAT_FLAGS(addextend, "Add another extend to the current map for players to vote.", ADMFLAG_CHANGEMAP)
 {
-	const char* pszCommandPlayerName = player ? player->GetPlayerName() : "量子套";
+	const char* pszCommandPlayerName = player ? player->GetPlayerName() : "控制台";
 
 	if (g_ExtendState == EExtendState::POST_EXTEND_NO_EXTENDS_LEFT || g_ExtendState == EExtendState::NO_EXTENDS)
 		g_ExtendState = EExtendState::EXTEND_ALLOWED;

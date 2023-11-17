@@ -244,7 +244,7 @@ GAME_EVENT_F(round_end)
 		if (i < 5)
 			ClientPrintAll(HUD_PRINTTALK, " %c%i. %s \x01- \x07%i 伤害", colorMap[MIN(i, 3)], i + 1, pController->GetPlayerName(), pPlayer->GetTotalDamage());
 		else
-			ClientPrint(pController, HUD_PRINTTALK, " \x0C%i. %s \x01- \x07%i DMG", i + 1, pController->GetPlayerName(), pPlayer->GetTotalDamage());
+			ClientPrint(pController, HUD_PRINTTALK, " \x0C%i. %s \x01- \x07%i 伤害", i + 1, pController->GetPlayerName(), pPlayer->GetTotalDamage());
 		
 		pPlayer->SetTotalDamage(0);
 	}

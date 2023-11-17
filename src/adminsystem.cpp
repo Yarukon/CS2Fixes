@@ -840,7 +840,7 @@ CON_COMMAND_CHAT_FLAGS(map, "change map", ADMFLAG_CHANGEMAP)
 {
 	if (args.ArgC() < 2)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Usage: !map <mapname>");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"指令格式: !map <mapname>");
 		return;
 	}
 
@@ -866,7 +866,7 @@ CON_COMMAND_CHAT_FLAGS(hsay, "say something as a hud hint", ADMFLAG_CHAT)
 {
 	if (args.ArgC() < 2)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !hsay <message>");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "指令格式: !hsay <message>");
 		return;
 	}
 
@@ -923,12 +923,12 @@ CON_COMMAND_CHAT_FLAGS(extend, "extend current map (negative value reduces map d
 	V_snprintf(buf, sizeof(buf), "mp_timelimit %.6f", flTimelimit);
 	g_pEngineServer2->ServerCommand(buf);
 
-	const char* pszCommandPlayerName = player ? player->GetPlayerName() : "Console";
+	const char* pszCommandPlayerName = player ? player->GetPlayerName() : "控制台";
 
 	if (iExtendTime < 0)
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "shortened map time %i minutes.", pszCommandPlayerName, iExtendTime * -1);
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "缩减了 %i 分钟的地图时长.", pszCommandPlayerName, iExtendTime * -1);
 	else
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "extended map time %i minutes.", pszCommandPlayerName, iExtendTime);
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "延长了 %i 分钟的地图时长.", pszCommandPlayerName, iExtendTime);
 }
 
 bool CAdminSystem::LoadAdmins()
