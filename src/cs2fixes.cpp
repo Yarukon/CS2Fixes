@@ -34,7 +34,7 @@
 #include "icvar.h"
 #include "interface.h"
 #include "tier0/dbg.h"
-#include "interfaces/cs2_interfaces.h"
+#include "interfaces/cschemasystem.h"
 #include "plat.h"
 #include "entitysystem.h"
 #include "engine/igameeventsystem.h"
@@ -109,15 +109,11 @@ SH_DECL_HOOK3_void(ICvar, DispatchConCommand, SH_NOATTRIB, 0, ConCommandHandle, 
 
 CS2Fixes g_CS2Fixes;
 
-CON_COMMAND_F(toggle_logs, "Toggle printing most logs and warnings", FCVAR_SPONLY | FCVAR_LINKED_CONCOMMAND)
-{
-	ToggleLogs();
-}
-
 IGameEventSystem *g_gameEventSystem = nullptr;
 IGameEventManager2 *g_gameEventManager = nullptr;
 INetworkGameServer *g_pNetworkGameServer = nullptr;
 CEntitySystem *g_pEntitySystem = nullptr;
+CSchemaSystem *g_pSchemaSystem2 = nullptr;
 CGlobalVars *gpGlobals = nullptr;
 CPlayerManager *g_playerManager = nullptr;
 IVEngineServer2 *g_pEngineServer2 = nullptr;
@@ -126,13 +122,21 @@ ISteamHTTP *g_http = nullptr;
 CSteamGameServerAPIContext g_steamAPI;
 CCSGameRules *g_pGameRules = nullptr;
 
+CEntitySystem *GetEntitySystem()
+{
+	static int offset = g_GameConfig->GetOffset("GameEntitySystem");
+	return *reinterpret_cast<CGameEntitySystem **>((uintptr_t)(g_pGameResourceServiceServer) + offset);
+}
+
 PLUGIN_EXPOSE(CS2Fixes, g_CS2Fixes);
 bool CS2Fixes::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool late)
 {
 	PLUGIN_SAVEVARS();
 
 	GET_V_IFACE_CURRENT(GetEngineFactory, g_pEngineServer2, IVEngineServer2, SOURCE2ENGINETOSERVER_INTERFACE_VERSION);
+	GET_V_IFACE_CURRENT(GetEngineFactory, g_pGameResourceServiceServer, IGameResourceServiceServer, GAMERESOURCESERVICESERVER_INTERFACE_VERSION);
 	GET_V_IFACE_CURRENT(GetEngineFactory, g_pCVar, ICvar, CVAR_INTERFACE_VERSION);
+	GET_V_IFACE_CURRENT(GetEngineFactory, g_pSchemaSystem2, CSchemaSystem, SCHEMASYSTEM_INTERFACE_VERSION);
 	GET_V_IFACE_ANY(GetServerFactory, g_pSource2Server, ISource2Server, SOURCE2SERVER_INTERFACE_VERSION);
 	GET_V_IFACE_ANY(GetServerFactory, g_pSource2ServerConfig, ISource2ServerConfig, SOURCE2SERVERCONFIG_INTERFACE_VERSION);
 	GET_V_IFACE_ANY(GetServerFactory, g_pSource2GameEntities, ISource2GameEntities, SOURCE2GAMEENTITIES_INTERFACE_VERSION);
@@ -185,8 +189,6 @@ bool CS2Fixes::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 	if (!addresses::Initialize(g_GameConfig))
 		bRequiredInitLoaded = false;
 
-	interfaces::Initialize();
-
 	if (!InitPatches(g_GameConfig))
 		bRequiredInitLoaded = false;
 
@@ -203,7 +205,10 @@ bool CS2Fixes::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 	}
 
 	if (!bRequiredInitLoaded)
+	{
+		snprintf(error, maxlen, "One or more address lookups, patches or detours failed, please refer to startup logs for more information");
 		return false;
+	}
 
 	Message( "All hooks started!\n" );
 
@@ -213,7 +218,7 @@ bool CS2Fixes::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 	if (late)
 	{
 		RegisterEventListeners();
-		g_pEntitySystem = interfaces::pGameResourceServiceServer->GetGameEntitySystem();
+		g_pEntitySystem = GetEntitySystem();
 		g_pNetworkGameServer = g_pNetworkServerService->GetIGameServer();
 		gpGlobals = g_pNetworkGameServer->GetGlobals();
 	}
@@ -243,6 +248,9 @@ bool CS2Fixes::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 		g_playerManager->CheckInfractions();
 		return 30.0f;
 	});
+
+	// run our cfg
+	g_pEngineServer2->ServerCommand("exec cs2fixes/cs2fixes");
 
 	srand(time(0));
 
@@ -290,18 +298,18 @@ void CS2Fixes::Hook_DispatchConCommand(ConCommandHandle cmdHandle, const CComman
 	if (!g_pEntitySystem)
 		return;
 
-	auto slot = ctx.GetPlayerSlot();
+	auto iCommandPlayerSlot = ctx.GetPlayerSlot();
 
-	bool isSay = !V_strcmp(args.Arg(0), "say");
-	bool isTeamSay = !V_strcmp(args.Arg(0), "say_team");
+	bool bSay = !V_strcmp(args.Arg(0), "say");
+	bool bTeamSay = !V_strcmp(args.Arg(0), "say_team");
 
-	if (slot != -1 && (isSay || isTeamSay))
+	if (iCommandPlayerSlot != -1 && (bSay || bTeamSay))
 	{
-		auto pController = CCSPlayerController::FromSlot(slot);
+		auto pController = CCSPlayerController::FromSlot(iCommandPlayerSlot);
 		bool bGagged = pController && pController->GetZEPlayer()->IsGagged();
 		bool bFlooding = pController && pController->GetZEPlayer()->IsFlooding();
-		bool bAdminChat = isTeamSay && *args[1] == '@';
-		bool bSilent = *args[1] == '/' || (isTeamSay && *args[1] == '@');
+		bool bAdminChat = bTeamSay && *args[1] == '@';
+		bool bSilent = *args[1] == '/' || bAdminChat;
 		bool bCommand = *args[1] == '!' || *args[1] == '/';
 
 		// Chat messages should generate events regardless
@@ -339,10 +347,13 @@ void CS2Fixes::Hook_DispatchConCommand(ConCommandHandle cmdHandle, const CComman
 			{
 				ZEPlayer *pPlayer = g_playerManager->GetPlayer(i);
 
-				if (!pPlayer || !pPlayer->IsAdminFlagSet(ADMFLAG_GENERIC))
+				if (!pPlayer)
 					continue;
 
-				ClientPrint(CCSPlayerController::FromSlot(i), HUD_PRINTTALK, " \4(管理员频道) %s:\1 %s", pController->GetPlayerName(), pszMessage);
+				if (pPlayer->IsAdminFlagSet(ADMFLAG_GENERIC))
+					ClientPrint(CCSPlayerController::FromSlot(i), HUD_PRINTTALK, " \4(管理员频道) %s:\1 %s", pController->GetPlayerName(), pszMessage);
+				else if (i == iCommandPlayerSlot.Get()) // Sender is not an admin
+					ClientPrint(pController, HUD_PRINTTALK, " \4(TO ADMINS) %s:\1 %s", pController->GetPlayerName(), pszMessage);
 			}
 		}
 
@@ -373,15 +384,10 @@ void CS2Fixes::Hook_DispatchConCommand(ConCommandHandle cmdHandle, const CComman
 void CS2Fixes::Hook_StartupServer(const GameSessionConfiguration_t& config, ISource2WorldSession*, const char*)
 {
 	g_pNetworkGameServer = g_pNetworkServerService->GetIGameServer();
-	g_pEntitySystem = interfaces::pGameResourceServiceServer->GetGameEntitySystem();
+	g_pEntitySystem = GetEntitySystem();
 	gpGlobals = g_pNetworkGameServer->GetGlobals();
 
-	// exec a map cfg
-	Message("Hook_StartupServer: Running map config for %s\n", gpGlobals->mapname);
-
-	char cmd[MAX_PATH];
-	V_snprintf(cmd, sizeof(cmd), "exec maps/%s", gpGlobals->mapname);
-	g_pEngineServer2->ServerCommand(cmd);
+	Message("Hook_StartupServer: %s\n", gpGlobals->mapname);
 
 	if(g_bHasTicked)
 		RemoveMapTimers();
@@ -406,7 +412,7 @@ void CS2Fixes::Hook_StartupServer(const GameSessionConfiguration_t& config, ISou
 	});
 
 	// Set amount of Extends left
-	g_ExtendsLeft = 1;
+	g_iExtendsLeft = 1;
 }
 
 void CS2Fixes::Hook_GameServerSteamAPIActivated()
@@ -434,7 +440,7 @@ void CS2Fixes::Hook_PostEvent(CSplitScreenSlot nSlot, bool bLocalOnly, int nClie
 
 	NetMessageInfo_t *info = pEvent->GetNetMessageInfo();
 
-	if (info->m_MessageId == GE_FireBulletsId)
+	if (g_bEnableStopSound && info->m_MessageId == GE_FireBulletsId)
 	{
 		if (g_playerManager->GetSilenceSoundMask())
 		{
@@ -583,7 +589,7 @@ void CS2Fixes::Hook_GameFrame( bool simulating, bool bFirstTick, bool bLastTick 
 void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount, CBitVec<16384> &unionTransmitEdicts,
 								const Entity2Networkable_t **pNetworkables, const uint16 *pEntityIndicies, int nEntities)
 {
-	if (!g_pEntitySystem)
+	if (!g_bEnableHide || !g_pEntitySystem)
 		return;
 
 	VPROF_ENTER_SCOPE(__FUNCTION__);
@@ -667,7 +673,7 @@ const char *CS2Fixes::GetLicense()
 
 const char *CS2Fixes::GetVersion()
 {
-	return "1.0.0.0";
+	return "1.0";
 }
 
 const char *CS2Fixes::GetDate()
@@ -682,7 +688,7 @@ const char *CS2Fixes::GetLogTag()
 
 const char *CS2Fixes::GetAuthor()
 {
-	return "xen & poggu";
+	return "xen, Poggu, and the Source2ZE community";
 }
 
 const char *CS2Fixes::GetDescription()
