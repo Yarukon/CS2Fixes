@@ -87,7 +87,9 @@ GAME_EVENT_F(round_prestart)
 		if (!pController || pController->m_iTeamNum() != CS_TEAM_T)
 			continue;
 
-		pController->SwitchTeam(CS_TEAM_CT);
+		// pController->SwitchTeam(CS_TEAM_CT);
+
+		pController->m_iTeamNum() = CS_TEAM_CT;
 	}
 }
 
