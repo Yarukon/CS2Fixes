@@ -23,7 +23,7 @@
 #include "adminsystem.h"
 
 #define COMMAND_PREFIX "c_"
-#define CHAT_PREFIX	" \7[僵尸逃跑]\1 "
+#define CHAT_PREFIX	" \7[EXG 社区]\1 "
 
 typedef void (*FnChatCommandCallback_t)(const CCommand &args, CCSPlayerController *player);
 
