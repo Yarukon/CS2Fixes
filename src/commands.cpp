@@ -32,6 +32,7 @@
 #include "adminsystem.h"
 #include "ctimer.h"
 #include "httpmanager.h"
+#include "discord.h"
 #undef snprintf
 #include "vendor/nlohmann/json.hpp"
 
@@ -411,7 +412,7 @@ CON_COMMAND_F(cs2f_hide_distance_max, "The max distance for hide", FCVAR_LINKED_
 		g_iMaxHideDistance = V_StringToInt32(args[1], 2000);
 }
 
-CON_COMMAND_CHAT(hide, "hides nearby teammates")
+CON_COMMAND_CHAT(hide, "hides nearby players")
 {
 	// Silently return so the command is completely hidden
 	if (!g_bEnableHide)
@@ -454,24 +455,9 @@ CON_COMMAND_CHAT(hide, "hides nearby teammates")
 	pZEPlayer->SetHideDistance(distance);
 
 	if (distance == 0)
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "队友隐藏已禁用.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Hiding players is now disabled.");
 	else
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "已启用队友隐藏, 隐藏范围为 %i 个单位.", distance);
-}
-
-CON_COMMAND_F(player_msg, "send message to player", FCVAR_SPONLY | FCVAR_LINKED_CONCOMMAND)
-{
-	int uid = atoi(args[1]);
-
-	CCSPlayerController* pTarget = CCSPlayerController::FromSlot(uid);
-
-	if (!pTarget)
-		return;
-
-	// skipping the id and space, it's dumb but w/e
-	const char* pMessage = args.ArgS() + V_strlen(args[1]) + 1;
-
-	ClientPrint(pTarget, HUD_PRINTTALK, pMessage);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Now hiding players within %i units.", distance);
 }
 
 #if _DEBUG
@@ -724,5 +710,16 @@ CON_COMMAND_CHAT(http, "test an HTTP request")
 		g_HTTPManager.GET(args[2], &HttpCallback);
 	else if (strcmp(args[1], "post") == 0)
 		g_HTTPManager.POST(args[2], args[3], &HttpCallback);
+}
+
+CON_COMMAND_CHAT(discordbot, "send a message to a discord webhook")
+{
+	if (args.ArgC() < 3)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !discord <bot> <message>");
+		return;
+	}
+
+	g_pDiscordBotManager->PostDiscordMessage(args[1], args[2]);
 }
 #endif // _DEBUG
