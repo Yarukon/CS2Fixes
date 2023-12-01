@@ -847,25 +847,17 @@ CON_COMMAND_CHAT_FLAGS(map, "change map", ADMFLAG_CHANGEMAP)
 {
 	if (args.ArgC() < 2)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"指令格式: !map <mapname>");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Usage: !map <mapname>");
 		return;
 	}
 
 	if (!g_pEngineServer2->IsMapValid(args[1]))
 	{
-<<<<<<< HEAD
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"无效地图.");
-		return;
-	}
-
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "更改地图至 %s...", szMapName);
-=======
 		// This might be a workshop map, and right now there's no easy way to get the list from a collection
 		// So blindly attempt the change for now, as the command does nothing if the map isn't found
 		std::string sCommand = "ds_workshop_changelevel " + std::string(args[1]);
 
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Attempting a map change to %s from the workshop collection...", args[1]);
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "Changing map to %s...", args[1]);
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "5秒后尝试更改地图至创意工坊地图 %s...", args[1]);
 
 		new CTimer(5.0f, false, [sCommand]()
 		{
@@ -880,8 +872,7 @@ CON_COMMAND_CHAT_FLAGS(map, "change map", ADMFLAG_CHANGEMAP)
 	char szMapName[MAX_PATH];
 	V_strncpy(szMapName, args[1], sizeof(szMapName));
 
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "Changing map to %s...", szMapName);
->>>>>>> upstream/main
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "更改地图至 %s...", szMapName);
 
 	new CTimer(5.0f, false, [szMapName]()
 	{
