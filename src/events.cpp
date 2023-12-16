@@ -265,9 +265,9 @@ GAME_EVENT_F(round_end)
 		CCSPlayerController* pController = CCSPlayerController::FromSlot(pPlayer->GetPlayerSlot());
 
 		if (i < 5)
-			ClientPrintAll(HUD_PRINTTALK, " %c%i. %s \x01- \x07%i 伤害 \x05(%i HITS & %i KILLS)", colorMap[MIN(i, 3)], i + 1, pController->GetPlayerName(), pPlayer->GetTotalDamage(), pPlayer->GetTotalHits(), pPlayer->GetTotalKills());
+			ClientPrintAll(HUD_PRINTTALK, " %c%i. %s \x01- \x07%i 伤害 \x05(%i 命中 & %i 击杀)", colorMap[MIN(i, 3)], i + 1, pController->GetPlayerName(), pPlayer->GetTotalDamage(), pPlayer->GetTotalHits(), pPlayer->GetTotalKills());
 		else
-			ClientPrint(pController, HUD_PRINTTALK, " \x0C%i. %s \x01- \x07%i 伤害 \x05(%i HITS & %i KILLS)", i + 1, pController->GetPlayerName(), pPlayer->GetTotalDamage(), pPlayer->GetTotalHits(), pPlayer->GetTotalKills());
+			ClientPrint(pController, HUD_PRINTTALK, " \x0C%i. %s \x01- \x07%i 伤害 \x05(%i 命中 & %i 击杀)", i + 1, pController->GetPlayerName(), pPlayer->GetTotalDamage(), pPlayer->GetTotalHits(), pPlayer->GetTotalKills());
 		
 		pPlayer->SetTotalDamage(0);
 		pPlayer->SetTotalHits(0);
