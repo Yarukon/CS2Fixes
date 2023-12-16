@@ -190,7 +190,7 @@ CON_COMMAND_CHAT_FLAGS(mute, "mutes a player", ADMFLAG_CHAT)
 
 	if (iDuration == 0 && nType >= ETargetType::ALL)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你只能永久禁言单个目标.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你只能永久禁麦单个目标.");
 		return;
 	}
 
@@ -220,14 +220,14 @@ CON_COMMAND_CHAT_FLAGS(mute, "mutes a player", ADMFLAG_CHAT)
 		g_pAdminSystem->SaveInfractions();
 
 		if (iDuration > 0)
-			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "禁言了", szAction);
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "禁麦了", szAction);
 		else
-			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "永久禁言了");
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "永久禁麦了");
 	}
 
 	g_pAdminSystem->SaveInfractions();
 
-	PrintMultiAdminAction(nType, pszCommandPlayerName, "禁言了", szAction);
+	PrintMultiAdminAction(nType, pszCommandPlayerName, "禁麦了", szAction);
 }
 
 CON_COMMAND_CHAT_FLAGS(unmute, "unmutes a player", ADMFLAG_CHAT)
@@ -266,17 +266,17 @@ CON_COMMAND_CHAT_FLAGS(unmute, "unmutes a player", ADMFLAG_CHAT)
 
 		if (!g_pAdminSystem->FindAndRemoveInfraction(pTargetPlayer, CInfractionBase::Mute) && nType < ETargetType::ALL)
 		{
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s 未被禁言.", pTarget->GetPlayerName());
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s 未被禁麦.", pTarget->GetPlayerName());
 			continue;
 		}
 
 		if (nType < ETargetType::ALL)
-			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "取消禁言了");
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "取消禁麦了");
 	}
 
 	g_pAdminSystem->SaveInfractions();
 
-	PrintMultiAdminAction(nType, pszCommandPlayerName, "取消禁言了");
+	PrintMultiAdminAction(nType, pszCommandPlayerName, "取消禁麦了");
 }
 
 CON_COMMAND_CHAT_FLAGS(gag, "gag a player", ADMFLAG_CHAT)
@@ -309,7 +309,7 @@ CON_COMMAND_CHAT_FLAGS(gag, "gag a player", ADMFLAG_CHAT)
 
 	if (iDuration == 0 && nType >= ETargetType::ALL)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你只能静音单个玩家.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你只能禁言单个玩家.");
 		return;
 	}
 
@@ -341,14 +341,14 @@ CON_COMMAND_CHAT_FLAGS(gag, "gag a player", ADMFLAG_CHAT)
 			continue;
 
 		if (iDuration > 0)
-			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "静音了", szAction);
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "禁言了", szAction);
 		else
-			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "永久静音了");
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "永久禁言了");
 	}
 
 	g_pAdminSystem->SaveInfractions();
 
-	PrintMultiAdminAction(nType, pszCommandPlayerName, "静音了", szAction);
+	PrintMultiAdminAction(nType, pszCommandPlayerName, "禁言了", szAction);
 }
 
 CON_COMMAND_CHAT_FLAGS(ungag, "ungags a player", ADMFLAG_CHAT)
@@ -387,17 +387,17 @@ CON_COMMAND_CHAT_FLAGS(ungag, "ungags a player", ADMFLAG_CHAT)
 
 		if (!g_pAdminSystem->FindAndRemoveInfraction(pTargetPlayer, CInfractionBase::Gag) && nType < ETargetType::ALL)
 		{
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s 未被禁麦.", pTarget->GetPlayerName());
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s 未被禁言.", pTarget->GetPlayerName());
 			continue;
 		}
 
 		if (nType < ETargetType::ALL)
-			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "取消静音了");
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "取消禁言了");
 	}
 
 	g_pAdminSystem->SaveInfractions();
 
-	PrintMultiAdminAction(nType, pszCommandPlayerName, "取消静音了");
+	PrintMultiAdminAction(nType, pszCommandPlayerName, "取消禁言了");
 }
 
 CON_COMMAND_CHAT_FLAGS(kick, "kick a player", ADMFLAG_KICK)

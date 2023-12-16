@@ -131,7 +131,7 @@ void ParseWeaponCommand(const CCommand& args, CCSPlayerController* player)
 
 	if (pPawn->m_iHealth() <= 0 || pPawn->m_iTeamNum != CS_TEAM_CT)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You can only buy weapons when human.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你只能在活着并处于人类队伍时才能购买武器.");
 		return;
 	}
 
@@ -140,7 +140,7 @@ void ParseWeaponCommand(const CCommand& args, CCSPlayerController* player)
 
 	if (money < weaponEntry.iPrice)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You can't afford %s! It costs $%i, you only have $%i", weaponEntry.szWeaponName, weaponEntry.iPrice, money);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你无法购买 %s! 该物品需花费 $%i, 你只有 $%i", weaponEntry.szWeaponName, weaponEntry.iPrice, money);
 		return;
 	}
 
@@ -155,7 +155,7 @@ void ParseWeaponCommand(const CCommand& args, CCSPlayerController* player)
 			{
 				if (purchase.m_nCount >= weaponEntry.maxAmount)
 				{
-					ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You cannot buy any more %s (Max %i)", weaponEntry.szWeaponName, weaponEntry.maxAmount);
+					ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你不能再购买更多的 %s 了(最大 %i 个)", weaponEntry.szWeaponName, weaponEntry.maxAmount);
 					return;
 				}
 				purchase.m_nCount += 1;
@@ -203,7 +203,7 @@ void ParseWeaponCommand(const CCommand& args, CCSPlayerController* player)
 
 	player->m_pInGameMoneyServices->m_iAccount = money - weaponEntry.iPrice;
 	pItemServices->GiveNamedItem(weaponEntry.szClassName);
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You have purchased %s for $%i", weaponEntry.szWeaponName, weaponEntry.iPrice);
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你购买了 %s 花费 $%i", weaponEntry.szWeaponName, weaponEntry.iPrice);
 }
 
 void WeaponCommandCallback(const CCommandContext& context, const CCommand& args)
@@ -531,9 +531,9 @@ CON_COMMAND_CHAT(hide, "hides nearby players")
 	pZEPlayer->SetHideDistance(distance);
 
 	if (distance == 0)
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Hiding players is now disabled.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "玩家隐藏已禁用.");
 	else
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Now hiding players within %i units.", distance);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "玩家隐藏已启用 范围 %i 个单位.", distance);
 }
 
 #if _DEBUG
