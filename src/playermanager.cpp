@@ -128,13 +128,14 @@ void CPlayerManager::OnBotConnected(CPlayerSlot slot)
 	m_vecPlayers[slot.Get()] = new ZEPlayer(slot, true);
 }
 
-bool CPlayerManager::OnClientConnected(CPlayerSlot slot)
+bool CPlayerManager::OnClientConnected(CPlayerSlot slot, uint64 xuid)
 {
 	Assert(m_vecPlayers[slot.Get()] == nullptr);
 
 	Message("%d connected\n", slot.Get());
 
 	ZEPlayer *pPlayer = new ZEPlayer(slot);
+	pPlayer->SetUnauthenticatedSteamId(new CSteamID(xuid));
 
 	if (!g_pAdminSystem->ApplyInfractions(pPlayer))
 	{
@@ -177,7 +178,7 @@ void CPlayerManager::OnLateLoad()
 		if (!pController || !pController->IsController() || !pController->IsConnected())
 			continue;
 
-		OnClientConnected(i);
+		OnClientConnected(i, pController->m_steamID());
 	}
 }
 
@@ -194,8 +195,8 @@ void CPlayerManager::TryAuthenticate()
 		if (g_pEngineServer2->IsClientFullyAuthenticated(i))
 		{
 			m_vecPlayers[i]->SetAuthenticated();
-			m_vecPlayers[i]->SetSteamId(g_pEngineServer2->GetClientSteamID(i));
-			Message("%lli authenticated %d\n", m_vecPlayers[i]->GetSteamId()->ConvertToUint64(), i);
+			m_vecPlayers[i]->SetSteamId(m_vecPlayers[i]->GetUnauthenticatedSteamId());
+			Message("%lli authenticated %d\n", m_vecPlayers[i]->GetSteamId64(), i);
 			m_vecPlayers[i]->OnAuthenticated();
 		}
 	}
@@ -269,7 +270,8 @@ void CPlayerManager::CheckHideDistances()
 			{
 				auto pTargetPawn = pTargetController->GetPawn();
 
-				if (pTargetPawn && pTargetPawn->IsAlive() && (!g_bHideTeammatesOnly || pTargetController->m_iTeamNum == team))
+				// TODO: Unhide dead pawns if/when valve fixes the crash
+				if (pTargetPawn && (!g_bHideTeammatesOnly || pTargetController->m_iTeamNum == team))
 				{
 					player->SetTransmit(j, pTargetPawn->GetAbsOrigin().DistToSqr(vecPosition) <= hideDistance * hideDistance);
 				}

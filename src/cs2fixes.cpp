@@ -528,7 +528,7 @@ bool CS2Fixes::Hook_ClientConnect( CPlayerSlot slot, const char *pszName, uint64
 {
 	Message( "Hook_ClientConnect(%d, \"%s\", %lli, \"%s\", %d, \"%s\")\n", slot, pszName, xuid, pszNetworkID, unk1, pRejectReason->ToGrowable()->Get() );
 		
-	if (!g_playerManager->OnClientConnected(slot))
+	if (!g_playerManager->OnClientConnected(slot, xuid))
 		RETURN_META_VALUE(MRES_SUPERCEDE, false);
 
 	RETURN_META_VALUE(MRES_IGNORED, true);
@@ -614,12 +614,7 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 
 		CCSPlayerController* pSelfController = CCSPlayerController::FromSlot(iPlayerSlot);
 
-		if (!pSelfController || !pSelfController->IsConnected() || !pSelfController->m_bPawnIsAlive)
-			continue;
-
-		auto pSelfPawn = pSelfController->GetPawn();
-
-		if (!pSelfPawn || !pSelfPawn->IsAlive())
+		if (!pSelfController || !pSelfController->IsConnected())
 			continue;
 
 		auto pSelfZEPlayer = g_playerManager->GetPlayer(iPlayerSlot);
@@ -627,14 +622,12 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 		if (!pSelfZEPlayer)
 			continue;
 
-		for (int i = 0; i < gpGlobals->maxClients; i++)
+		for (int j = 0; j < gpGlobals->maxClients; j++)
 		{
-			if (!pSelfZEPlayer->ShouldBlockTransmit(i))
-				continue;
+			CCSPlayerController* pController = CCSPlayerController::FromSlot(j);
 
-			CCSPlayerController* pController = CCSPlayerController::FromSlot(i);
-
-			if (!pController)
+			// Always transmit to themselves
+			if (!pController || j == iPlayerSlot)
 				continue;
 
 			auto pPawn = pController->GetPawn();
@@ -642,7 +635,10 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 			if (!pPawn)
 				continue;
 
-			pInfo->m_pTransmitEntity->Clear(pPawn->entindex());
+			// Hide players marked as hidden or ANY dead player, it seems that a ragdoll of a previously hidden player can crash?
+			// TODO: Revert this if/when valve fixes the issue?
+			if (pSelfZEPlayer->ShouldBlockTransmit(j) || pPawn->m_lifeState != LIFE_ALIVE)
+				pInfo->m_pTransmitEntity->Clear(pPawn->entindex());
 		}
 	}
 
