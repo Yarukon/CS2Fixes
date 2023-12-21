@@ -60,7 +60,7 @@ WeaponMapEntry_t WeaponMap[] = {
 	{{"m4a4"},							"weapon_m4a1",			"M4A4",				3100, 16, GEAR_SLOT_RIFLE},
 	{{"m4a1-s", "m4a1"},				"weapon_m4a1_silencer",	"M4A1-S",			2900, 60, GEAR_SLOT_RIFLE},
 	{{"sg553"},							"weapon_sg556",			"SG 553",			3000, 39, GEAR_SLOT_RIFLE},
-	{{"awp"},							"weapon_awp",			"AWP",				4750, 9, GEAR_SLOT_RIFLE},
+	{{"awp"},							"weapon_awp",			"AWP",				10000, 9, GEAR_SLOT_RIFLE},
 	{{"g3sg1"},							"weapon_g3sg1",			"G3SG1",			5000, 11, GEAR_SLOT_RIFLE},
 	{{"scar20", "scar"},				"weapon_scar20",		"SCAR-20",			5000, 38, GEAR_SLOT_RIFLE},
 	{{"ssg08", "ssg"},					"weapon_ssg08",			"SSG 08",			1700, 40, GEAR_SLOT_RIFLE},
@@ -68,8 +68,8 @@ WeaponMapEntry_t WeaponMap[] = {
 	{{"nova"},							"weapon_nova",			"Nova",				1050, 35, GEAR_SLOT_RIFLE},
 	{{"sawedoff"},						"weapon_sawedoff",		"Sawed-Off",		1100, 29, GEAR_SLOT_RIFLE},
 	{{"xm1014", "xm"},					"weapon_xm1014",		"XM1014",			2000, 25, GEAR_SLOT_RIFLE},
-	{{"m249"},							"weapon_m249",			"M249",				5200, 14, GEAR_SLOT_RIFLE},
-	{{"negev"},							"weapon_negev",			"Negev",			1700, 28, GEAR_SLOT_RIFLE},
+	{{"m249"},							"weapon_m249",			"M249",				10000, 14, GEAR_SLOT_RIFLE},
+	{{"negev"},							"weapon_negev",			"Negev",			15000, 28, GEAR_SLOT_RIFLE},
 	{{"deagle"},						"weapon_deagle",		"Desert Eagle",		700, 1, GEAR_SLOT_PISTOL},
 	{{"dualberettas", "elite"},			"weapon_elite",			"Dual Berettas",	300, 2, GEAR_SLOT_PISTOL},
 	{{"fiveseven"},						"weapon_fiveseven",		"Five-SeveN",		500, 3, GEAR_SLOT_PISTOL},
@@ -80,8 +80,8 @@ WeaponMapEntry_t WeaponMap[] = {
 	{{"usp-s", "usp"},					"weapon_usp_silencer",	"USP-S",			200, 61, GEAR_SLOT_PISTOL},
 	{{"cz75-auto", "cs75a", "cz"},		"weapon_cz75a",			"CZ75-Auto",		500, 63, GEAR_SLOT_PISTOL},
 	{{"r8revolver", "revolver", "r8"},	"weapon_revolver",		"R8 Revolver",		600, 64, GEAR_SLOT_PISTOL},
-	{{"hegrenade", "he"},				"weapon_hegrenade",		"HE Grenade",		300, 44, GEAR_SLOT_GRENADES, 1},
-	{{"molotov"},						"weapon_molotov",		"Molotov",			400, 46, GEAR_SLOT_GRENADES, 1},
+	{{"hegrenade", "he"},				"weapon_hegrenade",		"HE Grenade",		2000, 44, GEAR_SLOT_GRENADES, 1},
+	{{"molotov", "fire"},				"weapon_molotov",		"Molotov",			3000, 46, GEAR_SLOT_GRENADES, 1},
 	{{"kevlar"},						"item_kevlar",			"Kevlar Vest",		650, 50, GEAR_SLOT_UTILITY},
 };
 
@@ -155,7 +155,7 @@ void ParseWeaponCommand(const CCommand& args, CCSPlayerController* player)
 			{
 				if (purchase.m_nCount >= weaponEntry.maxAmount)
 				{
-					ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你不能再购买更多的 %s 了(最大 %i 个)", weaponEntry.szWeaponName, weaponEntry.maxAmount);
+					ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你不能再购买更多的 %s 了(最多 %i 个)", weaponEntry.szWeaponName, weaponEntry.maxAmount);
 					return;
 				}
 				purchase.m_nCount += 1;
