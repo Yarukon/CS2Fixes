@@ -370,6 +370,10 @@ void CS2Fixes::Hook_DispatchConCommand(ConCommandHandle cmdHandle, const CComman
 			// Do the same trimming as with admin chat
 			char *pszMessage = (char *)(args.ArgS() + 2);
 
+			// Fix bind KEY "say XXX" not working
+			if (strncmp(args.ArgS(), "\"", 1) < 0)
+				pszMessage = (char*)(args.ArgS() + 1);
+
 			// Host_Say at some point removes the trailing " for whatever reason, so we only remove if it was never called
 			if (bSilent)
 				pszMessage[V_strlen(pszMessage) - 1] = 0;
