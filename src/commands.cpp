@@ -80,8 +80,8 @@ WeaponMapEntry_t WeaponMap[] = {
 	{{"usp-s", "usp"},					"weapon_usp_silencer",	"USP-S",			200, 61, GEAR_SLOT_PISTOL},
 	{{"cz75-auto", "cs75a", "cz"},		"weapon_cz75a",			"CZ75-Auto",		500, 63, GEAR_SLOT_PISTOL},
 	{{"r8revolver", "revolver", "r8"},	"weapon_revolver",		"R8 Revolver",		600, 64, GEAR_SLOT_PISTOL},
-	{{"hegrenade", "he"},				"weapon_hegrenade",		"HE Grenade",		2000, 44, GEAR_SLOT_GRENADES, 1},
-	{{"molotov", "fire"},				"weapon_molotov",		"Molotov",			3000, 46, GEAR_SLOT_GRENADES, 1},
+	{{"hegrenade", "he"},				"weapon_hegrenade",		"HE Grenade",		2000, 44, GEAR_SLOT_GRENADES, 10},
+	{{"molotov", "fire"},				"weapon_molotov",		"Molotov",			3000, 46, GEAR_SLOT_GRENADES, 10},
 	{{"kevlar"},						"item_kevlar",			"Kevlar Vest",		650, 50, GEAR_SLOT_UTILITY},
 };
 
