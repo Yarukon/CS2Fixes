@@ -78,10 +78,10 @@ CON_COMMAND_CHAT_FLAGS(setnextmap, "Force next map", ADMFLAG_CHANGEMAP)
 	bool bIsClearingForceNextMap = args.ArgC() < 2;
 	int iResponse = g_pMapVoteSystem->ForceNextMap(bIsClearingForceNextMap ? "" : args[1]);
 	if (bIsClearingForceNextMap) {
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You reset the forced next map.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你取消了下一张地图的强制更换.");
 	}
 	else {
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You have forced the next map to %s.", g_pMapVoteSystem->GetMapName(iResponse));
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你强制下一张地图更换为 %s.", g_pMapVoteSystem->GetMapName(iResponse));
 	}
 }
 
@@ -91,29 +91,29 @@ CON_COMMAND_CHAT_FLAGS(nominate, "Nominate a map", ADMFLAG_NONE)
 	int iResponse = g_pMapVoteSystem->AddMapNomination(player->GetPlayerSlot(), bIsClearingNomination ? "" : args[1]);
 	switch (iResponse) {
 		case NominationReturnCodes::VOTE_STARTED:
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Could not nominate as the vote has already started.");
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "投票已经开始, 无法再进行提名.");
 			break;
 		case NominationReturnCodes::INVALID_INPUT:
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Could not nominate as the input is invalid. Usage: !nominate <map substring>");
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "无法提名, 输入有误. 使用方法: !nominate <map substring>");
 			break;
 		case NominationReturnCodes::MAP_NOT_FOUND:
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Could not nominate as no map matched '%s'.", args[1]);
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "无法提名, 不存在名为 '%s' 的地图.", args[1]);
 			break;
 		case NominationReturnCodes::INVALID_MAP:
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "The map matching '%s' is not available for nomination.", args[1]);
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "名为 '%s' 的地图无法进行提名.", args[1]);
 			break;
 		case NominationReturnCodes::NOMINATION_DISABLED:
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Nomination is currently disabled.");
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "提名系统已被禁用.");
 			break;
 		default:
 			if (bIsClearingNomination) {
-				ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Your nomination was reset.");
+				ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你的提名已被重置.");
 			}
 			else {
 				const char* sPlayerName = player->GetPlayerName();
 				const char* sMapName = g_pMapVoteSystem->GetMapName(iResponse);
 				int iNumNominations = g_pMapVoteSystem->GetTotalNominations(iResponse);
-				ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX " \x06%s \x01was nominated by %s. It now has %d nominations.", sMapName, sPlayerName, iNumNominations);
+				ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX " \x06%s \x01被提名, 提名玩家为 %s. 目前提名列表中有 %d 个地图.", sMapName, sPlayerName, iNumNominations);
 			}
 	}
 }
@@ -125,8 +125,8 @@ static int __cdecl OrderStringsLexicographically(const char* const* a, const cha
 
 CON_COMMAND_CHAT(maplist, "List the maps in the server")
 {
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "The list of all maps will be shown in console.");
-	ClientPrint(player, HUD_PRINTCONSOLE, "The list of all maps is:");
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "地图列表将会打印在控制台中.");
+	ClientPrint(player, HUD_PRINTCONSOLE, "服务器目前所有可用地图:");
 	CUtlVector<const char*> vecMapNames;
 	for (int i = 0; i < g_pMapVoteSystem->GetMapListSize(); i++) {
 		vecMapNames.AddToTail(g_pMapVoteSystem->GetMapName(i));
@@ -139,25 +139,25 @@ CON_COMMAND_CHAT(maplist, "List the maps in the server")
 
 CON_COMMAND_CHAT(nomlist, "List the list of nominations")
 {
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Current nominations:");
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "当前提名列表:");
 	for (int i = 0; i < g_pMapVoteSystem->GetMapListSize(); i++) {
 		if (!g_pMapVoteSystem->IsMapIndexEnabled(i)) continue;
 		int iNumNominations = g_pMapVoteSystem->GetTotalNominations(i);
 		if (iNumNominations == 0) continue;
 		const char* sMapName = g_pMapVoteSystem->GetMapName(i);
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "- %s (%d times)\n", sMapName, iNumNominations);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "- %s (%d 次)\n", sMapName, iNumNominations);
 	}
 }
 
 CON_COMMAND_CHAT(mapcooldowns, "List the maps currently in cooldown")
 {
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "The list of maps in cooldown will be shown in console.");
-	ClientPrint(player, HUD_PRINTCONSOLE, "The list of maps in cooldown is:");
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "地图冷却将会打印在控制台中.");
+	ClientPrint(player, HUD_PRINTCONSOLE, "服务器目前的地图冷却:");
 	int iMapsInCooldown = g_pMapVoteSystem->GetMapsInCooldown();
 	for (int i = iMapsInCooldown - 1; i >= 0; i--) {
 		int iMapIndex = g_pMapVoteSystem->GetCooldownMap(i);
 		const char* sMapName = g_pMapVoteSystem->GetMapName(iMapIndex);
-		ClientPrint(player, HUD_PRINTCONSOLE, "- %s (%d maps ago)", sMapName, iMapsInCooldown - i);
+		ClientPrint(player, HUD_PRINTCONSOLE, "- %s (%d 个地图以前)", sMapName, iMapsInCooldown - i);
 	}
 }
 
@@ -295,18 +295,18 @@ void CMapVoteSystem::FinishVote()
 	g_pGameRules->m_nEndMatchMapVoteWinner = iNextMapVoteIndex;
 	int iWinningMap = g_pGameRules->m_nEndMatchMapGroupVoteOptions[iNextMapVoteIndex];
 	if (bIsNextMapVoted) {
-		ClientPrintAll(HUD_PRINTTALK, "The vote has ended. \x06%s\x01 will be the next map!\n", GetMapName(iWinningMap));
+		ClientPrintAll(HUD_PRINTTALK, "投票已结束. \x06%s\x01 将会是下一张地图!\n", GetMapName(iWinningMap));
 	}
 	else if (bIsNextMapForced) {
-		ClientPrintAll(HUD_PRINTTALK, "The vote was overriden. \x06%s\x01 will be the next map!\n", GetMapName(iWinningMap));
+		ClientPrintAll(HUD_PRINTTALK, "投票已被覆写. \x06%s\x01 将会是下一张地图!\n", GetMapName(iWinningMap));
 	}
 	else {
-		ClientPrintAll(HUD_PRINTTALK, "No map was chosen. \x06%s\x01 will be the next map!\n", GetMapName(iWinningMap));
+		ClientPrintAll(HUD_PRINTTALK, "没有地图被投票. \x06%s\x01 将会是下一张地图!\n", GetMapName(iWinningMap));
 	}
 
 	// Print vote result information: how many votes did each map get?
 	int arrMapVotes[10] = { 0 };
-	ClientPrintAll(HUD_PRINTCONSOLE, "Map vote result --- total votes per map:\n");
+	ClientPrintAll(HUD_PRINTCONSOLE, "地图投票结果:\n");
 	for (int i = 0; i < gpGlobals->maxClients; i++) {
 		auto pController = CCSPlayerController::FromSlot(i);
 		int iPlayerVotedIndex = m_arrPlayerVotes[i];
@@ -316,8 +316,8 @@ void CMapVoteSystem::FinishVote()
 	}
 	for (int i = 0; i < 10; i++) {
 		int iMapIndex = g_pGameRules->m_nEndMatchMapGroupVoteOptions[i];
-		const char* sIsWinner = (i == iNextMapVoteIndex) ? "(WINNER)" : "";
-		ClientPrintAll(HUD_PRINTCONSOLE, "- %s got %d votes\n", GetMapName(iMapIndex), arrMapVotes[i]);
+		const char* sIsWinner = (i == iNextMapVoteIndex) ? "(胜出)" : "";
+		ClientPrintAll(HUD_PRINTCONSOLE, "- %s <-> %d 票\n", GetMapName(iMapIndex), arrMapVotes[i]);
 	}
 
 	// Store the winning map in the vector of played maps and pop until desired cooldown
@@ -477,7 +477,7 @@ int CMapVoteSystem::AddMapNomination(CPlayerSlot iPlayerSlot, const char* sMapSu
 int CMapVoteSystem::ForceNextMap(const char* sMapSubstring)
 {
 	if (sMapSubstring[0] == '\0') {
-		ClientPrintAll(HUD_PRINTTALK, " \x06%s \x01 is no longer the forced next map.\n", m_vecMapList[m_iForcedNextMapIndex].GetName());
+		ClientPrintAll(HUD_PRINTTALK, " \x06%s \x01 已取消强制设置为下一张地图.\n", m_vecMapList[m_iForcedNextMapIndex].GetName());
 		m_iForcedNextMapIndex = -1;
 		return 0;
 	}
@@ -487,7 +487,7 @@ int CMapVoteSystem::ForceNextMap(const char* sMapSubstring)
 
 	// When found, print the map and store the forced map
 	m_iForcedNextMapIndex = iFoundIndex;
-	ClientPrintAll(HUD_PRINTTALK, " \x06%s \x01 has been forced as next map.\n", m_vecMapList[iFoundIndex].GetName());
+	ClientPrintAll(HUD_PRINTTALK, " \x06%s \x01 被强制设置为下一张地图.\n", m_vecMapList[iFoundIndex].GetName());
 	return iFoundIndex;
 }
 

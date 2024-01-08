@@ -217,7 +217,7 @@ CON_COMMAND_CHAT(rtv, "Vote to end the current map sooner.")
 
 		if (g_bRTVEndRound)
 		{
-			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "RTV succeeded! Ending the map now...");
+			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "RTV 成功! 正在结束当前地图...");
 
 			new CTimer(3.0f, false, []()
 			{
@@ -237,7 +237,7 @@ CON_COMMAND_CHAT(rtv, "Vote to end the current map sooner.")
 		}
 		else
 		{
-			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "RTV succeeded! This is the last round of the map!");
+			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "RTV 成功! 这是当前地图的最后一回合!");
 		}
 
 		for (int i = 0; i < gpGlobals->maxClients; i++)
