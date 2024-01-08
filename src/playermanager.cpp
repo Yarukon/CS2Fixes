@@ -21,6 +21,7 @@
 #include "utlstring.h"
 #include "playermanager.h"
 #include "adminsystem.h"
+#include "map_votes.h"
 #include "entity/ccsplayercontroller.h"
 #include "ctime"
 
@@ -128,7 +129,7 @@ void CPlayerManager::OnBotConnected(CPlayerSlot slot)
 	m_vecPlayers[slot.Get()] = new ZEPlayer(slot, true);
 }
 
-bool CPlayerManager::OnClientConnected(CPlayerSlot slot, uint64 xuid)
+bool CPlayerManager::OnClientConnected(CPlayerSlot slot, uint64 xuid, const char* pszNetworkID)
 {
 	Assert(m_vecPlayers[slot.Get()] == nullptr);
 
@@ -136,6 +137,20 @@ bool CPlayerManager::OnClientConnected(CPlayerSlot slot, uint64 xuid)
 
 	ZEPlayer *pPlayer = new ZEPlayer(slot);
 	pPlayer->SetUnauthenticatedSteamId(new CSteamID(xuid));
+
+	std::string ip(pszNetworkID);
+
+	// Remove port
+	for (int i = 0; i < ip.length(); i++)
+	{
+		if (ip[i] == ':')
+		{
+			ip = ip.substr(0, i);
+			break;
+		}
+	}
+
+	pPlayer->SetIpAddress(ip);
 
 	if (!g_pAdminSystem->ApplyInfractions(pPlayer))
 	{
@@ -156,6 +171,8 @@ bool CPlayerManager::OnClientConnected(CPlayerSlot slot, uint64 xuid)
 	// Set hide distance to 100 by default
 	pPlayer->SetHideDistance(100);
 
+	g_pMapVoteSystem->ClearPlayerInfo(slot.Get());
+
 	return true;
 }
 
@@ -167,6 +184,8 @@ void CPlayerManager::OnClientDisconnect(CPlayerSlot slot)
 	m_vecPlayers[slot.Get()] = nullptr;
 
 	ResetPlayerFlags(slot.Get());
+
+	g_pMapVoteSystem->ClearPlayerInfo(slot.Get());
 }
 
 void CPlayerManager::OnLateLoad()
@@ -178,7 +197,7 @@ void CPlayerManager::OnLateLoad()
 		if (!pController || !pController->IsController() || !pController->IsConnected())
 			continue;
 
-		OnClientConnected(i, pController->m_steamID());
+		OnClientConnected(i, pController->m_steamID(), "0.0.0.0:0");
 	}
 }
 
@@ -311,6 +330,11 @@ ETargetType CPlayerManager::TargetPlayerString(int iCommandClient, const char* t
 			if (m_vecPlayers[i] == nullptr)
 				continue;
 
+			CCSPlayerController* player = CCSPlayerController::FromSlot(i);
+
+			if (!player || !player->IsController() || !player->IsConnected())
+				continue;
+
 			clients[iNumClients++] = i;
 		}
 	}
@@ -323,7 +347,7 @@ ETargetType CPlayerManager::TargetPlayerString(int iCommandClient, const char* t
 
 			CCSPlayerController* player = CCSPlayerController::FromSlot(i);
 
-			if (!player || !player->IsController())
+			if (!player || !player->IsController() || !player->IsConnected())
 				continue;
 
 			if (player->m_iTeamNum() != (targetType == ETargetType::T ? CS_TEAM_T : CS_TEAM_CT))
@@ -348,7 +372,7 @@ ETargetType CPlayerManager::TargetPlayerString(int iCommandClient, const char* t
 
 			CCSPlayerController* player = CCSPlayerController::FromSlot(slot);
 
-			if (!player)
+			if (!player || !player->IsController() || !player->IsConnected())
 				continue;
 
 			if (targetType >= ETargetType::RANDOM_T && (player->m_iTeamNum() != (targetType == ETargetType::RANDOM_T ? CS_TEAM_T : CS_TEAM_CT)))
@@ -364,7 +388,9 @@ ETargetType CPlayerManager::TargetPlayerString(int iCommandClient, const char* t
 		if (userid != -1)
 		{
 			targetType = ETargetType::PLAYER;
-			clients[iNumClients++] = GetSlotFromUserId(userid).Get();
+			CCSPlayerController* player = CCSPlayerController::FromSlot(GetSlotFromUserId(userid).Get());
+			if(player && player->IsController() && player->IsConnected())
+				clients[iNumClients++] = GetSlotFromUserId(userid).Get();
 		}
 	}
 	else
@@ -376,7 +402,7 @@ ETargetType CPlayerManager::TargetPlayerString(int iCommandClient, const char* t
 
 			CCSPlayerController* player = CCSPlayerController::FromSlot(i);
 
-			if (!player || !player->IsController())
+			if (!player || !player->IsController() || !player->IsConnected())
 				continue;
 
 			if (V_stristr(player->GetPlayerName(), target))
