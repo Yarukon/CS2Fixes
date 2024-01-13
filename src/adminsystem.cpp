@@ -968,6 +968,39 @@ CON_COMMAND_CHAT_FLAGS(extend, "extend current map (negative value reduces map d
 		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "延长了 %i 分钟的地图时长.", pszCommandPlayerName, iExtendTime);
 }
 
+CON_COMMAND_CHAT_FLAGS(kickreason, "kick player with a reason", ADMFLAG_KICK)
+{
+	if (args.ArgC() < 3)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !kickreason <name> <reason>");
+		return;
+	}
+
+	int iCommandPlayer = player ? player->GetPlayerSlot() : -1;
+	int iNumClients = 0;
+	int pSlots[MAXPLAYERS];
+
+	ETargetType nType = g_playerManager->TargetPlayerString(iCommandPlayer, args[1], iNumClients, pSlots);
+
+	if (!iNumClients)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Target not found.");
+		return;
+	}
+
+	int r = V_StringToInt32(args[2], -1);
+
+	ENetworkDisconnectionReason reason = (ENetworkDisconnectionReason)r;
+
+	for (int i = 0; i < iNumClients; i++)
+	{
+		CCSPlayerController* pTarget = CCSPlayerController::FromSlot(pSlots[i]);
+
+		if (!pTarget) { continue; }
+		g_pEngineServer2->DisconnectClient(pTarget->GetPlayerSlot(), reason);
+	}
+}
+
 bool CAdminSystem::LoadAdmins()
 {
 	m_vecAdmins.Purge();
