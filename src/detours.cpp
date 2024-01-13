@@ -208,12 +208,11 @@ const char* snd1 = "Flesh.BulletImpact";
 const char* snd2 = "Player.DamageHeadShot.Onlooker";
 const char* snd3 = "Player.DamageHeadShot.Victim";
 const char* snd4 = "Player.DamageHeadShotArmor.Victim";
-const char* snd5 = "BaseGrenade.Explode";
 void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase *pSoundEmitterSystem, CEntityIndex *a2, IRecipientFilter &filter, uint32 a4, EmitSound_t* a5)
 {
 	//ConMsg("Detour_CSoundEmitterSystem_EmitSound\n");
 	const char* sndName = a5->m_pSoundName;
-	if (strcmp(sndName, snd1) == 0 || strcmp(sndName, snd2) == 0 || strcmp(sndName, snd3) == 0 || strcmp(sndName, snd4) == 0 || strcmp(sndName, snd5) == 0)
+	if (strcmp(sndName, snd1) == 0 || strcmp(sndName, snd2) == 0 || strcmp(sndName, snd3) == 0 || strcmp(sndName, snd4) == 0)
 		return;
 
 	CSoundEmitterSystem_EmitSound(pSoundEmitterSystem, a2, filter, a4, a5);
