@@ -204,9 +204,12 @@ void FASTCALL Detour_CCSWeaponBase_Spawn(CBaseEntity *pThis, void *a2)
 	CCSWeaponBase_Spawn(pThis, a2);
 }
 
-void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase *pSoundEmitterSystem, CEntityIndex *a2, IRecipientFilter &filter, uint32 a4, void *a5)
+void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase *pSoundEmitterSystem, CEntityIndex *a2, IRecipientFilter &filter, uint32 a4, EmitSound_t* a5)
 {
 	//ConMsg("Detour_CSoundEmitterSystem_EmitSound\n");
+	if (strcmp(a5->m_pSoundName, "Flesh.BulletImpact") == 0)
+		return;
+
 	CSoundEmitterSystem_EmitSound(pSoundEmitterSystem, a2, filter, a4, a5);
 }
 
