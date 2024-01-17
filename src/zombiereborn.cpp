@@ -558,7 +558,7 @@ void SetupCTeams()
 
 void ZR_OnRoundStart(IGameEvent* pEvent)
 {
-	ClientPrintAll(HUD_PRINTTALK, ZR_PREFIX "The game is \x05Humans vs. Zombies\x01, the goal for zombies is to infect all humans by knifing them.");
+	ClientPrintAll(HUD_PRINTTALK, ZR_PREFIX "该游戏的玩法为 \x05人类 vs. 僵尸\x01, 僵尸的目标是用小刀感染所有人类.");
 	SetupRespawnToggler();
 	CZRRegenTimer::RemoveAllTimers();
 }
@@ -758,7 +758,7 @@ void ZR_InitialInfection()
 
 		if (!spawns.Count())
 		{
-			ClientPrintAll(HUD_PRINTTALK, ZR_PREFIX"There are no spawns!");
+			ClientPrintAll(HUD_PRINTTALK, ZR_PREFIX"找不到出生点!");
 			Panic("There are no spawns!\n");
 			return;
 		}
@@ -835,8 +835,8 @@ void ZR_InitialInfection()
 		
 		pPlayer->SetImmunity(pPlayer->GetImmunity() - g_iMZImmunityReduction);
 	}
-	ClientPrintAll(HUD_PRINTCENTER, "First infection has started!");
-	ClientPrintAll(HUD_PRINTTALK, ZR_PREFIX "First infection has started! Good luck, survivors!");
+	ClientPrintAll(HUD_PRINTCENTER, "我们是他们的奴隶!");
+	ClientPrintAll(HUD_PRINTTALK, ZR_PREFIX "我们是他们的奴隶!");
 	g_ZRRoundState = EZRRoundState::POST_INFECTION;
 }
 
@@ -857,7 +857,7 @@ void ZR_StartInitialCountdown()
 		if (g_iInfectionCountDown <= 60)
 		{
 			char message[256];
-			V_snprintf(message, sizeof(message), "First infection in \7%i %s\1!", g_iInfectionCountDown, g_iInfectionCountDown == 1 ? "second" : "seconds");
+			V_snprintf(message, sizeof(message), "将在 \7%i %s\1 后选出母体僵尸!", g_iInfectionCountDown, "秒");
 
 			ClientPrintAll(HUD_PRINTCENTER, message);
 			if (g_iInfectionCountDown % 5 == 0)
@@ -933,7 +933,7 @@ void ZR_Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSymbolLar
 	else
 		return;
 
-	ClientPrintAll(HUD_PRINTTALK, ZR_PREFIX "Respawning is %s!", g_bRespawnEnabled ? "enabled" : "disabled");
+	ClientPrintAll(HUD_PRINTTALK, ZR_PREFIX "已 %s 重生!", g_bRespawnEnabled ? "启用" : "禁用");
 }
 
 void SpawnPlayer(CCSPlayerController* pController)
@@ -1151,14 +1151,14 @@ CON_COMMAND_CHAT(ztele, "teleport to spawn")
 
 	if (!player)
 	{
-		ClientPrint(player, HUD_PRINTCONSOLE, ZR_PREFIX "You cannot use this command from the server console.");
+		ClientPrint(player, HUD_PRINTCONSOLE, ZR_PREFIX "你不能在控制台使用该指令.");
 		return;
 	}
 
 	// Check if command is enabled for humans
 	if (!g_bZteleHuman && player->m_iTeamNum() == CS_TEAM_CT)
 	{
-		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "You cannot use this command as a human.");
+		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "人类阵营无法使用该指令.");
 		return;
 	}
 
@@ -1170,7 +1170,7 @@ CON_COMMAND_CHAT(ztele, "teleport to spawn")
 	// But I ran into this when I switched to the real FindEntityByClassname and forgot to insert a *
 	if (spawns.Count() == 0)
 	{
-		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX"There are no spawns!");
+		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX"找不到出生点!");
 		Panic("ztele used while there are no spawns!\n");
 		return;
 	}
@@ -1187,14 +1187,14 @@ CON_COMMAND_CHAT(ztele, "teleport to spawn")
 
 	if (!pPawn->IsAlive())
 	{
-		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX"You cannot teleport when dead!");
+		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX"你只有在活着的时候才能使用!");
 		return;
 	}
 
 	//Get initial player position so we can do distance check
 	Vector initialpos = pPawn->GetAbsOrigin();
 
-	ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX"Teleporting to spawn in 5 seconds.");
+	ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX"5秒后传送到出生点, 不要移动.");
 
 	CHandle<CBasePlayerPawn> handle = pPawn->GetHandle();
 
@@ -1210,11 +1210,11 @@ CON_COMMAND_CHAT(ztele, "teleport to spawn")
 		if (initialpos.DistTo(endpos) < g_flMaxZteleDistance)
 		{
 			pPawn->SetAbsOrigin(spawnpos);
-			ClientPrint(pPawn->GetController(), HUD_PRINTTALK, ZR_PREFIX "You have been teleported to spawn.");
+			ClientPrint(pPawn->GetController(), HUD_PRINTTALK, ZR_PREFIX "已传送至出生点.");
 		}
 		else
 		{
-			ClientPrint(pPawn->GetController(), HUD_PRINTTALK, ZR_PREFIX "Teleport failed! You moved too far.");
+			ClientPrint(pPawn->GetController(), HUD_PRINTTALK, ZR_PREFIX "传送失败! 你移动的太远了.");
 			return -1.0f;
 		}
 

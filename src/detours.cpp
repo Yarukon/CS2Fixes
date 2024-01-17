@@ -201,16 +201,6 @@ void FASTCALL Detour_TriggerPush_Touch(CTriggerPush* pPush, Z_CBaseEntity* pOthe
 	pOther->m_fFlags(flags);
 }
 
-void FASTCALL Detour_CCSWeaponBase_Spawn(CBaseEntity *pThis, void *a2)
-{
-#ifdef _DEBUG
-	const char *pszClassName = pThis->m_pEntity->m_designerName.String();
-	Message("Weapon spawn: %s\n", pszClassName);
-#endif
-
-	CCSWeaponBase_Spawn(pThis, a2);
-}
-
 const char* snd1 = "Flesh.BulletImpact";
 const char* snd2 = "Player.DamageHeadShot.Onlooker";
 const char* snd3 = "Player.DamageHeadShot.Victim";
