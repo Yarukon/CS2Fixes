@@ -29,7 +29,7 @@
 #include <playerslot.h>
 #include "utlstring.h"
 #include "utlvector.h"
-
+#include "votemanager.h"
 
 extern CGlobalVars *gpGlobals;
 extern CCSGameRules* g_pGameRules;
@@ -39,6 +39,9 @@ CMapVoteSystem* g_pMapVoteSystem = nullptr;
 
 CON_COMMAND_CHAT_FLAGS(reload_map_list, "Reload map list", ADMFLAG_ROOT)
 {
+	if (!g_bVoteManagerEnable)
+		return;
+
 	g_pMapVoteSystem->LoadMapList();
 	Message("Map list reloaded\n");
 }
@@ -75,6 +78,9 @@ CON_COMMAND_F(cs2f_vote_max_nominations, "Number of nominations to include per v
 
 CON_COMMAND_CHAT_FLAGS(setnextmap, "Force next map", ADMFLAG_CHANGEMAP)
 {
+	if (!g_bVoteManagerEnable)
+		return;
+
 	bool bIsClearingForceNextMap = args.ArgC() < 2;
 	int iResponse = g_pMapVoteSystem->ForceNextMap(bIsClearingForceNextMap ? "" : args[1]);
 	if (bIsClearingForceNextMap) {
@@ -87,8 +93,16 @@ CON_COMMAND_CHAT_FLAGS(setnextmap, "Force next map", ADMFLAG_CHANGEMAP)
 
 CON_COMMAND_CHAT_FLAGS(nominate, "Nominate a map", ADMFLAG_NONE)
 {
+	if (!g_bVoteManagerEnable)
+		return;
+
 	bool bIsClearingNomination = args.ArgC() < 2;
 	int iResponse = g_pMapVoteSystem->AddMapNomination(player->GetPlayerSlot(), bIsClearingNomination ? "" : args[1]);
+	ZEPlayer* pPlayer = g_playerManager->GetPlayer(player->GetPlayerSlot());
+
+	if (!pPlayer)
+		return;
+
 	switch (iResponse) {
 		case NominationReturnCodes::VOTE_STARTED:
 			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "投票已经开始, 无法再进行提名.");
@@ -106,14 +120,23 @@ CON_COMMAND_CHAT_FLAGS(nominate, "Nominate a map", ADMFLAG_NONE)
 			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "提名系统已被禁用.");
 			break;
 		default:
-			if (bIsClearingNomination) {
+			if (bIsClearingNomination)
+			{
 				ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你的提名已被重置.");
 			}
-			else {
+			else if (pPlayer->GetNominateTime() + 60.0f > gpGlobals->curtime)
+			{
+				int iRemainingTime = (int)(pPlayer->GetNominateTime() + 60.0f - gpGlobals->curtime);
+				ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Wait %i seconds before you can nominate again.", iRemainingTime);
+				return;
+			}
+			else
+			{
 				const char* sPlayerName = player->GetPlayerName();
 				const char* sMapName = g_pMapVoteSystem->GetMapName(iResponse);
 				int iNumNominations = g_pMapVoteSystem->GetTotalNominations(iResponse);
 				ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX " \x06%s \x01被提名, 提名玩家为 %s. 目前提名列表中有 %d 个地图.", sMapName, sPlayerName, iNumNominations);
+				pPlayer->SetNominateTime(gpGlobals->curtime);
 			}
 	}
 }
@@ -125,6 +148,9 @@ static int __cdecl OrderStringsLexicographically(const char* const* a, const cha
 
 CON_COMMAND_CHAT(maplist, "List the maps in the server")
 {
+	if (!g_bVoteManagerEnable)
+		return;
+
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "地图列表将会打印在控制台中.");
 	ClientPrint(player, HUD_PRINTCONSOLE, "服务器目前所有可用地图:");
 	CUtlVector<const char*> vecMapNames;
@@ -139,6 +165,9 @@ CON_COMMAND_CHAT(maplist, "List the maps in the server")
 
 CON_COMMAND_CHAT(nomlist, "List the list of nominations")
 {
+	if (!g_bVoteManagerEnable)
+		return;
+
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "当前提名列表:");
 	for (int i = 0; i < g_pMapVoteSystem->GetMapListSize(); i++) {
 		if (!g_pMapVoteSystem->IsMapIndexEnabled(i)) continue;
@@ -151,6 +180,9 @@ CON_COMMAND_CHAT(nomlist, "List the list of nominations")
 
 CON_COMMAND_CHAT(mapcooldowns, "List the maps currently in cooldown")
 {
+	if (!g_bVoteManagerEnable)
+		return;
+
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "地图冷却将会打印在控制台中.");
 	ClientPrint(player, HUD_PRINTCONSOLE, "服务器目前的地图冷却:");
 	int iMapsInCooldown = g_pMapVoteSystem->GetMapsInCooldown();
@@ -163,12 +195,14 @@ CON_COMMAND_CHAT(mapcooldowns, "List the maps currently in cooldown")
 
 GAME_EVENT_F(cs_win_panel_match)
 {
-	g_pMapVoteSystem->StartVote();
+	if (g_bVoteManagerEnable)
+		g_pMapVoteSystem->StartVote();
 }
 
 GAME_EVENT_F(endmatch_mapvote_selecting_map)
 {
-	g_pMapVoteSystem->FinishVote();
+	if (g_bVoteManagerEnable)
+		g_pMapVoteSystem->FinishVote();
 }
 
 bool CMapVoteSystem::IsMapIndexEnabled(int iMapIndex)
@@ -180,6 +214,9 @@ bool CMapVoteSystem::IsMapIndexEnabled(int iMapIndex)
 
 void CMapVoteSystem::OnLevelInit(const char* pMapName)
 {
+	if (!g_bVoteManagerEnable)
+		return;
+
 	int iLastCooldownIndex = GetMapsInCooldown() - 1;
 	int iInitMapIndex = GetMapIndexFromSubstring(pMapName);
 	if (iLastCooldownIndex >= 0 && iInitMapIndex >= 0 && GetCooldownMap(iLastCooldownIndex) != iInitMapIndex) {
@@ -187,7 +224,7 @@ void CMapVoteSystem::OnLevelInit(const char* pMapName)
 	}
 }
 
-void CMapVoteSystem::StartVote() 
+void CMapVoteSystem::StartVote()
 {
 	m_bIsVoteOngoing = true;
 
@@ -342,6 +379,9 @@ void CMapVoteSystem::FinishVote()
 
 void CMapVoteSystem::RegisterPlayerVote(CPlayerSlot iPlayerSlot, int iVoteOption)
 {
+	if (!g_bVoteManagerEnable)
+		return;
+
 	CCSPlayerController* pController = CCSPlayerController::FromSlot(iPlayerSlot);
 	if (!pController || !m_bIsVoteOngoing) return;
 	if (iVoteOption < 0 || iVoteOption >= 10) return;
@@ -389,7 +429,7 @@ int CMapVoteSystem::WinningMapIndex()
 		iMaxVotes = (arrMapVotes[i] > iMaxVotes) ? arrMapVotes[i] : iMaxVotes;
 	}
 
-	// Identify how many maps are tied with the max number of votes    
+	// Identify how many maps are tied with the max number of votes
 	int iMapsWithMaxVotes = 0;
 	for (int i = 0; i < 10; i++) {
 		if (arrMapVotes[i] == iMaxVotes) iMapsWithMaxVotes++;
@@ -447,6 +487,9 @@ int CMapVoteSystem::GetMapIndexFromSubstring(const char* sMapSubstring)
 
 void CMapVoteSystem::ClearPlayerInfo(int iSlot)
 {
+	if (!g_bVoteManagerEnable)
+		return;
+
 	m_arrPlayerNominations[iSlot] = -1;
 	m_arrPlayerVotes[iSlot] = -1;
 }
@@ -540,7 +583,7 @@ bool CMapVoteSystem::LoadMapList()
 	FOR_EACH_VEC(m_vecMapList, i) {
 		CMapInfo map = m_vecMapList[i];
 		ConMsg(
-			"Map %d is %s with workshop id %llu, which is %s.\n", 
+			"Map %d is %s with workshop id %llu, which is %s.\n",
 			i, map.GetName(), map.GetWorkshopId(), map.IsEnabled()? "enabled" : "disabled"
 		);
 	}
