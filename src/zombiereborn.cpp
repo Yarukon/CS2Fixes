@@ -72,12 +72,12 @@ static int g_iMZImmunityReduction = 20;
 FAKE_BOOL_CVAR(zr_enable, "Whether to enable ZR features", g_bEnableZR, false, false)
 FAKE_FLOAT_CVAR(zr_ztele_max_distance, "Maximum distance players are allowed to move after starting ztele", g_flMaxZteleDistance, 150.0f, false)
 FAKE_BOOL_CVAR(zr_ztele_allow_humans, "Whether to allow humans to use ztele", g_bZteleHuman, false, false)
-FAKE_FLOAT_CVAR(zr_knockback_scale, "Global knockback scale", g_flKnockbackScale, 5.0f, false)
-FAKE_INT_CVAR(zr_infect_spawn_type, "Type of Mother Zombies Spawn [0 = MZ spawn where they stand, 1 = MZ get teleported back to spawn on being picked]", g_iInfectSpawnType, EZRSpawnType::RESPAWN, false)
-FAKE_INT_CVAR(zr_infect_spawn_time_min, "Minimum time in which Mother Zombies should be picked, after round start", g_iInfectSpawnTimeMin, 15, false)
-FAKE_INT_CVAR(zr_infect_spawn_time_max, "Maximum time in which Mother Zombies should be picked, after round start", g_iInfectSpawnTimeMax, 15, false)
-FAKE_INT_CVAR(zr_infect_spawn_mz_ratio, "Ratio of all Players to Mother Zombies to be spawned at round start", g_iInfectSpawnMZRatio, 7, false)
-FAKE_INT_CVAR(zr_infect_spawn_mz_min_count, "Minimum amount of Mother Zombies to be spawned at round start", g_iInfectSpawnMinCount, 1, false)
+FAKE_FLOAT_CVAR(zr2_knockback_scale, "Global knockback scale", g_flKnockbackScale, 5.0f, false)
+FAKE_INT_CVAR(zr2_infect_spawn_type, "Type of Mother Zombies Spawn [0 = MZ spawn where they stand, 1 = MZ get teleported back to spawn on being picked]", g_iInfectSpawnType, EZRSpawnType::RESPAWN, false)
+FAKE_INT_CVAR(zr2_infect_spawn_time_min, "Minimum time in which Mother Zombies should be picked, after round start", g_iInfectSpawnTimeMin, 15, false)
+FAKE_INT_CVAR(zr2_infect_spawn_time_max, "Maximum time in which Mother Zombies should be picked, after round start", g_iInfectSpawnTimeMax, 15, false)
+FAKE_INT_CVAR(zr2_infect_spawn_mz_ratio, "Ratio of all Players to Mother Zombies to be spawned at round start", g_iInfectSpawnMZRatio, 7, false)
+FAKE_INT_CVAR(zr2_infect_spawn_mz_min_count, "Minimum amount of Mother Zombies to be spawned at round start", g_iInfectSpawnMinCount, 1, false)
 FAKE_FLOAT_CVAR(zr_respawn_delay, "Time before a zombie is automatically respawned, negative values (e.g. -1.0) disable this, note maps can still manually respawn at any time", g_flRespawnDelay, 5.0f, false)
 FAKE_INT_CVAR(zr_default_winner_team, "Which team wins when time ran out [1 = Draw, 2 = Zombies, 3 = Humans]", g_iDefaultWinnerTeam, CS_TEAM_SPECTATOR, false)
 FAKE_INT_CVAR(zr_mz_immunity_reduction, "How much mz immunity to reduce for each player per round (0-100)", g_iMZImmunityReduction, 20, false)
@@ -1191,8 +1191,8 @@ void ZR_EndRoundAndAddTeamScore(int iTeamNum)
 CON_COMMAND_CHAT(ztele, "- teleport to spawn")
 {
 	// Silently return so the command is completely hidden
-	if (!g_bEnableZR)
-		return;
+	// if (!g_bEnableZR)
+	// 	return;
 
 	if (!player)
 	{

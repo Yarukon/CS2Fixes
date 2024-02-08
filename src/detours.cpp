@@ -470,13 +470,13 @@ bool InitDetours(CGameConfig *gameConfig)
 		success = false;
 	CBaseEntity_TakeDamageOld.EnableDetour();
 
-	if (!CCSPlayer_WeaponServices_CanUse.CreateDetour(gameConfig))
-		success = false;
-	CCSPlayer_WeaponServices_CanUse.EnableDetour();
+	// if (!CCSPlayer_WeaponServices_CanUse.CreateDetour(gameConfig))
+	// 	success = false;
+	// CCSPlayer_WeaponServices_CanUse.EnableDetour();
 
-	if (!CEntityIdentity_AcceptInput.CreateDetour(gameConfig))
-		success = false;
-	CEntityIdentity_AcceptInput.EnableDetour();
+	// if (!CEntityIdentity_AcceptInput.CreateDetour(gameConfig))
+	// 	success = false;
+	// CEntityIdentity_AcceptInput.EnableDetour();
 
 	if (!CNavMesh_GetNearestNavArea.CreateDetour(gameConfig))
 		success = false;

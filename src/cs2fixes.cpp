@@ -597,6 +597,9 @@ void CS2Fixes::Hook_ClientDisconnect( CPlayerSlot slot, ENetworkDisconnectionRea
 {
 	Message( "Hook_ClientDisconnect(%d, %d, \"%s\", %lli, \"%s\")\n", slot, reason, pszName, xuid, pszNetworkID );
 
+	if (xuid)
+		g_steamAPI.SteamGameServer()->EndAuthSession(CSteamID(xuid));
+
 	g_playerManager->OnClientDisconnect(slot);
 }
 
