@@ -51,6 +51,7 @@
 #include "httpmanager.h"
 #include "discord.h"
 #include "map_votes.h"
+#include "user_preferences.h"
 #include "entity/cgamerules.h"
 #include "entity/ccsplayercontroller.h"
 #include "entitylistener.h"
@@ -60,7 +61,7 @@
 
 #include "tier0/memdbgon.h"
 
-float g_flUniversalTime;
+double g_flUniversalTime;
 float g_flLastTickedTime;
 bool g_bHasTicked;
 
@@ -231,6 +232,8 @@ bool CS2Fixes::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 	g_pDiscordBotManager = new CDiscordBotManager();
 	g_pZRPlayerClassManager = new CZRPlayerClassManager();
 	g_pMapVoteSystem = new CMapVoteSystem();
+	g_pUserPreferencesSystem = new CUserPreferencesSystem();
+	g_pUserPreferencesStorage = new CUserPreferencesREST();
 	g_pZRWeaponConfig = new ZRWeaponConfig();
 	g_pEntityListener = new CEntityListener();
 
@@ -315,6 +318,12 @@ bool CS2Fixes::Unload(char *error, size_t maxlen)
 
 	if (g_pZRWeaponConfig)
 		delete g_pZRWeaponConfig;
+
+	if (g_pUserPreferencesSystem)
+		delete g_pUserPreferencesSystem;
+
+	if (g_pUserPreferencesStorage)
+		delete g_pUserPreferencesStorage;
 
 	if (g_pEntityListener)
 		delete g_pEntityListener;
@@ -437,6 +446,7 @@ void CS2Fixes::Hook_StartupServer(const GameSessionConfiguration_t& config, ISou
 	g_bHasTicked = false;
 
 	RegisterEventListeners();
+	g_playerManager->SetupInfiniteAmmo();
 
 	// Disable RTV and Extend votes after map has just started
 	g_RTVState = ERTVState::MAP_START;
@@ -452,9 +462,6 @@ void CS2Fixes::Hook_StartupServer(const GameSessionConfiguration_t& config, ISou
 			g_ExtendState = EExtendState::EXTEND_ALLOWED;
 		return -1.0f;
 	});
-
-	// Set amount of Extends left
-	g_iExtendsLeft = 1;
 
 	if (g_bEnableZR)
 		ZR_OnStartupServer();
@@ -649,7 +656,7 @@ void CS2Fixes::Hook_GameFrame( bool simulating, bool bFirstTick, bool bLastTick 
 void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount, CBitVec<16384> &unionTransmitEdicts,
 								const Entity2Networkable_t **pNetworkables, const uint16 *pEntityIndicies, int nEntities)
 {
-	if (!g_bEnableHide || !g_pEntitySystem)
+	if (!g_pEntitySystem)
 		return;
 
 	VPROF_ENTER_SCOPE(__FUNCTION__);
@@ -677,7 +684,16 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 			CCSPlayerController* pController = CCSPlayerController::FromSlot(j);
 
 			// Always transmit to themselves
-			if (!pController || j == iPlayerSlot)
+			if (!pController || !pController->IsConnected() || j == iPlayerSlot)
+				continue;
+
+			CBarnLight *pFlashLight = g_playerManager->GetPlayer(j)->GetFlashLight();
+
+			// Don't transmit other players' flashlights
+			if (pFlashLight)
+				pInfo->m_pTransmitEntity->Clear(pFlashLight->entindex());
+
+			if (!g_bEnableHide)
 				continue;
 
 			auto pPawn = pController->GetPawn();
