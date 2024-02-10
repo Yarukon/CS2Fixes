@@ -939,7 +939,7 @@ bool ZR_Detour_TakeDamageOld(CCSPlayerPawn *pVictimPawn, CTakeDamageInfo *pInfo)
 {
 	CCSPlayerPawn* pAttackerPawn = (CCSPlayerPawn*)pInfo->m_hAttacker.Get();
 
-	if (!(pAttackerPawn && pVictimPawn && pVictimPawn->IsPawn() && pVictimPawn->IsPawn()))
+	if (!(pAttackerPawn && pVictimPawn && pVictimPawn->IsPawn() && pAttackerPawn->IsPawn()))
 		return false;
 
 	CCSPlayerController *pAttackerController = CCSPlayerController::FromPawn(pAttackerPawn);
