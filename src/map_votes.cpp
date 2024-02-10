@@ -122,12 +122,12 @@ CON_COMMAND_CHAT_FLAGS(nominate, "[mapname] - Nominate a map (empty to clear nom
 		default:
 			if (bIsClearingNomination)
 			{
-				ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你的提名已被重置.");
+				ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你的地图提名已重置.");
 			}
 			else if (pPlayer->GetNominateTime() + 60.0f > gpGlobals->curtime)
 			{
 				int iRemainingTime = (int)(pPlayer->GetNominateTime() + 60.0f - gpGlobals->curtime);
-				ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Wait %i seconds before you can nominate again.", iRemainingTime);
+				ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "请等待 %i 秒后再进行地图提名操作.", iRemainingTime);
 				return;
 			}
 			else
@@ -135,7 +135,7 @@ CON_COMMAND_CHAT_FLAGS(nominate, "[mapname] - Nominate a map (empty to clear nom
 				const char* sPlayerName = player->GetPlayerName();
 				const char* sMapName = g_pMapVoteSystem->GetMapName(iResponse);
 				int iNumNominations = g_pMapVoteSystem->GetTotalNominations(iResponse);
-				ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX " \x06%s \x01被提名, 提名玩家为 %s. 目前提名列表中有 %d 个地图.", sMapName, sPlayerName, iNumNominations);
+				ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "\x01%s 预订了地图 \x06%s\x01. 目前提名列表中有 %d 个地图.", sPlayerName, sMapName, iNumNominations);
 				pPlayer->SetNominateTime(gpGlobals->curtime);
 			}
 	}

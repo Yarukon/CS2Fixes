@@ -389,18 +389,13 @@ CON_COMMAND_F(toggle_logs, "Toggle printing most logs and warnings", FCVAR_SPONL
 bool FASTCALL Detour_CCSPlayer_WeaponServices_CanUse(CCSPlayer_WeaponServices *pWeaponServices, CBasePlayerWeapon* pPlayerWeapon)
 {
 	if (g_bEnableZR && !ZR_Detour_CCSPlayer_WeaponServices_CanUse(pWeaponServices, pPlayerWeapon))
-	{
 		return false;
-	}
 
 	return CCSPlayer_WeaponServices_CanUse(pWeaponServices, pPlayerWeapon);
 }
 
 void FASTCALL Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSymbolLarge* pInputName, CEntityInstance* pActivator, CEntityInstance* pCaller, variant_t* value, int nOutputID)
 {
-	if (g_bEnableZR)
-		ZR_Detour_CEntityIdentity_AcceptInput(pThis, pInputName, pActivator, pCaller, value, nOutputID);
-
 	return CEntityIdentity_AcceptInput(pThis, pInputName, pActivator, pCaller, value, nOutputID);
 }
 
@@ -470,9 +465,9 @@ bool InitDetours(CGameConfig *gameConfig)
 		success = false;
 	CBaseEntity_TakeDamageOld.EnableDetour();
 
-	// if (!CCSPlayer_WeaponServices_CanUse.CreateDetour(gameConfig))
-	// 	success = false;
-	// CCSPlayer_WeaponServices_CanUse.EnableDetour();
+	if (!CCSPlayer_WeaponServices_CanUse.CreateDetour(gameConfig))
+		success = false;
+	CCSPlayer_WeaponServices_CanUse.EnableDetour();
 
 	// if (!CEntityIdentity_AcceptInput.CreateDetour(gameConfig))
 	// 	success = false;

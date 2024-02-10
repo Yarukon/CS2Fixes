@@ -49,7 +49,6 @@ EZRRoundState g_ZRRoundState = EZRRoundState::ROUND_START;
 static int g_iRoundNum = 0;
 static int g_iInfectionCountDown = 0;
 static bool g_bRespawnEnabled = true;
-static CHandle<Z_CBaseEntity> g_hRespawnToggler;
 static CHandle<CTeam> g_hTeamCT;
 static CHandle<CTeam> g_hTeamT;
 
@@ -72,12 +71,12 @@ static int g_iMZImmunityReduction = 20;
 FAKE_BOOL_CVAR(zr_enable, "Whether to enable ZR features", g_bEnableZR, false, false)
 FAKE_FLOAT_CVAR(zr_ztele_max_distance, "Maximum distance players are allowed to move after starting ztele", g_flMaxZteleDistance, 150.0f, false)
 FAKE_BOOL_CVAR(zr_ztele_allow_humans, "Whether to allow humans to use ztele", g_bZteleHuman, false, false)
-FAKE_FLOAT_CVAR(zr2_knockback_scale, "Global knockback scale", g_flKnockbackScale, 5.0f, false)
-FAKE_INT_CVAR(zr2_infect_spawn_type, "Type of Mother Zombies Spawn [0 = MZ spawn where they stand, 1 = MZ get teleported back to spawn on being picked]", g_iInfectSpawnType, EZRSpawnType::RESPAWN, false)
-FAKE_INT_CVAR(zr2_infect_spawn_time_min, "Minimum time in which Mother Zombies should be picked, after round start", g_iInfectSpawnTimeMin, 15, false)
-FAKE_INT_CVAR(zr2_infect_spawn_time_max, "Maximum time in which Mother Zombies should be picked, after round start", g_iInfectSpawnTimeMax, 15, false)
-FAKE_INT_CVAR(zr2_infect_spawn_mz_ratio, "Ratio of all Players to Mother Zombies to be spawned at round start", g_iInfectSpawnMZRatio, 7, false)
-FAKE_INT_CVAR(zr2_infect_spawn_mz_min_count, "Minimum amount of Mother Zombies to be spawned at round start", g_iInfectSpawnMinCount, 1, false)
+FAKE_FLOAT_CVAR(zr_knockback_scale, "Global knockback scale", g_flKnockbackScale, 5.0f, false)
+FAKE_INT_CVAR(zr_infect_spawn_type, "Type of Mother Zombies Spawn [0 = MZ spawn where they stand, 1 = MZ get teleported back to spawn on being picked]", g_iInfectSpawnType, EZRSpawnType::RESPAWN, false)
+FAKE_INT_CVAR(zr_infect_spawn_time_min, "Minimum time in which Mother Zombies should be picked, after round start", g_iInfectSpawnTimeMin, 15, false)
+FAKE_INT_CVAR(zr_infect_spawn_time_max, "Maximum time in which Mother Zombies should be picked, after round start", g_iInfectSpawnTimeMax, 15, false)
+FAKE_INT_CVAR(zr_infect_spawn_mz_ratio, "Ratio of all Players to Mother Zombies to be spawned at round start", g_iInfectSpawnMZRatio, 7, false)
+FAKE_INT_CVAR(zr_infect_spawn_mz_min_count, "Minimum amount of Mother Zombies to be spawned at round start", g_iInfectSpawnMinCount, 1, false)
 FAKE_FLOAT_CVAR(zr_respawn_delay, "Time before a zombie is automatically respawned, negative values (e.g. -1.0) disable this, note maps can still manually respawn at any time", g_flRespawnDelay, 5.0f, false)
 FAKE_INT_CVAR(zr_default_winner_team, "Which team wins when time ran out [1 = Draw, 2 = Zombies, 3 = Humans]", g_iDefaultWinnerTeam, CS_TEAM_SPECTATOR, false)
 FAKE_INT_CVAR(zr_mz_immunity_reduction, "How much mz immunity to reduce for each player per round (0-100)", g_iMZImmunityReduction, 20, false)
@@ -574,7 +573,6 @@ void SetupRespawnToggler()
 
 	pKeyValues->SetString("targetname", "zr_toggle_respawn");
 	relay->DispatchSpawn(pKeyValues);
-	g_hRespawnToggler = relay->GetHandle();
 }
 
 void SetupCTeams()
@@ -719,6 +717,7 @@ void ZR_Cure(CCSPlayerController *pTargetController)
 	g_pZRPlayerClassManager->ApplyPreferredOrDefaultHumanClass(pTargetPawn);
 }
 
+const char* playerInfectedEvent = "zr_on_player_infected";
 void ZR_Infect(CCSPlayerController *pAttackerController, CCSPlayerController *pVictimController, bool bDontBroadcast)
 {
 	if (pVictimController->m_iTeamNum() == CS_TEAM_CT)
@@ -736,6 +735,16 @@ void ZR_Infect(CCSPlayerController *pAttackerController, CCSPlayerController *pV
 	ZR_StripAndGiveKnife(pVictimPawn);
 	
 	g_pZRPlayerClassManager->ApplyPreferredOrDefaultZombieClass(pVictimPawn);
+
+	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
+	if (pEvent)
+	{
+		pEvent->SetString("custom_event", playerInfectedEvent);
+		pEvent->SetBool("is_mother_zombie", false);
+		pEvent->SetInt("infected_index", pVictimController->GetEntityIndex().Get());
+		pEvent->SetInt("attacker_index", pAttackerController->GetEntityIndex().Get());
+		g_gameEventManager->FireEvent(pEvent, true);
+	}
 }
 
 void ZR_InfectMotherZombie(CCSPlayerController *pVictimController)
@@ -754,6 +763,16 @@ void ZR_InfectMotherZombie(CCSPlayerController *pVictimController)
 	{
 		//Warning("Missing mother zombie class!!!\n");
 		g_pZRPlayerClassManager->ApplyPreferredOrDefaultZombieClass(pVictimPawn);
+	}
+
+	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
+
+	if (pEvent)
+	{
+		pEvent->SetString("custom_event", playerInfectedEvent);
+		pEvent->SetBool("is_mother_zombie", true);
+		pEvent->SetInt("infected_index", pVictimController->GetEntityIndex().Get());
+		g_gameEventManager->FireEvent(pEvent, true);
 	}
 }
 
@@ -953,22 +972,13 @@ bool ZR_Detour_CCSPlayer_WeaponServices_CanUse(CCSPlayer_WeaponServices *pWeapon
 		return false;
 	if (pPawn->m_iTeamNum() == CS_TEAM_CT && V_strlen(pszWeaponClassname) > 7 && !g_pZRWeaponConfig->FindWeapon(pszWeaponClassname + 7))
 		return false;
+
 	// doesn't guarantee the player will pick the weapon up, it just allows the original function to run
 	return true;
 }
 
-void ZR_Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSymbolLarge* pInputName, CEntityInstance* pActivator, CEntityInstance* pCaller, variant_t* value, int nOutputID)
+void ZR_ToggleRespawn(const char* inputName)
 {
-	if (!g_hRespawnToggler.IsValid())
-		return;
-
-	Z_CBaseEntity* relay = g_hRespawnToggler.Get();
-	const char* inputName = pInputName->String();
-
-	// Must be an input into our zr_toggle_respawn relay
-	if (!relay || pThis != relay->m_pEntity)
-		return;
-
 	if (!V_strcasecmp(inputName, "Trigger"))
 		ToggleRespawn();
 	else if (!V_strcasecmp(inputName, "Enable") && !g_bRespawnEnabled)
