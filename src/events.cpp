@@ -254,16 +254,3 @@ GAME_EVENT_F(round_time_warning)
 	if (g_bEnableZR)
 		ZR_OnRoundTimeWarning(pEvent);
 }
-
-GAME_EVENT_F(choppers_incoming_warning)
-{
-	if (g_bEnableZR)
-	{
-		const char* eventName = pEvent->GetString("custom_event");
-		if (strcmp(eventName, "zr_toggle_respawn") == 0)
-		{
-			const char* inputName = pEvent->GetString("zr_respawn_input");
-			ZR_ToggleRespawn(inputName);
-		}
-	}
-}

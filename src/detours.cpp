@@ -17,6 +17,12 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "protobuf/generated/cstrike15_usermessages.pb.h"
+#include "protobuf/generated/usermessages.pb.h"
+#include "protobuf/generated/cs_gameevents.pb.h"
+#include "protobuf/generated/gameevents.pb.h"
+#include "protobuf/generated/te.pb.h"
+
 #include "cdetour.h"
 #include "common.h"
 #include "module.h"
@@ -37,6 +43,8 @@
 #include "igameevents.h"
 #include "gameconfig.h"
 #include "zombiereborn.h"
+
+#include "networksystem/inetworkserializer.h"
 
 #define VPROF_ENABLED
 #include "tier0/vprof.h"
@@ -59,6 +67,9 @@ DECLARE_DETOUR(CCSPlayer_WeaponServices_CanUse, Detour_CCSPlayer_WeaponServices_
 DECLARE_DETOUR(CEntityIdentity_AcceptInput, Detour_CEntityIdentity_AcceptInput);
 DECLARE_DETOUR(CNavMesh_GetNearestNavArea, Detour_CNavMesh_GetNearestNavArea);
 DECLARE_DETOUR(FixLagCompEntityRelationship, Detour_FixLagCompEntityRelationship);
+
+DECLARE_DETOUR(SendNetMessage, Detour_SendNetMessage);
+DECLARE_DETOUR(MountAddon, Detour_MountAddon);
 
 void FASTCALL Detour_CGameRules_Constructor(CGameRules *pThis)
 {
@@ -396,6 +407,9 @@ bool FASTCALL Detour_CCSPlayer_WeaponServices_CanUse(CCSPlayer_WeaponServices *p
 
 void FASTCALL Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSymbolLarge* pInputName, CEntityInstance* pActivator, CEntityInstance* pCaller, variant_t* value, int nOutputID)
 {
+	if (g_bEnableZR)
+		ZR_Detour_CEntityIdentity_AcceptInput(pThis, pInputName, pActivator, pCaller, value, nOutputID);
+
 	return CEntityIdentity_AcceptInput(pThis, pInputName, pActivator, pCaller, value, nOutputID);
 }
 
@@ -421,6 +435,38 @@ void FASTCALL Detour_FixLagCompEntityRelationship(void *a1, CEntityInstance *pEn
 		return;
 
 	return FixLagCompEntityRelationship(a1, pEntity, a3);
+}
+
+std::string g_sExtraAddon;
+FAKE_STRING_CVAR(cs2f_extra_addons, "extra addon", g_sExtraAddon, false);
+
+void FASTCALL Detour_MountAddon(IEngineServiceMgr* pEngineServiceMgr, const char* pszAddonString)
+{
+	char buf[128];
+	ConMsg("pszAddonString");
+	V_snprintf(buf, sizeof(buf), "%s,%s", pszAddonString, g_sExtraAddon.c_str()); // addons are simply comma-delimited, can have any number of them
+
+	MountAddon(pEngineServiceMgr, buf); // note that this will replace mounted addons, not add to them
+}
+
+void FASTCALL Detour_SendNetMessage(void* a1, INetworkSerializable* a2, void* pData, int a4)
+{
+	static bool once = false;
+
+	NetMessageInfo_t* info = a2->GetNetMessageInfo();
+
+	if (info->m_MessageId == 7 && !once)
+	{
+		CNETMsg_SignonState* msg = (CNETMsg_SignonState*)pData;
+		msg->set_addons(g_sExtraAddon.c_str());
+		msg->set_signon_state(SIGNONSTATE_CHANGELEVEL);
+		once = true;
+
+		// TEMP HACK
+		new CTimer(5.0f, false, [] { once = false; return -1.0f; });
+	}
+
+	SendNetMessage(a1, a2, pData, a4);
 }
 
 CUtlVector<CDetourBase *> g_vecDetours;
@@ -469,9 +515,17 @@ bool InitDetours(CGameConfig *gameConfig)
 		success = false;
 	CCSPlayer_WeaponServices_CanUse.EnableDetour();
 
-	// if (!CEntityIdentity_AcceptInput.CreateDetour(gameConfig))
-	// 	success = false;
-	// CEntityIdentity_AcceptInput.EnableDetour();
+	if (!CEntityIdentity_AcceptInput.CreateDetour(gameConfig))
+	 	success = false;
+	CEntityIdentity_AcceptInput.EnableDetour();
+
+	if (!SendNetMessage.CreateDetour(gameConfig))
+		success = false;
+	SendNetMessage.EnableDetour();
+
+	if (!MountAddon.CreateDetour(gameConfig))
+		success = false;
+	MountAddon.EnableDetour();
 
 	if (!CNavMesh_GetNearestNavArea.CreateDetour(gameConfig))
 		success = false;

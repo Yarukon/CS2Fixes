@@ -49,6 +49,7 @@ EZRRoundState g_ZRRoundState = EZRRoundState::ROUND_START;
 static int g_iRoundNum = 0;
 static int g_iInfectionCountDown = 0;
 static bool g_bRespawnEnabled = true;
+static CHandle<Z_CBaseEntity> g_hRespawnToggler;
 static CHandle<CTeam> g_hTeamCT;
 static CHandle<CTeam> g_hTeamT;
 
@@ -573,6 +574,7 @@ void SetupRespawnToggler()
 
 	pKeyValues->SetString("targetname", "zr_toggle_respawn");
 	relay->DispatchSpawn(pKeyValues);
+	g_hRespawnToggler = relay->GetHandle();
 }
 
 void SetupCTeams()
@@ -977,8 +979,18 @@ bool ZR_Detour_CCSPlayer_WeaponServices_CanUse(CCSPlayer_WeaponServices *pWeapon
 	return true;
 }
 
-void ZR_ToggleRespawn(const char* inputName)
+void ZR_Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSymbolLarge* pInputName, CEntityInstance* pActivator, CEntityInstance* pCaller, variant_t* value, int nOutputID)
 {
+	if (!g_hRespawnToggler.IsValid())
+		return;
+
+	Z_CBaseEntity* relay = g_hRespawnToggler.Get();
+	const char* inputName = pInputName->String();
+
+	// Must be an input into our zr_toggle_respawn relay
+	if (!relay || pThis != relay->m_pEntity)
+		return;
+
 	if (!V_strcasecmp(inputName, "Trigger"))
 		ToggleRespawn();
 	else if (!V_strcasecmp(inputName, "Enable") && !g_bRespawnEnabled)
@@ -988,7 +1000,7 @@ void ZR_ToggleRespawn(const char* inputName)
 	else
 		return;
 
-	ClientPrintAll(HUD_PRINTTALK, ZR_PREFIX "已 %s 重生!", g_bRespawnEnabled ? "启用" : "禁用");
+	ClientPrintAll(HUD_PRINTTALK, ZR_PREFIX "已 %s 复活!", g_bRespawnEnabled ? "启用" : "禁用");
 }
 
 void SpawnPlayer(CCSPlayerController* pController)
@@ -1285,13 +1297,13 @@ CON_COMMAND_CHAT(zclass, "find and select your Z:R class")
 
 	if (!player)
 	{
-		ClientPrint(player, HUD_PRINTCONSOLE, ZR_PREFIX "You cannot use this command from the server console.");
+		ClientPrint(player, HUD_PRINTCONSOLE, ZR_PREFIX "你无法在控制台执行该指令.");
 		return;
 	}
 
 	if (args.ArgC() < 2)
 	{
-		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "You need to specify a team and class: %s <zombie or human> <class name>.", args[0]);
+		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "你需要指定队伍和职业: %s <zombie 或 human> <职业名称>.", args[0]);
 		return;
 	}
 
@@ -1299,7 +1311,7 @@ CON_COMMAND_CHAT(zclass, "find and select your Z:R class")
 	bool bIsZombie = !V_strcasecmp(args[1], "zombie") || !V_strcasecmp(args[1], "zm")|| !V_strcasecmp(args[1], "z");
 	bool bIsHuman = !V_strcasecmp(args[1], "human") || !V_strcasecmp(args[1], "hm") || !V_strcasecmp(args[1], "h");
 	if (bIsZombie == bIsHuman) {
-		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "You need to specify a team and class: %s <zombie|zm|z or human|hm|h> <class name>.", args[0]);
+		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "你需要指定队伍和职业: %s <zombie|zm|z 或 human|hm|h> <职业名称>.", args[0]);
 	}
 
 	CUtlVector<ZRClass*> teamClasses;
@@ -1316,22 +1328,22 @@ CON_COMMAND_CHAT(zclass, "find and select your Z:R class")
 			bool bClassMatches = !V_stricmp(sClassName, args[2]);
 			bool bIsApplicable = teamClasses[i]->IsApplicableTo(player);
 			if (bClassMatches && bIsApplicable) {
-				ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "Your %s class is now set to '%s'.", sTeamName, sClassName);
+				ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "你的 %s 职业设置为 '%s'.", sTeamName, sClassName);
 				g_pUserPreferencesSystem->SetPreference(iSlot, sPreferenceKey, sClassName);
 				return;
 			}
 		}
-		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "No available %s classes matched '%s'.", sTeamName, args[2]);
+		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "无法在 %s 职业内找到 '%s'.", sTeamName, args[2]);
 		return;
 	} else {
 		const char* sCurrentClass = g_pUserPreferencesSystem->GetPreference(iSlot, sPreferenceKey);
 		if (sCurrentClass[0] != '\0')
 		{
-			ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "Your current %s class is: %s. Available classes:", sTeamName, sCurrentClass);
+			ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "你当前的 %s 职业为: %s. 可用职业:", sTeamName, sCurrentClass);
 		} 
 		else
 		{
-			ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "Available %s classes:", sTeamName);
+			ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "可用的 %s 职业:", sTeamName);
 		}
 
 		FOR_EACH_VEC(teamClasses, i)
@@ -1351,13 +1363,13 @@ CON_COMMAND_CHAT_FLAGS(infect, "infect a player", ADMFLAG_GENERIC)
 
 	if (args.ArgC() < 2)
 	{
-		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "Usage: !infect <name>");
+		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "用法: !infect <name>");
 		return;
 	}
 
 	if (g_ZRRoundState == EZRRoundState::ROUND_END)
 	{
-		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "The round is already over!");
+		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "回合已结束!");
 		return;
 	}
 
@@ -1369,11 +1381,11 @@ CON_COMMAND_CHAT_FLAGS(infect, "infect a player", ADMFLAG_GENERIC)
 
 	if (!iNumClients)
 	{
-		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "Target not found.");
+		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "未找到目标.");
 		return;
 	}
 
-	const char* pszCommandPlayerName = player ? player->GetPlayerName() : "Console";
+	const char* pszCommandPlayerName = player ? player->GetPlayerName() : "控制台";
 
 	for (int i = 0; i < iNumClients; i++)
 	{
@@ -1386,7 +1398,7 @@ CON_COMMAND_CHAT_FLAGS(infect, "infect a player", ADMFLAG_GENERIC)
 
 		if (pTarget->m_iTeamNum() != CS_TEAM_CT || !pPawn || !pPawn->IsAlive())
 		{
-			ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "%s is not an alive human!", pTarget->GetPlayerName());
+			ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "%s 已经死亡!", pTarget->GetPlayerName());
 			continue;
 		}
 
@@ -1396,10 +1408,10 @@ CON_COMMAND_CHAT_FLAGS(infect, "infect a player", ADMFLAG_GENERIC)
 			ZR_Infect(pTarget, pTarget, true);
 
 		if (nType < ETargetType::ALL)
-			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "infected", g_ZRRoundState == EZRRoundState::ROUND_START ? " as a mother zombie" : "", ZR_PREFIX);
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "感染了", g_ZRRoundState == EZRRoundState::ROUND_START ? " 为母体僵尸" : "", ZR_PREFIX);
 	}
 
-	PrintMultiAdminAction(nType, pszCommandPlayerName, "infected", g_ZRRoundState == EZRRoundState::ROUND_START ? " as mother zombies" : "", ZR_PREFIX);
+	PrintMultiAdminAction(nType, pszCommandPlayerName, "感染了", g_ZRRoundState == EZRRoundState::ROUND_START ? " 为母体僵尸" : "", ZR_PREFIX);
 
 	// Note we skip MZ immunity & spawn TP code when first infection is manually triggered
 	if (g_ZRRoundState == EZRRoundState::ROUND_START)
@@ -1419,13 +1431,13 @@ CON_COMMAND_CHAT_FLAGS(revive, "revive a player", ADMFLAG_GENERIC)
 
 	if (args.ArgC() < 2)
 	{
-		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "Usage: !revive <name>");
+		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "用法: !revive <name>");
 		return;
 	}
 
 	if (g_ZRRoundState != EZRRoundState::POST_INFECTION)
 	{
-		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "A round is not ongoing!");
+		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "回合未在进行中!");
 		return;
 	}
 
@@ -1437,11 +1449,11 @@ CON_COMMAND_CHAT_FLAGS(revive, "revive a player", ADMFLAG_GENERIC)
 
 	if (!iNumClients)
 	{
-		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "Target not found.");
+		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "未找到目标.");
 		return;
 	}
 
-	const char* pszCommandPlayerName = player ? player->GetPlayerName() : "Console";
+	const char* pszCommandPlayerName = player ? player->GetPlayerName() : "控制台";
 
 	for (int i = 0; i < iNumClients; i++)
 	{
@@ -1454,15 +1466,15 @@ CON_COMMAND_CHAT_FLAGS(revive, "revive a player", ADMFLAG_GENERIC)
 
 		if (pTarget->m_iTeamNum() != CS_TEAM_T || !pPawn || !pPawn->IsAlive())
 		{
-			ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "%s is not an alive zombie!", pTarget->GetPlayerName());
+			ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "%s 已经死亡!", pTarget->GetPlayerName());
 			continue;
 		}
 
 		ZR_Cure(pTarget);
 
 		if (nType < ETargetType::ALL)
-			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "revived", "", ZR_PREFIX);
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "治愈了", "", ZR_PREFIX);
 	}
 
-	PrintMultiAdminAction(nType, pszCommandPlayerName, "revived", "", ZR_PREFIX);
+	PrintMultiAdminAction(nType, pszCommandPlayerName, "治愈了", "", ZR_PREFIX);
 }
