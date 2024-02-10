@@ -519,13 +519,13 @@ bool InitDetours(CGameConfig *gameConfig)
 	 	success = false;
 	CEntityIdentity_AcceptInput.EnableDetour();
 
-	if (!SendNetMessage.CreateDetour(gameConfig))
-		success = false;
-	SendNetMessage.EnableDetour();
+	// if (!SendNetMessage.CreateDetour(gameConfig))
+	//  	success = false;
+	// SendNetMessage.EnableDetour();
 
-	if (!MountAddon.CreateDetour(gameConfig))
-		success = false;
-	MountAddon.EnableDetour();
+	// if (!MountAddon.CreateDetour(gameConfig))
+	// 	success = false;
+	// MountAddon.EnableDetour();
 
 	if (!CNavMesh_GetNearestNavArea.CreateDetour(gameConfig))
 		success = false;
