@@ -181,6 +181,7 @@
     <ClCompile Include="src\cs2fixes.cpp" />
     <ClCompile Include="src\cs2_sdk\schema.cpp" />
     <ClCompile Include="src\ctimer.cpp" />
+    <ClCompile Include="src\customio.cpp" />
     <ClCompile Include="src\cvars.cpp" />
     <ClCompile Include="src\detours.cpp" />
     <ClCompile Include="src\discord.cpp" />
@@ -224,6 +225,7 @@
     <ClInclude Include="src\cs2_sdk\schema.h" />
     <ClInclude Include="src\cdetour.h" />
     <ClInclude Include="src\ctimer.h" />
+    <ClInclude Include="src\customio.h" />
     <ClInclude Include="src\detours.h" />
     <ClInclude Include="src\discord.h" />
     <ClInclude Include="src\eventlistener.h" />

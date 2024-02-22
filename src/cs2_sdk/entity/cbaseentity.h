@@ -206,12 +206,6 @@ public:
 		addresses::UTIL_Remove(this);
 	}
 
-	void SetMoveType(MoveType_t nMoveType)
-	{
-		m_MoveType = nMoveType; // necessary to maintain client prediction
-		m_nActualMoveType = nMoveType;
-	}
-
 	const char* GetName() const { return m_pEntity->m_name.String(); }
 };
 

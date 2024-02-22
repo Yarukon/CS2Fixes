@@ -715,12 +715,12 @@ CON_COMMAND_CHAT_FLAGS(noclip, "- toggle noclip on yourself", ADMFLAG_SLAY | ADM
 	if (pPawn->m_nActualMoveType() == MOVETYPE_NOCLIP)
 	{
 		pPawn->SetMoveType(MOVETYPE_WALK);
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "exited noclip.", player->GetPlayerName());
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "禁用了穿墙模式.", player->GetPlayerName());
 	}
 	else
 	{
 		pPawn->SetMoveType(MOVETYPE_NOCLIP);
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "entered noclip.", player->GetPlayerName());
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "启用了穿墙模式.", player->GetPlayerName());
 	}
 }
 
