@@ -61,10 +61,10 @@ void PrintMultiAdminAction(ETargetType nType, const char* pszAdminName, const ch
 		ClientPrintAll(HUD_PRINTTALK, "%s" ADMIN_PREFIX "%s 所有人%s.", prefix, pszAdminName, pszAction, pszAction2);
 		break;
 	case ETargetType::T:
-		ClientPrintAll(HUD_PRINTTALK, "%s" ADMIN_PREFIX "%s terrorists%s.", prefix, pszAdminName, pszAction, pszAction2);
+		ClientPrintAll(HUD_PRINTTALK, "%s" ADMIN_PREFIX "%s Terrorists%s.", prefix, pszAdminName, pszAction, pszAction2);
 		break;
 	case ETargetType::CT:
-		ClientPrintAll(HUD_PRINTTALK, "%s" ADMIN_PREFIX "%s counter-terrorists%s.", prefix, pszAdminName, pszAction, pszAction2);
+		ClientPrintAll(HUD_PRINTTALK, "%s" ADMIN_PREFIX "%s Counter-Terrorists%s.", prefix, pszAdminName, pszAction, pszAction2);
 		break;
 	}
 }
@@ -148,7 +148,7 @@ CON_COMMAND_CHAT_FLAGS(ban, "<name> <minutes|0 (permament)> - ban a player", ADM
 
 	if (!pTargetPlayer->IsAuthenticated())
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s is not yet authenticated, consider kicking instead or please wait a moment and try again.", pTarget->GetPlayerName());
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s 还未验证完毕, 请考虑踢出该玩家或稍后再试.", pTarget->GetPlayerName());
 		return;
 	}
 
@@ -227,7 +227,7 @@ CON_COMMAND_CHAT_FLAGS(mute, "<name> <duration|0 (permament)> - mutes a player",
 
 		if (!pTargetPlayer->IsAuthenticated())
 		{
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s is not yet authenticated, please wait a moment and try again.", pTarget->GetPlayerName());
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s 还未验证完毕, 请考虑踢出该玩家或稍后再试.", pTarget->GetPlayerName());
 			continue;
 		}
 
@@ -352,7 +352,7 @@ CON_COMMAND_CHAT_FLAGS(gag, "<name> <duration|0 (permanent)> - gag a player", AD
 
 		if (!pTargetPlayer->IsAuthenticated())
 		{
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s is not yet authenticated, please wait a moment and try again.", pTarget->GetPlayerName());
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s 还未验证完毕, 请考虑踢出该玩家或稍后再试.", pTarget->GetPlayerName());
 			continue;
 		}
 
@@ -672,7 +672,7 @@ CON_COMMAND_CHAT_FLAGS(setteam, "<name> <team (0-3)> - set a player's team", ADM
 
 	const char *pszCommandPlayerName = player ? player->GetPlayerName() : "控制台";
 
-	constexpr const char *teams[] = {"无", "观察者", "terrorists", "counter-terrorists"};
+	constexpr const char *teams[] = {"无", "观察者", "Terrorists", "Counter-Terrorists"};
 
 	char szAction[64];
 	V_snprintf(szAction, sizeof(szAction), " 至队伍 %s", teams[iTeam]);
@@ -1080,7 +1080,7 @@ CON_COMMAND_CHAT_FLAGS(beacon, "Toggle beacon on a player", ADMFLAG_GENERIC)
 {
 	if (args.ArgC() < 2)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !beacon <name>");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "指令格式: !beacon <name>");
 		return;
 	}
 
@@ -1092,11 +1092,11 @@ CON_COMMAND_CHAT_FLAGS(beacon, "Toggle beacon on a player", ADMFLAG_GENERIC)
 
 	if (!iNumClients)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Target not found.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "找不到目标.");
 		return;
 	}
 
-	const char *pszCommandPlayerName = player ? player->GetPlayerName() : "Console";
+	const char *pszCommandPlayerName = player ? player->GetPlayerName() : "控制台";
 
 	for (int i = 0; i < iNumClients; i++)
 	{
@@ -1108,10 +1108,10 @@ CON_COMMAND_CHAT_FLAGS(beacon, "Toggle beacon on a player", ADMFLAG_GENERIC)
 		PerformBeacon(pSlots[i]);
 
 		if (nType < ETargetType::ALL)
-			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "toggled beacon on");
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "触发了", "的高亮");
 	}
 
-	PrintMultiAdminAction(nType, pszCommandPlayerName, "toggled beacon on");
+	PrintMultiAdminAction(nType, pszCommandPlayerName, "触发了", "的高亮");
 }
 
 bool CAdminSystem::LoadAdmins()
