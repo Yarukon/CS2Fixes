@@ -1,7 +1,7 @@
 /**
  * =============================================================================
  * CS2Fixes
- * Copyright (C) 2023 Source2ZE
+ * Copyright (C) 2023-2024 Source2ZE
  * =============================================================================
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -86,7 +86,8 @@ public:
 						return return_addr;
 					}
 
-					return_addr = (void*)(pMemory + i);
+					return_addr = (void *)(pMemory + i);
+					break;
 				}
 			}
 		}

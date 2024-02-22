@@ -1,7 +1,7 @@
 /**
  * =============================================================================
  * CS2Fixes
- * Copyright (C) 2023 Source2ZE
+ * Copyright (C) 2023-2024 Source2ZE
  * =============================================================================
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -175,6 +175,7 @@ CON_COMMAND_CHAT(rtv, "- Vote to end the current map sooner")
 	if (iCurrentRTVCount + 1 >= iNeededRTVCount)
 	{
 		g_RTVState = ERTVState::POST_RTV_SUCCESSFULL;
+		g_ExtendState = EExtendState::POST_RTV;
 		// CONVAR_TODO
 		g_pEngineServer2->ServerCommand("mp_timelimit 1");
 
@@ -276,6 +277,9 @@ CON_COMMAND_CHAT(ve, "- Vote to extend current map")
 		return;
 	case EExtendState::POST_LAST_ROUND_END:
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "投票延长在选择下一张地图时禁用.");
+		return;
+	case EExtendState::POST_RTV:
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Extend vote is closed because RTV vote has passed.");
 		return;
 	case EExtendState::NO_EXTENDS:
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "当前地图不支持投票延长.");

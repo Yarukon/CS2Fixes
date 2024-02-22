@@ -2,7 +2,7 @@
 /**
  * =============================================================================
  * CS2Fixes
- * Copyright (C) 2023 Source2ZE
+ * Copyright (C) 2023-2024 Source2ZE
  * =============================================================================
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -36,6 +36,7 @@ enum class EExtendState
 	POST_EXTEND_COOLDOWN,
 	POST_EXTEND_NO_EXTENDS_LEFT,
 	POST_LAST_ROUND_END,
+	POST_RTV,
 	NO_EXTENDS,
 };
 

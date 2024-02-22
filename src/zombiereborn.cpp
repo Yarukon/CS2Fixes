@@ -1,7 +1,7 @@
 /**
  * =============================================================================
  * CS2Fixes
- * Copyright (C) 2023 Source2ZE
+ * Copyright (C) 2023-2024 Source2ZE
  * =============================================================================
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -89,6 +89,7 @@ void ZR_Precache(IEntityResourceManifest* pResourceManifest)
 
 bool ZRClass::IsApplicableTo(CCSPlayerController *pController)
 {
+	if (!bEnabled) return false;
 	if (!V_stricmp(szClassName.c_str(), "MotherZombie")) return false;
 	ZEPlayer* pPlayer = pController->GetZEPlayer();
 	if (!pPlayer) return false;
@@ -875,8 +876,10 @@ void ZR_InitialInfection()
 			if (g_iInfectSpawnType == EZRSpawnType::RESPAWN)
 			{
 				randomindex = rand() % spawns.Count();
-				pPawn->SetAbsOrigin(spawns[randomindex]->GetAbsOrigin());
-				pPawn->SetAbsRotation(spawns[randomindex]->GetAbsRotation());
+				Vector origin = spawns[randomindex]->GetAbsOrigin();
+				QAngle rotation = spawns[randomindex]->GetAbsRotation();
+
+				pPawn->Teleport(&origin, &rotation, nullptr);
 			}
 
 			ZR_InfectMotherZombie(pController);
@@ -1244,7 +1247,7 @@ CON_COMMAND_CHAT(ztele, "- teleport to spawn")
 
 	//Pick and get position of random spawnpoint
 	int randomindex = rand() % spawns.Count();
-	Vector spawnpos = spawns[randomindex]->GetAbsOrigin();
+	CHandle<SpawnPoint> spawnHandle = spawns[randomindex]->GetHandle();
 
 	//Here's where the mess starts
 	CBasePlayerPawn* pPawn = player->GetPawn();
@@ -1263,20 +1266,24 @@ CON_COMMAND_CHAT(ztele, "- teleport to spawn")
 
 	ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX"5秒后传送到出生点, 不要移动.");
 
-	CHandle<CBasePlayerPawn> handle = pPawn->GetHandle();
+	CHandle<CBasePlayerPawn> pawnHandle = pPawn->GetHandle();
 
-	new CTimer(5.0f, false, [spawnpos, handle, initialpos]()
+	new CTimer(5.0f, false, [spawnHandle, pawnHandle, initialpos]()
 	{
-		CBasePlayerPawn* pPawn = handle.Get();
+		CBasePlayerPawn* pPawn = pawnHandle.Get();
+		SpawnPoint* pSpawn = spawnHandle.Get();
 
-		if (!pPawn)
+		if (!pPawn || !pSpawn)
 			return -1.0f;
 
 		Vector endpos = pPawn->GetAbsOrigin();
 
 		if (initialpos.DistTo(endpos) < g_flMaxZteleDistance)
 		{
-			pPawn->SetAbsOrigin(spawnpos);
+			Vector origin = pSpawn->GetAbsOrigin();
+			QAngle rotation = pSpawn->GetAbsRotation();
+
+			pPawn->Teleport(&origin, &rotation, nullptr);
 			ClientPrint(pPawn->GetController(), HUD_PRINTTALK, ZR_PREFIX "已传送至出生点.");
 		}
 		else

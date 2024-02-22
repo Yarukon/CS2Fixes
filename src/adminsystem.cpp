@@ -1,7 +1,7 @@
 /**
  * =============================================================================
  * CS2Fixes
- * Copyright (C) 2023 Source2ZE
+ * Copyright (C) 2023-2024 Source2ZE
  * =============================================================================
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -17,7 +17,7 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "protobuf/generated/usermessages.pb.h"
+#include "usermessages.pb.h"
 
 #include "adminsystem.h"
 #include "KeyValues.h"
@@ -715,12 +715,12 @@ CON_COMMAND_CHAT_FLAGS(noclip, "- toggle noclip on yourself", ADMFLAG_SLAY | ADM
 	if (pPawn->m_nActualMoveType() == MOVETYPE_NOCLIP)
 	{
 		pPawn->SetMoveType(MOVETYPE_WALK);
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "禁用了穿墙模式.", player->GetPlayerName());
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "exited noclip.", player->GetPlayerName());
 	}
 	else
 	{
 		pPawn->SetMoveType(MOVETYPE_NOCLIP);
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "启用了穿墙模式.", player->GetPlayerName());
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "entered noclip.", player->GetPlayerName());
 	}
 }
 
@@ -1237,10 +1237,11 @@ void CAdminSystem::SaveInfractions()
 		pKV->AddSubKey(pSubKey);
 	}
 
-	const char *pszPath = "addons/cs2fixes/data/infractions.txt";
+	char szPath[MAX_PATH];
+	V_snprintf(szPath, sizeof(szPath), "%s%s", Plat_GetGameDirectory(), "/csgo/addons/cs2fixes/data/infractions.txt");
 
-	if (!pKV->SaveToFile(g_pFullFileSystem, pszPath))
-		Warning("Failed to save infractions to %s", pszPath);
+	if (!pKV->SaveToFile(g_pFullFileSystem, szPath))
+		Warning("Failed to save infractions to %s\n", szPath);
 }
 
 void CAdminSystem::AddInfraction(CInfractionBase* infraction)

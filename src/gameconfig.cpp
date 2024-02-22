@@ -192,6 +192,7 @@ void *CGameConfig::ResolveSignature(const char *name)
 		byte *pSignature = HexToByte(signature, iLength);
 		if (!pSignature)
 			return nullptr;
+
 		int error;
 
 		address = (*module)->FindSignature(pSignature, iLength, error);
@@ -242,8 +243,6 @@ int CGameConfig::HexStringToUint8Array(const char* hexString, uint8_t* byteArray
             return -1; // Return an error code.
         }
     }
-
-    byteArray[byteCount] = '\0'; // Add a null-terminating character.
 
     return byteCount; // Return the number of bytes successfully converted.
 }
