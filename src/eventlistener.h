@@ -62,3 +62,9 @@ void UnregisterEventListeners();
 	void _event##_callback(IGameEvent*);									\
 	CGameEventListener _event##_listener(_event##_callback, #_event);		\
 	void _event##_callback(IGameEvent *pEvent)
+
+
+#define GAME_EVENT_F2(_event, _id)												\
+	void _event##_id##_callback(IGameEvent*);									\
+	CGameEventListener _event##_id##_listener(_event##_id##_callback, #_event);		\
+	void _event##_id##_callback(IGameEvent *pEvent)

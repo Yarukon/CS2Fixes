@@ -48,10 +48,10 @@
 
 #include "tier0/memdbgon.h"
 
-extern CGlobalVars *gpGlobals;
-extern CGameEntitySystem *g_pEntitySystem;
-extern IGameEventManager2 *g_gameEventManager;
-extern CCSGameRules *g_pGameRules;
+extern CGlobalVars* gpGlobals;
+extern CGameEntitySystem* g_pEntitySystem;
+extern IGameEventManager2* g_gameEventManager;
+extern CCSGameRules* g_pGameRules;
 
 DECLARE_DETOUR(UTIL_SayTextFilter, Detour_UTIL_SayTextFilter);
 DECLARE_DETOUR(UTIL_SayText2Filter, Detour_UTIL_SayText2Filter);
@@ -67,7 +67,7 @@ DECLARE_DETOUR(FixLagCompEntityRelationship, Detour_FixLagCompEntityRelationship
 DECLARE_DETOUR(SendNetMessage, Detour_SendNetMessage);
 DECLARE_DETOUR(HostStateRequest, Detour_HostStateRequest);
 
-void FASTCALL Detour_CGameRules_Constructor(CGameRules *pThis)
+void FASTCALL Detour_CGameRules_Constructor(CGameRules* pThis)
 {
 	g_pGameRules = (CCSGameRules*)pThis;
 	CGameRules_Constructor(pThis);
@@ -79,31 +79,38 @@ static bool g_bBlockAllDamage = false;
 FAKE_BOOL_CVAR(cs2f_block_molotov_self_dmg, "Whether to block self-damage from molotovs", g_bBlockMolotovSelfDmg, false, false)
 FAKE_BOOL_CVAR(cs2f_block_all_dmg, "Whether to block all damage to players", g_bBlockAllDamage, false, false)
 
-void FASTCALL Detour_CBaseEntity_TakeDamageOld(Z_CBaseEntity *pThis, CTakeDamageInfo *inputInfo)
+int EvLastAttacker = -1;
+int EvLastVictim = -1;
+int EvLastInflictor = -1;
+int EvLastAbility = -1;
+float EvLastDamage = -1;
+int EvLastDamageType = -1;
+
+void FASTCALL Detour_CBaseEntity_TakeDamageOld(Z_CBaseEntity* pThis, CTakeDamageInfo* inputInfo)
 {
 #ifdef _DEBUG
 	Message("\n--------------------------------\n"
-			"TakeDamage on %s\n"
-			"Attacker: %s\n"
-			"Inflictor: %s\n"
-			"Ability: %s\n"
-			"Damage: %.2f\n"
-			"Damage Type: %i\n"
-			"--------------------------------\n",
-			pThis->GetClassname(),
-			inputInfo->m_hAttacker.Get() ? inputInfo->m_hAttacker.Get()->GetClassname() : "NULL",
-			inputInfo->m_hInflictor.Get() ? inputInfo->m_hInflictor.Get()->GetClassname() : "NULL",
-			inputInfo->m_hAbility.Get() ? inputInfo->m_hAbility.Get()->GetClassname() : "NULL",
-			inputInfo->m_flDamage,
-			inputInfo->m_bitsDamageType);
+		"TakeDamage on %s\n"
+		"Attacker: %s\n"
+		"Inflictor: %s\n"
+		"Ability: %s\n"
+		"Damage: %.2f\n"
+		"Damage Type: %i\n"
+		"--------------------------------\n",
+		pThis->GetClassname(),
+		inputInfo->m_hAttacker.Get() ? inputInfo->m_hAttacker.Get()->GetClassname() : "NULL",
+		inputInfo->m_hInflictor.Get() ? inputInfo->m_hInflictor.Get()->GetClassname() : "NULL",
+		inputInfo->m_hAbility.Get() ? inputInfo->m_hAbility.Get()->GetClassname() : "NULL",
+		inputInfo->m_flDamage,
+		inputInfo->m_bitsDamageType);
 #endif
 
 	// Block all player damage if desired
 	if (g_bBlockAllDamage && pThis->IsPawn())
 		return;
 
-	CBaseEntity *pInflictor = inputInfo->m_hInflictor.Get();
-	const char *pszInflictorClass = pInflictor ? pInflictor->GetClassname() : "";
+	CBaseEntity* pInflictor = inputInfo->m_hInflictor.Get();
+	const char* pszInflictorClass = pInflictor ? pInflictor->GetClassname() : "";
 
 	// Prevent everything but nades from inflicting blast damage
 	if (inputInfo->m_bitsDamageType == DamageTypes_t::DMG_BLAST && V_strncmp(pszInflictorClass, "hegrenade", 9))
@@ -116,7 +123,38 @@ void FASTCALL Detour_CBaseEntity_TakeDamageOld(Z_CBaseEntity *pThis, CTakeDamage
 	if (g_bBlockMolotovSelfDmg && inputInfo->m_hAttacker == pThis && !V_strncmp(pszInflictorClass, "inferno", 7))
 		return;
 
+
+	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning");
+	if (pEvent) {
+		EvLastAttacker = inputInfo->m_hAttacker.Get() ? inputInfo->m_hAttacker.Get()->GetEntityIndex().Get() : -1;
+		EvLastVictim = pThis->GetEntityIndex().Get();
+		EvLastInflictor = inputInfo->m_hInflictor.Get() ? inputInfo->m_hInflictor.Get()->GetEntityIndex().Get() : -1;
+		EvLastAbility = inputInfo->m_hAbility.Get() ? inputInfo->m_hAbility.Get()->GetEntityIndex().Get() : -1;
+		EvLastDamage = inputInfo->m_flDamage;
+		EvLastDamageType = inputInfo->m_bitsDamageType;
+		pEvent->SetString("custom_event", "entity_take_damage");
+		pEvent->SetInt("attacker_index", EvLastAttacker);
+		pEvent->SetInt("victim_index", EvLastVictim);
+		pEvent->SetInt("inflictor_index", EvLastInflictor);
+		pEvent->SetInt("ability_index", EvLastAbility);
+		pEvent->SetFloat("damage", EvLastDamage);
+		pEvent->SetInt("damage_type", EvLastDamageType);
+		g_gameEventManager->FireEvent(pEvent, true);
+		if (EvLastDamage <= 0) { return; }
+		inputInfo->m_flDamage = EvLastDamage;
+	}
+
 	CBaseEntity_TakeDamageOld(pThis, inputInfo);
+}
+
+GAME_EVENT_F2(choppers_incoming_warning, entity_take_damage)
+{
+	auto customEventName = pEvent->GetString("custom_event", "");
+	if (strcmp(customEventName, "entity_take_damage") != 0) {
+		return;
+	}
+	float damage = pEvent->GetFloat("damage");
+	EvLastDamage = damage;
 }
 
 static bool g_bUseOldPush = false;
@@ -193,7 +231,7 @@ const char* snd1 = "Flesh.BulletImpact";
 const char* snd2 = "Player.DamageHeadShot.Onlooker";
 const char* snd3 = "Player.DamageHeadShot.Victim";
 const char* snd4 = "Player.DamageHeadShotArmor.Victim";
-void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase *pSoundEmitterSystem, CEntityIndex *a2, IRecipientFilter &filter, uint32 a4, EmitSound_t* a5)
+void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase* pSoundEmitterSystem, CEntityIndex* a2, IRecipientFilter& filter, uint32 a4, EmitSound_t* a5)
 {
 	//ConMsg("Detour_CSoundEmitterSystem_EmitSound\n");
 	const char* sndName = a5->m_pSoundName;
@@ -212,7 +250,7 @@ bool FASTCALL Detour_IsHearingClient(void* serverClient, int index)
 	return IsHearingClient(serverClient, index);
 }
 
-void SayChatMessageWithTimer(IRecipientFilter &filter, const char *pText, CCSPlayerController *pPlayer, uint64 eMessageType)
+void SayChatMessageWithTimer(IRecipientFilter& filter, const char* pText, CCSPlayerController* pPlayer, uint64 eMessageType)
 {
 	char buf[256];
 
@@ -310,7 +348,7 @@ bool g_bEnableTriggerTimer = false;
 
 FAKE_BOOL_CVAR(cs2f_trigger_timer_enable, "Whether to process countdown messages said by Console (e.g. Hold for 10 seconds) and append the round time where the countdown resolves", g_bEnableTriggerTimer, false, false)
 
-void FASTCALL Detour_UTIL_SayTextFilter(IRecipientFilter &filter, const char *pText, CCSPlayerController *pPlayer, uint64 eMessageType)
+void FASTCALL Detour_UTIL_SayTextFilter(IRecipientFilter& filter, const char* pText, CCSPlayerController* pPlayer, uint64 eMessageType)
 {
 	if (pPlayer)
 		return UTIL_SayTextFilter(filter, pText, pPlayer, eMessageType);
@@ -325,14 +363,14 @@ void FASTCALL Detour_UTIL_SayTextFilter(IRecipientFilter &filter, const char *pT
 }
 
 void FASTCALL Detour_UTIL_SayText2Filter(
-	IRecipientFilter &filter,
-	CCSPlayerController *pEntity,
+	IRecipientFilter& filter,
+	CCSPlayerController* pEntity,
 	uint64 eMessageType,
-	const char *msg_name,
-	const char *param1,
-	const char *param2,
-	const char *param3,
-	const char *param4)
+	const char* msg_name,
+	const char* param1,
+	const char* param2,
+	const char* param3,
+	const char* param4)
 {
 #ifdef _DEBUG
 	CPlayerSlot slot = filter.GetRecipientIndex(0);
@@ -357,17 +395,17 @@ bool FASTCALL Detour_IsChannelEnabled(LoggingChannelID_t channelID, LoggingSever
 
 CDetour<decltype(Detour_Log)> g_LoggingDetours[] =
 {
-	CDetour<decltype(Detour_Log)>( Detour_Log, "Msg" ),
+	CDetour<decltype(Detour_Log)>(Detour_Log, "Msg"),
 	//CDetour<decltype(Detour_Log)>( Detour_Log, "?ConMsg@@YAXPEBDZZ" ),
 	//CDetour<decltype(Detour_Log)>( Detour_Log, "?ConColorMsg@@YAXAEBVColor@@PEBDZZ" ),
-	CDetour<decltype(Detour_Log)>( Detour_Log, "ConDMsg" ),
-	CDetour<decltype(Detour_Log)>( Detour_Log, "DevMsg" ),
-	CDetour<decltype(Detour_Log)>( Detour_Log, "Warning" ),
-	CDetour<decltype(Detour_Log)>( Detour_Log, "DevWarning" ),
+	CDetour<decltype(Detour_Log)>(Detour_Log, "ConDMsg"),
+	CDetour<decltype(Detour_Log)>(Detour_Log, "DevMsg"),
+	CDetour<decltype(Detour_Log)>(Detour_Log, "Warning"),
+	CDetour<decltype(Detour_Log)>(Detour_Log, "DevWarning"),
 	//CDetour<decltype(Detour_Log)>( Detour_Log, "?DevWarning@@YAXPEBDZZ" ),
-	CDetour<decltype(Detour_Log)>( Detour_Log, "LoggingSystem_Log" ),
-	CDetour<decltype(Detour_Log)>( Detour_Log, "LoggingSystem_LogDirect" ),
-	CDetour<decltype(Detour_Log)>( Detour_Log, "LoggingSystem_LogAssert" ),
+	CDetour<decltype(Detour_Log)>(Detour_Log, "LoggingSystem_Log"),
+	CDetour<decltype(Detour_Log)>(Detour_Log, "LoggingSystem_LogDirect"),
+	CDetour<decltype(Detour_Log)>(Detour_Log, "LoggingSystem_LogAssert"),
 	//CDetour<decltype(Detour_Log)>( Detour_IsChannelEnabled, "LoggingSystem_IsChannelEnabled" ),
 };
 
@@ -393,7 +431,7 @@ CON_COMMAND_F(toggle_logs, "Toggle printing most logs and warnings", FCVAR_SPONL
 	bBlock = !bBlock;
 }
 
-bool FASTCALL Detour_CCSPlayer_WeaponServices_CanUse(CCSPlayer_WeaponServices *pWeaponServices, CBasePlayerWeapon* pPlayerWeapon)
+bool FASTCALL Detour_CCSPlayer_WeaponServices_CanUse(CCSPlayer_WeaponServices* pWeaponServices, CBasePlayerWeapon* pPlayerWeapon)
 {
 	if (g_bEnableZR && !ZR_Detour_CCSPlayer_WeaponServices_CanUse(pWeaponServices, pPlayerWeapon))
 		return false;
@@ -406,16 +444,16 @@ bool FASTCALL Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSym
 	if (g_bEnableZR)
 		ZR_Detour_CEntityIdentity_AcceptInput(pThis, pInputName, pActivator, pCaller, value, nOutputID);
 
-    if (!V_strcasecmp(pInputName->String(), "KeyValues"))
-    {
-        if ((value->m_type == FIELD_CSTRING || value->m_type == FIELD_STRING) && value->m_pszString)
-        {
-            // always const char*, even if it's FIELD_STRING (that is bug string from lua 'EntFire')
-            return CustomIO_HandleInput(pThis->m_pInstance, value->m_pszString, pActivator, pCaller);
-        }
-        Message("Invalid value type for input %s\n", pInputName->String());
-        return false;
-    }
+	if (!V_strcasecmp(pInputName->String(), "KeyValues"))
+	{
+		if ((value->m_type == FIELD_CSTRING || value->m_type == FIELD_STRING) && value->m_pszString)
+		{
+			// always const char*, even if it's FIELD_STRING (that is bug string from lua 'EntFire')
+			return CustomIO_HandleInput(pThis->m_pInstance, value->m_pszString, pActivator, pCaller);
+		}
+		Message("Invalid value type for input %s\n", pInputName->String());
+		return false;
+	}
 
 	return CEntityIdentity_AcceptInput(pThis, pInputName, pActivator, pCaller, value, nOutputID);
 }
@@ -436,7 +474,7 @@ bool g_bFixLagCompCrash = false;
 
 FAKE_BOOL_CVAR(cs2f_fix_lag_comp_crash, "Whether to fix lag compensation crash with env_entity_maker", g_bFixLagCompCrash, false, false)
 
-void FASTCALL Detour_FixLagCompEntityRelationship(void *a1, CEntityInstance *pEntity, bool a3)
+void FASTCALL Detour_FixLagCompEntityRelationship(void* a1, CEntityInstance* pEntity, bool a3)
 {
 	if (g_bFixLagCompCrash && strcmp(pEntity->GetClassname(), "env_entity_maker") == 0)
 		return;
@@ -447,14 +485,14 @@ void FASTCALL Detour_FixLagCompEntityRelationship(void *a1, CEntityInstance *pEn
 std::string g_sExtraAddon;
 FAKE_STRING_CVAR(cs2f_extra_addon, "The workshop ID of an extra addon to mount and send to clients", g_sExtraAddon, false);
 
-void *FASTCALL Detour_HostStateRequest(void *a1, void **pRequest)
+void* FASTCALL Detour_HostStateRequest(void* a1, void** pRequest)
 {
 	// skip if we're doing anything other than changelevel
-	if (g_sExtraAddon.empty() || V_strnicmp((char *)pRequest[2], "changelevel", 11))
+	if (g_sExtraAddon.empty() || V_strnicmp((char*)pRequest[2], "changelevel", 11))
 		return HostStateRequest(a1, pRequest);
 
 	// This offset hasn't changed in 6 years so it should be safe
-	CUtlString *sAddonString = (CUtlString*)(pRequest + 11);
+	CUtlString* sAddonString = (CUtlString*)(pRequest + 11);
 
 	// addons are simply comma-delimited, can have any number of them
 	if (!sAddonString->IsEmpty())
@@ -467,20 +505,20 @@ void *FASTCALL Detour_HostStateRequest(void *a1, void **pRequest)
 
 extern double g_flUniversalTime;
 
-void FASTCALL Detour_SendNetMessage(INetChannel *pNetChan, INetworkSerializable *pNetMessage, void *pData, int a4)
+void FASTCALL Detour_SendNetMessage(INetChannel* pNetChan, INetworkSerializable* pNetMessage, void* pData, int a4)
 {
-	NetMessageInfo_t *info = pNetMessage->GetNetMessageInfo();
+	NetMessageInfo_t* info = pNetMessage->GetNetMessageInfo();
 
 	// 7 for signon messages
 	if (info->m_MessageId != 7 || g_sExtraAddon.empty())
 		return SendNetMessage(pNetChan, pNetMessage, pData, a4);
 
-	ClientJoinInfo_t *pPendingClient = GetPendingClient(pNetChan);
+	ClientJoinInfo_t* pPendingClient = GetPendingClient(pNetChan);
 
 	if (pPendingClient)
 	{
 		Message("Detour_SendNetMessage: Sending addon %s to client %lli\n", g_sExtraAddon.c_str(), pPendingClient->steamid);
-		CNETMsg_SignonState *pMsg = (CNETMsg_SignonState *)pData;
+		CNETMsg_SignonState* pMsg = (CNETMsg_SignonState*)pData;
 		pMsg->set_addons(g_sExtraAddon.c_str());
 		pMsg->set_signon_state(SIGNONSTATE_CHANGELEVEL);
 		pPendingClient->signon_timestamp = g_flUniversalTime;
@@ -489,9 +527,9 @@ void FASTCALL Detour_SendNetMessage(INetChannel *pNetChan, INetworkSerializable 
 	SendNetMessage(pNetChan, pNetMessage, pData, a4);
 }
 
-CUtlVector<CDetourBase *> g_vecDetours;
+CUtlVector<CDetourBase*> g_vecDetours;
 
-bool InitDetours(CGameConfig *gameConfig)
+bool InitDetours(CGameConfig* gameConfig)
 {
 	bool success = true;
 
@@ -536,7 +574,7 @@ bool InitDetours(CGameConfig *gameConfig)
 	CCSPlayer_WeaponServices_CanUse.EnableDetour();
 
 	if (!CEntityIdentity_AcceptInput.CreateDetour(gameConfig))
-	 	success = false;
+		success = false;
 	CEntityIdentity_AcceptInput.EnableDetour();
 
 	if (!CNavMesh_GetNearestNavArea.CreateDetour(gameConfig))
