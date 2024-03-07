@@ -737,23 +737,23 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 			if (!pController || !pController->IsConnected() || j == iPlayerSlot)
 				continue;
 
-			CBarnLight *pFlashLight = g_playerManager->GetPlayer(j)->GetFlashLight();
+			CBarnLight *pFlashLight = pController->IsConnected() ? g_playerManager->GetPlayer(j)->GetFlashLight() : nullptr;
 
 			// Don't transmit other players' flashlights
-			if (pFlashLight)
+			if (pFlashLight && !(pSelfController->GetPlayerState() == STATE_OBSERVER_MODE && pSelfController->GetObserverTarget() == pController->GetPawn()))
 				pInfo->m_pTransmitEntity->Clear(pFlashLight->entindex());
 
-			if (!g_bEnableHide)
+			if (!g_bEnableHide || pSelfController->GetPlayerState() == STATE_OBSERVER_MODE)
 				continue;
 
-			auto pPawn = pController->m_hPawn.Get();
+			CCSPlayerPawn* pPawn = pController->GetPlayerPawn();
 
 			if (!pPawn)
 				continue;
 
 			// Hide players marked as hidden or ANY dead player, it seems that a ragdoll of a previously hidden player can crash?
 			// TODO: Revert this if/when valve fixes the issue?
-			if (pSelfZEPlayer->ShouldBlockTransmit(j) || pPawn->m_lifeState != LIFE_ALIVE)
+			if (pSelfZEPlayer->ShouldBlockTransmit(j) || !pPawn->IsAlive())
 				pInfo->m_pTransmitEntity->Clear(pPawn->entindex());
 		}
 	}
@@ -761,7 +761,6 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 	VPROF_EXIT_SCOPE();
 }
 
-// Potentially might not work
 void CS2Fixes::OnLevelInit( char const *pMapName,
 									 char const *pMapEntities,
 									 char const *pOldLevel,
