@@ -740,10 +740,10 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 			CBarnLight *pFlashLight = pController->IsConnected() ? g_playerManager->GetPlayer(j)->GetFlashLight() : nullptr;
 
 			// Don't transmit other players' flashlights
-			if (pFlashLight && !(pSelfController->GetPlayerState() == STATE_OBSERVER_MODE && pSelfController->GetObserverTarget() == pController->GetPawn()))
+			if (pFlashLight && !(pSelfController->GetPawnState() == STATE_OBSERVER_MODE && pSelfController->GetObserverTarget() == pController->GetPawn()))
 				pInfo->m_pTransmitEntity->Clear(pFlashLight->entindex());
 
-			if (!g_bEnableHide || pSelfController->GetPlayerState() == STATE_OBSERVER_MODE)
+			if (!g_bEnableHide || pSelfController->GetPawnState() == STATE_OBSERVER_MODE)
 				continue;
 
 			CCSPlayerPawn* pPawn = pController->GetPlayerPawn();
