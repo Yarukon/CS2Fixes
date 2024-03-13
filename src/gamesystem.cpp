@@ -60,9 +60,6 @@ bool InitGameSystems()
 
 extern IGameEventManager2* g_gameEventManager;
 
-const int EvPrecachePathsSize = 4096;
-char EvPrecachePaths[EvPrecachePathsSize][512];
-
 GS_EVENT_MEMBER(CGameSystem, BuildGameSessionManifest)
 {
 	Message("CGameSystem::BuildGameSessionManifest\n");
@@ -76,38 +73,6 @@ GS_EVENT_MEMBER(CGameSystem, BuildGameSessionManifest)
 	ZR_Precache(pResourceManifest);
 	PrecacheAdminBeaconParticle(pResourceManifest);
 
-	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning");
-	if (pEvent)
-	{
-		pEvent->SetString("custom_event", "precache_files");
-		for (int i = 0;i < EvPrecachePathsSize;i++) {
-			char name[64];
-			V_snprintf(name, sizeof(name), "path%d", i);
-			pEvent->SetString(name, "");
-			V_strncpy(EvPrecachePaths[i], "", sizeof(EvPrecachePaths[i]));
-		}
-		g_gameEventManager->FireEvent(pEvent, true);
-		for (int i = 0;i < EvPrecachePathsSize;i++) {
-			if (strlen(EvPrecachePaths[i]) > 1) {
-				pResourceManifest->AddResource(EvPrecachePaths[i]);
-				Message("add precache(%d): %s \n", i, EvPrecachePaths[i]);
-			}
-		}
-	}
-}
-
-GAME_EVENT_F2(choppers_incoming_warning, precache_files)
-{
-	auto customEventName = pEvent->GetString("custom_event", "");
-	if (strcmp(customEventName, "precache_files") != 0) {
-		return;
-	}
-	for (int i = 0;i < EvPrecachePathsSize;i++) {
-		char name[64];
-		V_snprintf(name, sizeof(name), "path%d", i);
-		auto p = pEvent->GetString(name, "");
-		V_strncpy(EvPrecachePaths[i], p, sizeof(EvPrecachePaths[i]));
-	}
 }
 
 // Called every frame before entities think
