@@ -217,7 +217,6 @@ private:
 	CHandle<CParticleSystem> m_hBeaconParticle;
 	uint32 m_iPlayerState;
 	ZEPlayerHandle m_Handle;
-	uint32 m_iPlayerState;
 };
 
 class CPlayerManager
