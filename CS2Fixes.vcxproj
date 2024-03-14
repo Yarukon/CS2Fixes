@@ -124,7 +124,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>protobuf/generated;src/utils;src/cs2_sdk;sdk/public;sdk/public/tier0;sdk/game/shared;sdk/game/server;sdk/public/tier1;sdk/public/mathlib;minhook/include;$(MMSOURCE112)/core;$(MMSOURCE112)/core/sourcehook;vendor/subhook;vendor/funchook/include;sdk/public/entity2;sdk/public/game/server;vendor/protobuf-3.21.8/src;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>protobuf/generated;src/utils;src/cs2_sdk;sdk/public;sdk/public/tier0;sdk/game/shared;sdk/game/server;sdk/public/tier1;sdk/public/mathlib;minhook/include;$(MMSOURCE112)/core;$(MMSOURCE112)/core/sourcehook;vendor/subhook;vendor/funchook/include;sdk/public/entity2;sdk/public/game/server;sdk/thirdparty/protobuf-3.21.8/src;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -150,7 +150,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>protobuf/generated;src/utils;src/cs2_sdk;sdk/public;sdk/public/tier0;sdk/game/shared;sdk/game/server;sdk/public/tier1;sdk/public/mathlib;minhook/include;$(MMSOURCE112)/core;$(MMSOURCE112)/core/sourcehook;vendor/subhook;vendor/funchook/include;sdk/public/entity2;sdk/public/game/server;vendor/protobuf-3.21.8/src;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>protobuf/generated;src/utils;src/cs2_sdk;sdk/public;sdk/public/tier0;sdk/game/shared;sdk/game/server;sdk/public/tier1;sdk/public/mathlib;minhook/include;$(MMSOURCE112)/core;$(MMSOURCE112)/core/sourcehook;vendor/subhook;vendor/funchook/include;sdk/public/entity2;sdk/public/game/server;sdk/thirdparty/protobuf-3.21.8/src;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <UndefinePreprocessorDefinitions>%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -212,13 +212,18 @@
     <ClInclude Include="src\cs2_sdk\entity\cbasemodelentity.h" />
     <ClInclude Include="src\cs2_sdk\entity\cbaseplayercontroller.h" />
     <ClInclude Include="src\cs2_sdk\entity\cbaseplayerpawn.h" />
+    <ClInclude Include="src\cs2_sdk\entity\cbasetrigger.h" />
     <ClInclude Include="src\cs2_sdk\entity\ccollisionproperty.h" />
     <ClInclude Include="src\cs2_sdk\entity\ccsplayercontroller.h" />
     <ClInclude Include="src\cs2_sdk\entity\ccsplayerpawn.h" />
     <ClInclude Include="src\cs2_sdk\entity\ccsweaponbase.h" />
+    <ClInclude Include="src\cs2_sdk\entity\cenventitymaker.h" />
     <ClInclude Include="src\cs2_sdk\entity\cgamerules.h" />
     <ClInclude Include="src\cs2_sdk\entity\cparticlesystem.h" />
+    <ClInclude Include="src\cs2_sdk\entity\cphysthruster.h" />
     <ClInclude Include="src\cs2_sdk\entity\ctakedamageinfo.h" />
+    <ClInclude Include="src\cs2_sdk\entity\cteam.h" />
+    <ClInclude Include="src\cs2_sdk\entity\ctriggerpush.h" />
     <ClInclude Include="src\cs2_sdk\entity\globaltypes.h" />
     <ClInclude Include="src\cs2_sdk\entity\lights.h" />
     <ClInclude Include="src\cs2_sdk\entity\services.h" />
@@ -234,8 +239,11 @@
     <ClInclude Include="src\httpmanager.h" />
     <ClInclude Include="src\mempatch.h" />
     <ClInclude Include="src\addresses.h" />
+    <ClInclude Include="src\patches.h" />
     <ClInclude Include="src\playermanager.h" />
     <ClInclude Include="src\recipientfilters.h" />
+    <ClInclude Include="src\serversideclient.h" />
+    <ClInclude Include="src\utils\plat_win.h" />
     <ClInclude Include="src\votemanager.h" />
     <ClInclude Include="src\map_votes.h" />
     <ClInclude Include="src\user_preferences.h" />

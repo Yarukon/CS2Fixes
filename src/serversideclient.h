@@ -4,6 +4,7 @@
 #include "steam/steamclientpublic.h"
 #include "utlstring.h"
 #include "inetchannel.h"
+#include "gameconfig.h"
 
 class CServerSideClient
 {

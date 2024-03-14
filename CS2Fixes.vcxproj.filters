@@ -256,7 +256,31 @@
     <ClInclude Include="src\cs2_sdk\cschemasystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\cs2_sdk\entity\cbasetrigger.h">
+      <Filter>Header Files\cs2_sdk\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cs2_sdk\entity\cenventitymaker.h">
+      <Filter>Header Files\cs2_sdk\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cs2_sdk\entity\cphysthruster.h">
+      <Filter>Header Files\cs2_sdk\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cs2_sdk\entity\cteam.h">
+      <Filter>Header Files\cs2_sdk\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cs2_sdk\entity\ctriggerpush.h">
+      <Filter>Header Files\cs2_sdk\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\plat_win.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
     <ClInclude Include="src\customio.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\patches.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\serversideclient.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

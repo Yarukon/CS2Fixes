@@ -441,8 +441,6 @@ void CS2Fixes::Hook_StartupServer(const GameSessionConfiguration_t& config, ISou
 	RegisterEventListeners();
 	g_playerManager->SetupInfiniteAmmo();
 
-	g_ClientsPendingAddon.RemoveAll();
-
 	// Disable RTV and Extend votes after map has just started
 	g_RTVState = ERTVState::MAP_START;
 	g_ExtendState = EExtendState::MAP_START;
@@ -588,11 +586,6 @@ void CS2Fixes::Hook_OnClientConnected(CPlayerSlot slot, const char* pszName, uin
 		g_playerManager->OnBotConnected(slot);
 }
 
-extern std::string g_sExtraAddon;
-
-float g_flRejoinTimeout;
-FAKE_FLOAT_CVAR(cs2f_extra_addon_timeout, "How long until clients are timed out in between connects for the extra addon", g_flRejoinTimeout, 15.f, false);
-
 bool CS2Fixes::Hook_ClientConnect( CPlayerSlot slot, const char *pszName, uint64 xuid, const char *pszNetworkID, bool unk1, CBufferString *pRejectReason )
 {
 	Message( "Hook_ClientConnect(%d, \"%s\", %lli, \"%s\", %d, \"%s\")\n", slot, pszName, xuid, pszNetworkID, unk1, pRejectReason->ToGrowable()->Get() );
@@ -600,39 +593,6 @@ bool CS2Fixes::Hook_ClientConnect( CPlayerSlot slot, const char *pszName, uint64
 	// Player is banned
 	if (!g_playerManager->OnClientConnected(slot, xuid, pszNetworkID))
 		RETURN_META_VALUE(MRES_SUPERCEDE, false);
-
-	CServerSideClient *pClient = GetClientBySlot(slot);
-
-	// We don't have an extra addon set so do nothing here
-	if (g_sExtraAddon.empty())
-		RETURN_META_VALUE(MRES_IGNORED, true);
-
-	Message("Client %lli", xuid);
-
-	// Store the client's ID temporarily as they will get reconnected once the extra addon is sent
-	// This gets checked for in SendNetMessage so we don't repeatedly send the changelevel signon state
-	// The only caveat to this is that there's no way for us to verify if the client has actually downloaded the extra addon,
-	// since they're fully disconnected while downloading it, so the best we can do is use a timeout interval
-	int index;
-	ClientJoinInfo_t *pPendingClient = GetPendingClient(xuid, index);
-	
-	if (!pPendingClient)
-	{
-		// Client joined for the first time or after a timeout
-		Msg(" will reconnect for addon\n");
-		AddPendingClient(xuid);
-	}
-	else if ((g_flUniversalTime - pPendingClient->signon_timestamp) < g_flRejoinTimeout)
-	{
-		// Client reconnected within the timeout interval
-		// If they already have the addon this happens almost instantly after receiving the signon message with the addon
-		Msg(" has reconnected within the interval, allowing\n");
-		g_ClientsPendingAddon.FastRemove(index);
-	}
-	else
-	{
-		Msg(" has reconnected after the timeout or did not receive the addon message, will send addon message again\n");
-	}
 
 	RETURN_META_VALUE(MRES_IGNORED, true);
 }
@@ -702,6 +662,8 @@ void CS2Fixes::Hook_GameFrame( bool simulating, bool bFirstTick, bool bLastTick 
 	VPROF_EXIT_SCOPE();
 }
 
+extern bool g_bFlashLightTransmitOthers;
+
 void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount, CBitVec<16384> &unionTransmitEdicts,
 								const Entity2Networkable_t **pNetworkables, const uint16 *pEntityIndicies, int nEntities)
 {
@@ -734,19 +696,24 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 			CCSPlayerController* pController = CCSPlayerController::FromSlot(j);
 
 			// Always transmit to themselves
-			if (!pController || !pController->IsConnected() || j == iPlayerSlot)
+			if (!pController || j == iPlayerSlot)
 				continue;
 
+			// Don't transmit other players' flashlights, except the one they're watching if in spec
 			CBarnLight *pFlashLight = pController->IsConnected() ? g_playerManager->GetPlayer(j)->GetFlashLight() : nullptr;
 
-			// Don't transmit other players' flashlights
-			if (pFlashLight && !(pSelfController->GetPawnState() == STATE_OBSERVER_MODE && pSelfController->GetObserverTarget() == pController->GetPawn()))
+			if (!g_bFlashLightTransmitOthers && pFlashLight &&
+				!(pSelfController->GetPawnState() == STATE_OBSERVER_MODE && pSelfController->GetObserverTarget() == pController->GetPawn()))
+			{
 				pInfo->m_pTransmitEntity->Clear(pFlashLight->entindex());
+			}
 
+			// Always transmit other players if spectating
 			if (!g_bEnableHide || pSelfController->GetPawnState() == STATE_OBSERVER_MODE)
 				continue;
 
-			CCSPlayerPawn* pPawn = pController->GetPlayerPawn();
+			// Get the actual pawn as the player could be currently spectating
+			CCSPlayerPawn *pPawn = pController->GetPlayerPawn();
 
 			if (!pPawn)
 				continue;

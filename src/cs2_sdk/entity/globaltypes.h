@@ -151,14 +151,14 @@ struct EmitSound_t
 	{
 	}
 	int m_nChannel;
-	const char* m_pSoundName;
+	const char *m_pSoundName;
 	float m_flVolume;
 	soundlevel_t m_SoundLevel;
 	int m_nFlags;
 	int m_nPitch;
-	const Vector* m_pOrigin;
+	const Vector *m_pOrigin;
 	float m_flSoundTime;
-	float* m_pflSoundDuration;
+	float *m_pflSoundDuration;
 	bool m_bEmitCloseCaption;
 	bool m_bWarnOnMissingCloseCaption;
 	bool m_bWarnOnDirectWaveReference;

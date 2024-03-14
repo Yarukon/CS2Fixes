@@ -33,18 +33,6 @@
 
 static uint32 iZEPlayerHandleSerial = 0u; // this should actually be 3 bytes large, but no way enough players join in servers lifespan for this to be an issue
 
-struct ClientJoinInfo_t
-{
-	uint64 steamid;
-	double signon_timestamp;
-};
-
-extern CUtlVector<ClientJoinInfo_t> g_ClientsPendingAddon;
-
-void AddPendingClient(uint64 steamid);
-ClientJoinInfo_t *GetPendingClient(uint64 steamid, int &index);
-ClientJoinInfo_t *GetPendingClient(INetChannel *pNetChan);
-
 enum class ETargetType {
 	NONE,
 	PLAYER,
@@ -190,9 +178,9 @@ public:
 	float GetNominateTime() { return m_flNominateTime; }
 	CBarnLight *GetFlashLight() { return m_hFlashLight.Get(); }
 	CParticleSystem *GetBeaconParticle() { return m_hBeaconParticle.Get(); }
-	uint32 GetPlayerState() { return m_iPlayerState; }
 	ZEPlayerHandle GetHandle() { return m_Handle; }
-
+	uint32 GetPlayerState() { return m_iPlayerState; }
+	
 	void OnAuthenticated();
 	void CheckAdmin();
 	void CheckInfractions();
@@ -204,10 +192,10 @@ private:
 	bool m_bConnected;
 	const CSteamID* m_UnauthenticatedSteamID;
 	const CSteamID* m_SteamID;
+	CPlayerSlot m_slot;
 	bool m_bFakeClient;
 	bool m_bMuted;
 	bool m_bGagged;
-	CPlayerSlot m_slot;
 	uint64 m_iAdminFlags;
 	int m_iHideDistance;
 	CBitVec<MAXPLAYERS> m_shouldTransmit;
@@ -229,6 +217,7 @@ private:
 	CHandle<CParticleSystem> m_hBeaconParticle;
 	uint32 m_iPlayerState;
 	ZEPlayerHandle m_Handle;
+	uint32 m_iPlayerState;
 };
 
 class CPlayerManager

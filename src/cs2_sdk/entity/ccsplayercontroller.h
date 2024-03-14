@@ -46,7 +46,7 @@ public:
 	}
 
 	// Returns the actual player pawn
-	CCSPlayerPawn* GetPlayerPawn()
+	CCSPlayerPawn *GetPlayerPawn()
 	{
 		return m_hPlayerPawn().Get();
 	}
@@ -79,7 +79,7 @@ public:
 
 	void Respawn()
 	{
-		CCSPlayerPawn* pPawn = GetPlayerPawn();
+		CCSPlayerPawn *pPawn = GetPlayerPawn();
 		if (!pPawn || pPawn->IsAlive())
 			return;
 
@@ -91,7 +91,7 @@ public:
 	CSPlayerState GetPawnState()
 	{
 		// All CS2 pawns are derived from this
-		CCSPlayerPawnBase* pPawn = (CCSPlayerPawnBase*)GetPawn();
+		CCSPlayerPawnBase *pPawn = (CCSPlayerPawnBase*)GetPawn();
 
 		// The player is still joining so their pawn doesn't exist yet, and STATE_WELCOME is what they start with
 		if (!pPawn)
@@ -102,7 +102,7 @@ public:
 
 	CSPlayerState GetPlayerPawnState()
 	{
-		CCSPlayerPawn* pPawn = GetPlayerPawn();
+		CCSPlayerPawn *pPawn = GetPlayerPawn();
 
 		// The player is still joining so their pawn doesn't exist yet, and STATE_WELCOME is what they start with
 		if (!pPawn)
@@ -111,7 +111,7 @@ public:
 		return pPawn->m_iPlayerState();
 	}
 
-	Z_CBaseEntity* GetObserverTarget()
+	Z_CBaseEntity *GetObserverTarget()
 	{
 		auto pPawn = GetPawn();
 
