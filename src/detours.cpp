@@ -225,15 +225,22 @@ void FASTCALL Detour_TriggerPush_Touch(CTriggerPush* pPush, Z_CBaseEntity* pOthe
 	pOther->m_fFlags(flags);
 }
 
-const char* snd1 = "Flesh.BulletImpact";
-const char* snd2 = "Player.DamageHeadShot.Onlooker";
-const char* snd3 = "Player.DamageHeadShot.Victim";
-const char* snd4 = "Player.DamageHeadShotArmor.Victim";
+// The dirty way, but also the fastest way to do this
+const char* snd1 = "Player.DamageBody.AttackerFeedback";
+const char* snd2 = "Player.DamageBody.Onlooker";
+const char* snd3 = "Player.DamageBody.Victim";
+const char* snd4 = "Player.DeathHeadShot.AttackerFeedback";
+const char* snd5 = "Player.DeathHeadShot.Onlooker";
+const char* snd6 = "Player.DeathHeadShot.Victim";
+const char* snd7 = "Player.DeathHeadShotArmor.AttackerFeedback";
+const char* snd8 = "Player.DeathHeadShotArmor.Onlooker";
+const char* snd9 = "Player.DeathHeadShotArmor.Victim";
+const char* snd10 = "Flesh.BulletImpact";
 void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase* pSoundEmitterSystem, CEntityIndex* a2, IRecipientFilter& filter, uint32 a4, EmitSound2_t* a5)
 {
-	//ConMsg("Detour_CSoundEmitterSystem_EmitSound\n");
 	const char* sndName = a5->m_pSoundName;
-	if (V_strcmp(sndName, snd1) || V_strcmp(sndName, snd2) || V_strcmp(sndName, snd3) || V_strcmp(sndName, snd4))
+	// ConMsg("Detour_CSoundEmitterSystem_EmitSound: %s\n", a5->m_pSoundName);
+	if (V_strcmp(sndName, snd1) || V_strcmp(sndName, snd2) || V_strcmp(sndName, snd3) || V_strcmp(sndName, snd4) || V_strcmp(sndName, snd5) || V_strcmp(sndName, snd6) || V_strcmp(sndName, snd7) || V_strcmp(sndName, snd8) || V_strcmp(sndName, snd9) || V_strcmp(sndName, snd10))
 		return;
 
 	CSoundEmitterSystem_EmitSound(pSoundEmitterSystem, a2, filter, a4, a5);
@@ -524,6 +531,10 @@ bool InitDetours(CGameConfig* gameConfig)
 	if (!IsHearingClient.CreateDetour(gameConfig))
 		success = false;
 	IsHearingClient.EnableDetour();
+
+	if (!CSoundEmitterSystem_EmitSound.CreateDetour(gameConfig))
+		success = false;
+	CSoundEmitterSystem_EmitSound.EnableDetour();
 
 	if (!TriggerPush_Touch.CreateDetour(gameConfig))
 		success = false;

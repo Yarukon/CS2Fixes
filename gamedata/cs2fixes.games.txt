@@ -104,8 +104,8 @@
 			"CSoundEmitterSystem_EmitSound"
 			{
 				"library"		"server"
-				"windows"		"\x48\x2A\x2A\x2A\x2A\x2A\x2A\x48\x2A\x2A\x2A\x4D\x2A\x2A\x48\x2A\x2A\x2A\x48\x2A\x2A\x4C"
-				"linux"			"\x48\xB8\x2A\x2A\x2A\x2A\xFF\xFF\xFF\xFF\x55\x48\x89\xE5\x41\x57\x41\x89\xF7"
+				"windows"		"\x4C\x2A\x2A\x4D\x89\x43\x2A\x55"
+				"linux"			""
 			}
 			// idk a good way to find this again, i just brute forced the vtable. offset is 133 on CTriggerPush
 			"TriggerPush_Touch"
