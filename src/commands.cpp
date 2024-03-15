@@ -397,7 +397,7 @@ CON_COMMAND_CHAT(hide, "<distance> - hides nearby players")
 	if (distance == 0)
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "玩家隐藏已禁用.");
 	else
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "玩家隐藏已启用 范围 %i 个单位.", distance);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "玩家隐藏已启用 范围 %i 个单位 (按住鼠标右键可以暂时取消隐藏).", distance);
 }
 
 CON_COMMAND_CHAT(help, "- Display list of commands in console")

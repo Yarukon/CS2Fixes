@@ -420,11 +420,13 @@ void CPlayerManager::CheckHideDistances()
 
 		auto pPawn = pController->GetPawn();
 
-		if (!pPawn || !pPawn->IsAlive())
+		if (!pPawn || !pPawn->IsAlive() || player->IsHoldingRMB())
 			continue;
 
 		auto vecPosition = pPawn->GetAbsOrigin();
 		int team = pController->m_iTeamNum;
+
+		hideDistance = hideDistance * hideDistance;
 
 		for (int j = 0; j < gpGlobals->maxClients; j++)
 		{
@@ -440,7 +442,7 @@ void CPlayerManager::CheckHideDistances()
 				// TODO: Unhide dead pawns if/when valve fixes the crash
 				if (pTargetPawn && (!g_bHideTeammatesOnly || pTargetController->m_iTeamNum == team))
 				{
-					player->SetTransmit(j, pTargetPawn->GetAbsOrigin().DistToSqr(vecPosition) <= hideDistance * hideDistance);
+					player->SetTransmit(j, pTargetPawn->GetAbsOrigin().DistToSqr(vecPosition) <= hideDistance);
 				}
 			}
 		}
@@ -480,6 +482,12 @@ void CPlayerManager::UpdatePlayerStates()
 
 		uint32 iPreviousPlayerState = pPlayer->GetPlayerState();
 		uint32 iCurrentPlayerState = pController->GetPawnState();
+
+		if (pController->IsConnected() && pController->IsAlive())
+		{
+			uint64* pButtons = pController->GetPawn()->m_pMovementServices->m_nButtons().m_pButtonStates();
+			pPlayer->SetHoldingRMB((pButtons[0] & IN_ATTACK2) != 0);
+		}
 
 		if (iCurrentPlayerState != iPreviousPlayerState)
 		{

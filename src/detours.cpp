@@ -121,7 +121,6 @@ void FASTCALL Detour_CBaseEntity_TakeDamageOld(Z_CBaseEntity* pThis, CTakeDamage
 	if (g_bBlockMolotovSelfDmg && inputInfo->m_hAttacker == pThis && !V_strncmp(pszInflictorClass, "inferno", 7))
 		return;
 
-
 	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning");
 	if (pEvent) {
 		EvLastAttacker = inputInfo->m_hAttacker.Get() ? inputInfo->m_hAttacker.Get()->GetEntityIndex().Get() : -1;
