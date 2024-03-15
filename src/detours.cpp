@@ -56,6 +56,7 @@ extern CCSGameRules* g_pGameRules;
 DECLARE_DETOUR(UTIL_SayTextFilter, Detour_UTIL_SayTextFilter);
 DECLARE_DETOUR(UTIL_SayText2Filter, Detour_UTIL_SayText2Filter);
 DECLARE_DETOUR(IsHearingClient, Detour_IsHearingClient);
+DECLARE_DETOUR(CSoundEmitterSystem_EmitSound, Detour_CSoundEmitterSystem_EmitSound);
 DECLARE_DETOUR(TriggerPush_Touch, Detour_TriggerPush_Touch);
 DECLARE_DETOUR(CGameRules_Constructor, Detour_CGameRules_Constructor);
 DECLARE_DETOUR(CBaseEntity_TakeDamageOld, Detour_CBaseEntity_TakeDamageOld);
@@ -232,7 +233,7 @@ void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase* pSou
 {
 	//ConMsg("Detour_CSoundEmitterSystem_EmitSound\n");
 	const char* sndName = a5->m_pSoundName;
-	if (strcmp(sndName, snd1) == 0 || strcmp(sndName, snd2) == 0 || strcmp(sndName, snd3) == 0 || strcmp(sndName, snd4) == 0)
+	if (V_strcmp(sndName, snd1) || V_strcmp(sndName, snd2) || V_strcmp(sndName, snd3) || V_strcmp(sndName, snd4))
 		return;
 
 	CSoundEmitterSystem_EmitSound(pSoundEmitterSystem, a2, filter, a4, a5);
