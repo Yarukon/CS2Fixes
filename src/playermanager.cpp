@@ -483,7 +483,7 @@ void CPlayerManager::UpdatePlayerStates()
 		uint32 iPreviousPlayerState = pPlayer->GetPlayerState();
 		uint32 iCurrentPlayerState = pController->GetPawnState();
 
-		if (pController->IsConnected() && pController->IsAlive())
+		if (g_bEnableHide && pController->IsConnected() && pController->IsAlive())
 		{
 			uint64* pButtons = pController->GetPawn()->m_pMovementServices->m_nButtons().m_pButtonStates();
 			pPlayer->SetHoldingRMB((pButtons[0] & IN_ATTACK2) != 0);
