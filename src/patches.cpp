@@ -36,8 +36,8 @@ CMemPatch g_CommonPatches[] =
 	CMemPatch("ServerMovementUnlock", "ServerMovementUnlock"),
 	CMemPatch("VScriptEnable", "VScriptEnable"),
 	CMemPatch("CheckJumpButtonWater", "FixWaterFloorJump"),
-	// CMemPatch("CategorizeUnderwater", "CategorizeUnderwater"),
-	// CMemPatch("WaterLevelGravity", "WaterLevelGravity"),
+	CMemPatch("CategorizeUnderwater", "CategorizeUnderwater"),
+	CMemPatch("WaterLevelGravity", "WaterLevelGravity"),
 	CMemPatch("BotNavIgnore", "BotNavIgnore"),
 #ifndef _WIN32
 	// Linux checks for the nav mesh in each bot_add command, so we patch 3 times
