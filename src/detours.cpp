@@ -239,7 +239,8 @@ const char* snd10 = "Flesh.BulletImpact";
 void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase* pSoundEmitterSystem, uint32* guid, IRecipientFilter& filter, CEntityIndex index, EmitSound2_t* params)
 {
 	const char* sndName = params->m_pSoundName;
-	ConMsg("Detour_CSoundEmitterSystem_EmitSound: index: %d recipientcnt: %d snd: %s chn: %d\n", index.Get(), filter.GetRecipientCount(), params->m_pSoundName, params->channel);
+	// ConMsg("Detour_CSoundEmitterSystem_EmitSound: index: %d recipientcnt: %d snd: %s chn: %d\n", index.Get(), filter.GetRecipientCount(), sndName, params->channel);
+	// ConMsg("vol: %f lvl: %d flags: %d pitch: %d\n", params->m_flVolume, params->m_SoundLevel, params->m_nFlags, params->m_nPitch);
 	if (V_strcmp(sndName, snd1) || V_strcmp(sndName, snd2) || V_strcmp(sndName, snd3) || V_strcmp(sndName, snd4) || V_strcmp(sndName, snd5) || V_strcmp(sndName, snd6) || V_strcmp(sndName, snd7) || V_strcmp(sndName, snd8) || V_strcmp(sndName, snd9) || V_strcmp(sndName, snd10))
 		return;
 

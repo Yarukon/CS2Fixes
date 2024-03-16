@@ -47,6 +47,10 @@ void FlushAllDetours();
 struct EmitSound2_t {
 	int channel;
 	const char* m_pSoundName;
+	float m_flVolume;
+	unsigned int m_SoundLevel;
+	int m_nFlags;
+	int m_nPitch;
 };
 
 void FASTCALL Detour_UTIL_SayTextFilter(IRecipientFilter &, const char *, CCSPlayerController *, uint64);
