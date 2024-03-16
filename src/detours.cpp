@@ -236,14 +236,14 @@ const char* snd7 = "Player.DeathHeadShotArmor.AttackerFeedback";
 const char* snd8 = "Player.DeathHeadShotArmor.Onlooker";
 const char* snd9 = "Player.DeathHeadShotArmor.Victim";
 const char* snd10 = "Flesh.BulletImpact";
-void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase* pSoundEmitterSystem, CEntityIndex* a2, IRecipientFilter& filter, uint32 a4, EmitSound2_t* a5)
+void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase* pSoundEmitterSystem, uint32* guid, IRecipientFilter& filter, CEntityIndex index, EmitSound2_t* params)
 {
-	const char* sndName = a5->m_pSoundName;
-	// ConMsg("Detour_CSoundEmitterSystem_EmitSound: %s\n", a5->m_pSoundName);
+	const char* sndName = params->m_pSoundName;
+	ConMsg("Detour_CSoundEmitterSystem_EmitSound: index: %d recipientcnt: %d snd: %s chn: %d\n", index.Get(), filter.GetRecipientCount(), params->m_pSoundName, params->channel);
 	if (V_strcmp(sndName, snd1) || V_strcmp(sndName, snd2) || V_strcmp(sndName, snd3) || V_strcmp(sndName, snd4) || V_strcmp(sndName, snd5) || V_strcmp(sndName, snd6) || V_strcmp(sndName, snd7) || V_strcmp(sndName, snd8) || V_strcmp(sndName, snd9) || V_strcmp(sndName, snd10))
 		return;
 
-	CSoundEmitterSystem_EmitSound(pSoundEmitterSystem, a2, filter, a4, a5);
+	CSoundEmitterSystem_EmitSound(pSoundEmitterSystem, guid, filter, index, params);
 }
 
 bool FASTCALL Detour_IsHearingClient(void* serverClient, int index)
