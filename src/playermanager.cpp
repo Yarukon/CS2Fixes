@@ -193,8 +193,8 @@ void ZEPlayer::SpawnFlashLight()
 void ZEPlayer::ToggleFlashLight()
 {
 	// Play the "click" sound
-	CSingleRecipientFilter filter(GetPlayerSlot());
-	CCSPlayerController::FromSlot(GetPlayerSlot())->EmitSoundFilter(filter, "HudChat.Message");
+	// CSingleRecipientFilter filter(GetPlayerSlot());
+	// CCSPlayerController::FromSlot(GetPlayerSlot())->EmitSoundFilter(filter, "HudChat.Message");
 
 	CBarnLight *pLight = GetFlashLight();
 
