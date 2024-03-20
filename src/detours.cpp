@@ -43,6 +43,8 @@
 #include "serversideclient.h"
 #include "networksystem/inetworkserializer.h"
 
+#include "recipientfilters.h"
+
 #define VPROF_ENABLED
 #include "tier0/vprof.h"
 
@@ -236,13 +238,25 @@ const char* snd7 = "Player.DeathHeadShotArmor.AttackerFeedback";
 const char* snd8 = "Player.DeathHeadShotArmor.Onlooker";
 const char* snd9 = "Player.DeathHeadShotArmor.Victim";
 const char* snd10 = "Flesh.BulletImpact";
-void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase* pSoundEmitterSystem, uint32* guid, IRecipientFilter& filter, CEntityIndex index, EmitSound2_t* params)
+
+#define STRCMP(str1, str2) strcmp(str1, str2) == 0
+void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase* pSoundEmitterSystem, uint32* guid, IRecipientFilter* filter, CEntityIndex index, EmitSound2_t* params)
 {
 	const char* sndName = params->m_pSoundName;
-	// ConMsg("Detour_CSoundEmitterSystem_EmitSound: index: %d recipientcnt: %d snd: %s chn: %d\n", index.Get(), filter.GetRecipientCount(), sndName, params->channel);
+	// ConMsg("Detour_CSoundEmitterSystem_EmitSound: index: %d recipientcnt: %d snd: %s chn: %d\n", index.Get(), filter->GetRecipientCount(), sndName, params->channel);
 	// ConMsg("vol: %f lvl: %d flags: %d pitch: %d\n", params->m_flVolume, params->m_SoundLevel, params->m_nFlags, params->m_nPitch);
-	if (V_strcmp(sndName, snd1) || V_strcmp(sndName, snd2) || V_strcmp(sndName, snd3) || V_strcmp(sndName, snd4) || V_strcmp(sndName, snd5) || V_strcmp(sndName, snd6) || V_strcmp(sndName, snd7) || V_strcmp(sndName, snd8) || V_strcmp(sndName, snd9) || V_strcmp(sndName, snd10))
-		return;
+
+	// for (int i = 0; i < filter->GetRecipientCount(); ++i)
+	// 	ConMsg("recipient slot %d : %d\n", i, filter->GetRecipientIndex(i));
+
+	if (STRCMP(sndName, snd1) || STRCMP(sndName, snd2) || STRCMP(sndName, snd3) || STRCMP(sndName, snd4) || STRCMP(sndName, snd5) || STRCMP(sndName, snd6) || STRCMP(sndName, snd7) || STRCMP(sndName, snd8) || STRCMP(sndName, snd9) || STRCMP(sndName, snd10))
+	{
+		// ConMsg("block snd -> %s\n", sndName);
+
+		// CSingleRecipientFilter newFilter(index.Get());
+		// CSoundEmitterSystem_EmitSound(pSoundEmitterSystem, guid, newFilter, index, params);
+	 	return;
+	}
 
 	CSoundEmitterSystem_EmitSound(pSoundEmitterSystem, guid, filter, index, params);
 }
@@ -534,7 +548,7 @@ bool InitDetours(CGameConfig* gameConfig)
 	IsHearingClient.EnableDetour();
 
 	if (!CSoundEmitterSystem_EmitSound.CreateDetour(gameConfig))
-		success = false;
+	 	success = false;
 	CSoundEmitterSystem_EmitSound.EnableDetour();
 
 	if (!TriggerPush_Touch.CreateDetour(gameConfig))
