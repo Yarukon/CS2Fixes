@@ -113,17 +113,6 @@ void FASTCALL Detour_CBaseEntity_TakeDamageOld(Z_CBaseEntity* pThis, CTakeDamage
 	CBaseEntity* pInflictor = inputInfo->m_hInflictor.Get();
 	const char* pszInflictorClass = pInflictor ? pInflictor->GetClassname() : "";
 
-	// Prevent everything but nades from inflicting blast damage
-	if (inputInfo->m_bitsDamageType == DamageTypes_t::DMG_BLAST && V_strncmp(pszInflictorClass, "hegrenade", 9))
-		inputInfo->m_bitsDamageType = DamageTypes_t::DMG_GENERIC;
-
-	if (g_bEnableZR && ZR_Detour_TakeDamageOld((CCSPlayerPawn*)pThis, inputInfo))
-		return;
-
-	// Prevent molly on self
-	if (g_bBlockMolotovSelfDmg && inputInfo->m_hAttacker == pThis && !V_strncmp(pszInflictorClass, "inferno", 7))
-		return;
-
 	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning");
 	if (pEvent) {
 		EvLastAttacker = inputInfo->m_hAttacker.Get() ? inputInfo->m_hAttacker.Get()->GetEntityIndex().Get() : -1;
@@ -143,6 +132,17 @@ void FASTCALL Detour_CBaseEntity_TakeDamageOld(Z_CBaseEntity* pThis, CTakeDamage
 		if (EvLastDamage <= 0) { return; }
 		inputInfo->m_flDamage = EvLastDamage;
 	}
+
+	// Prevent everything but nades from inflicting blast damage
+	if (inputInfo->m_bitsDamageType == DamageTypes_t::DMG_BLAST && V_strncmp(pszInflictorClass, "hegrenade", 9))
+		inputInfo->m_bitsDamageType = DamageTypes_t::DMG_GENERIC;
+
+	if (g_bEnableZR && ZR_Detour_TakeDamageOld((CCSPlayerPawn*)pThis, inputInfo))
+		return;
+
+	// Prevent molly on self
+	if (g_bBlockMolotovSelfDmg && inputInfo->m_hAttacker == pThis && !V_strncmp(pszInflictorClass, "inferno", 7))
+		return;
 
 	CBaseEntity_TakeDamageOld(pThis, inputInfo);
 }
