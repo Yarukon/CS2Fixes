@@ -228,16 +228,17 @@ void FASTCALL Detour_TriggerPush_Touch(CTriggerPush* pPush, Z_CBaseEntity* pOthe
 }
 
 // The dirty way, but also the fastest way to do this
-const char* snd1 = "Player.DamageBody.AttackerFeedback";
+const char* snd1 = "Player.DamageBody.Victim";
 const char* snd2 = "Player.DamageBody.Onlooker";
-const char* snd3 = "Player.DamageBody.Victim";
-const char* snd4 = "Player.DeathHeadShot.AttackerFeedback";
-const char* snd5 = "Player.DeathHeadShot.Onlooker";
-const char* snd6 = "Player.DeathHeadShot.Victim";
-const char* snd7 = "Player.DeathHeadShotArmor.AttackerFeedback";
-const char* snd8 = "Player.DeathHeadShotArmor.Onlooker";
+const char* snd3 = "Player.DamageHeadShot.Victim";
+const char* snd4 = "Player.DamageHeadShot.Onlooker";
+const char* snd5 = "Player.DamageHeadShotArmor.Victim";
+const char* snd6 = "Player.DamageHeadShotArmor.Onlooker";
+const char* snd7 = "Player.DeathHeadShot.Victim";
+const char* snd8 = "Player.DeathHeadShot.Onlooker";
 const char* snd9 = "Player.DeathHeadShotArmor.Victim";
-const char* snd10 = "Flesh.BulletImpact";
+const char* snd10 = "Player.DeathHeadShotArmor.Onlooker";
+const char* snd11 = "Flesh.BulletImpact";
 
 #define STRCMP(str1, str2) strcmp(str1, str2) == 0
 void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase* pSoundEmitterSystem, uint32* guid, IRecipientFilter* filter, CEntityIndex index, EmitSound2_t* params)
@@ -247,9 +248,9 @@ void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase* pSou
 	// ConMsg("vol: %f lvl: %d flags: %d pitch: %d\n", params->m_flVolume, params->m_SoundLevel, params->m_nFlags, params->m_nPitch);
 
 	// for (int i = 0; i < filter->GetRecipientCount(); ++i)
-	// 	ConMsg("recipient slot %d : %d\n", i, filter->GetRecipientIndex(i));
+	//  	ConMsg("recipient slot %d : %d\n", i, filter->GetRecipientIndex(i));
 
-	if (STRCMP(sndName, snd1) || STRCMP(sndName, snd2) || STRCMP(sndName, snd3) || STRCMP(sndName, snd4) || STRCMP(sndName, snd5) || STRCMP(sndName, snd6) || STRCMP(sndName, snd7) || STRCMP(sndName, snd8) || STRCMP(sndName, snd9) || STRCMP(sndName, snd10))
+	if (STRCMP(sndName, snd1) || STRCMP(sndName, snd2) || STRCMP(sndName, snd3) || STRCMP(sndName, snd4) || STRCMP(sndName, snd5) || STRCMP(sndName, snd6))
 	{
 		// ConMsg("block snd -> %s\n", sndName);
 
