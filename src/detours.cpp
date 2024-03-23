@@ -250,7 +250,7 @@ void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase* pSou
 	// for (int i = 0; i < filter->GetRecipientCount(); ++i)
 	//  	ConMsg("recipient slot %d : %d\n", i, filter->GetRecipientIndex(i));
 
-	if (STRCMP(sndName, snd1) || STRCMP(sndName, snd2) || STRCMP(sndName, snd3) || STRCMP(sndName, snd4) || STRCMP(sndName, snd5) || STRCMP(sndName, snd6))
+	if (STRCMP(sndName, snd1) || STRCMP(sndName, snd2) || STRCMP(sndName, snd3) || STRCMP(sndName, snd4) || STRCMP(sndName, snd5) || STRCMP(sndName, snd6) || STRCMP(sndName, snd7) || STRCMP(sndName, snd8) || STRCMP(sndName, snd9) || STRCMP(sndName, snd10) || STRCMP(sndName, snd11))
 	{
 		// ConMsg("block snd -> %s\n", sndName);
 
