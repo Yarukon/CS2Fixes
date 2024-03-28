@@ -845,6 +845,17 @@ void ZR_InfectMotherZombie(CCSPlayerController* pVictimController)
 	}
 }
 
+bool ev_lastMZShouldInfect = false;
+
+GAME_EVENT_F2(choppers_incoming_warning, zr_pre_infect_mother_zombie)
+{
+	auto customEventName = pEvent->GetString("custom_event", "");
+	if (strcmp(customEventName, "zr_pre_infect_mother_zombie") != 0) {
+		return;
+	}
+	ev_lastMZShouldInfect = pEvent->GetBool("should_infect", true);
+}
+
 // make players who've been picked as MZ recently less likely to be picked again
 // store a variable in ZEPlayer, which gets initialized with value 100 if they are picked to be a mother zombie
 // the value represents a % chance of the player being skipped next time they are picked to be a mother zombie
@@ -864,6 +875,18 @@ void ZR_InitialInfection()
 		if (!pPawn || !pPawn->IsAlive())
 			continue;
 
+		ev_lastMZShouldInfect = true;
+		IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
+		if (pEvent)
+		{
+			pEvent->SetString("custom_event", "zr_pre_infect_mother_zombie");
+			pEvent->SetInt("infected_index", pController->GetEntityIndex().Get());
+			pEvent->SetBool("should_infect", true);
+			g_gameEventManager->FireEvent(pEvent, true);
+		}
+		if (!ev_lastMZShouldInfect) {
+			continue;
+		}
 		pCandidateControllers.AddToTail(pController);
 	}
 
