@@ -157,6 +157,44 @@ GAME_EVENT_F2(choppers_incoming_warning, entity_take_damage)
 	EvLastDamage = damage;
 }
 
+// 由其他插件自定义发起对实体的伤害
+GAME_EVENT_F2(choppers_incoming_warning, call_entity_take_damage)
+{
+	auto customEventName = pEvent->GetString("custom_event", "");
+	if (strcmp(customEventName, "call_entity_take_damage") != 0) {
+		return;
+	}
+	float damage = pEvent->GetFloat("damage");
+	if (damage < 1) {
+		return;
+	}
+	int victimIndex = pEvent->GetInt("victim_index");
+	if (victimIndex < 1) {
+		return;
+	}
+	int attackerIndex = pEvent->GetInt("attacker_index");
+	if (attackerIndex < 1) {
+		attackerIndex = 0;
+	}
+	int inflictorIndex = pEvent->GetInt("inflictor_index");
+	if (inflictorIndex < 1) {
+		inflictorIndex = 0;
+	}
+	DamageTypes_t damageType = (DamageTypes_t)pEvent->GetInt("damage_type");
+	auto victim = (Z_CBaseEntity*)g_pEntitySystem->GetBaseEntity(CEntityIndex(victimIndex));
+	if (!victim) { return; }
+	auto attacker = g_pEntitySystem->GetBaseEntity(CEntityIndex(attackerIndex));
+	if (!attacker) { return; }
+	auto inflictor = g_pEntitySystem->GetBaseEntity(CEntityIndex(inflictorIndex));
+	if (!inflictor) { return; }
+	auto info = new CTakeDamageInfo();
+	info->m_flDamage = damage;
+	info->m_bitsDamageType = damageType;
+	info->m_hAttacker.Set(attacker);
+	info->m_hInflictor.Set(inflictor);
+	CBaseEntity_TakeDamageOld(victim, info);
+}
+
 static bool g_bUseOldPush = false;
 
 FAKE_BOOL_CVAR(cs2f_use_old_push, "Whether to use the old CSGO trigger_push behavior", g_bUseOldPush, false, false)
@@ -256,7 +294,7 @@ void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase* pSou
 
 		// CSingleRecipientFilter newFilter(index.Get());
 		// CSoundEmitterSystem_EmitSound(pSoundEmitterSystem, guid, newFilter, index, params);
-	 	return;
+		return;
 	}
 
 	CSoundEmitterSystem_EmitSound(pSoundEmitterSystem, guid, filter, index, params);
@@ -466,16 +504,16 @@ bool FASTCALL Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSym
 		ZR_Detour_CEntityIdentity_AcceptInput(pThis, pInputName, pActivator, pCaller, value, nOutputID);
 
 	// Handle KeyValue(s)
-    if (!V_strnicmp(pInputName->String(), "KeyValue", 8))
-    {
-        if ((value->m_type == FIELD_CSTRING || value->m_type == FIELD_STRING) && value->m_pszString)
-        {
-            // always const char*, even if it's FIELD_STRING (that is bug string from lua 'EntFire')
-            return CustomIO_HandleInput(pThis->m_pInstance, value->m_pszString, pActivator, pCaller);
-        }
-        Message("Invalid value type for input %s\n", pInputName->String());
-        return false;
-    }
+	if (!V_strnicmp(pInputName->String(), "KeyValue", 8))
+	{
+		if ((value->m_type == FIELD_CSTRING || value->m_type == FIELD_STRING) && value->m_pszString)
+		{
+			// always const char*, even if it's FIELD_STRING (that is bug string from lua 'EntFire')
+			return CustomIO_HandleInput(pThis->m_pInstance, value->m_pszString, pActivator, pCaller);
+		}
+		Message("Invalid value type for input %s\n", pInputName->String());
+		return false;
+	}
 
 	return CEntityIdentity_AcceptInput(pThis, pInputName, pActivator, pCaller, value, nOutputID);
 }
@@ -549,7 +587,7 @@ bool InitDetours(CGameConfig* gameConfig)
 	IsHearingClient.EnableDetour();
 
 	if (!CSoundEmitterSystem_EmitSound.CreateDetour(gameConfig))
-	 	success = false;
+		success = false;
 	CSoundEmitterSystem_EmitSound.EnableDetour();
 
 	if (!TriggerPush_Touch.CreateDetour(gameConfig))
