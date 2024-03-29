@@ -717,7 +717,7 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 		{
 			lastTransmitEntity = pInfo->m_pTransmitEntity;
 			pEvent->SetString("custom_event", "pre_transmit_entity_clear");
-			pEvent->SetInt("player_index", pController->GetEntityIndex().Get());
+			pEvent->SetInt("player_index", pSelfController->GetEntityIndex().Get());
 			g_gameEventManager->FireEvent(pEvent, true);
 		}
 		lastTransmitEntity = NULL;
