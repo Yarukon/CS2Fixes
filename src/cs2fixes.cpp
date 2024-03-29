@@ -712,6 +712,15 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 			continue;
 
 		lastTransmitEntity = NULL;
+		IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
+		if (pEvent)
+		{
+			lastTransmitEntity = pInfo->m_pTransmitEntity;
+			pEvent->SetString("custom_event", "pre_transmit_entity_clear");
+			pEvent->SetInt("player_index", pController->GetEntityIndex().Get());
+			g_gameEventManager->FireEvent(pEvent, true);
+		}
+		lastTransmitEntity = NULL;
 		for (int j = 0; j < gpGlobals->maxClients; j++)
 		{
 			CCSPlayerController* pController = CCSPlayerController::FromSlot(j);
@@ -728,16 +737,7 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 			{
 				pInfo->m_pTransmitEntity->Clear(pFlashLight->entindex());
 			}
-			lastTransmitEntity = NULL;
-			IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
-			if (pEvent)
-			{
-				lastTransmitEntity = pInfo->m_pTransmitEntity;
-				pEvent->SetString("custom_event", "pre_transmit_entity_clear");
-				pEvent->SetInt("player_index", pController->GetEntityIndex().Get());
-				g_gameEventManager->FireEvent(pEvent, true);
-			}
-			lastTransmitEntity = NULL;
+			
 			// Always transmit other players if spectating
 			if (!g_bEnableHide || pSelfController->GetPawnState() == STATE_OBSERVER_MODE)
 				continue;
