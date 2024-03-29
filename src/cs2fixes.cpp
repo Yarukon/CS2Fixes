@@ -664,6 +664,26 @@ void CS2Fixes::Hook_GameFrame( bool simulating, bool bFirstTick, bool bLastTick 
 
 extern bool g_bFlashLightTransmitOthers;
 
+CBitVec<16384>* lastTransmitEntity;
+
+GAME_EVENT_F2(choppers_incoming_warning, pre_transmit_entity_clear)
+{
+	auto customEventName = pEvent->GetString("custom_event", "");
+	if (strcmp(customEventName, "pre_transmit_entity_clear") != 0) {
+		return;
+	}
+	if (!lastTransmitEntity) { return; }
+	for (int i = 0; i <= 1024; i++)
+	{
+		char name[32];
+		V_snprintf(name, sizeof(name), "clear%d", i);
+		int index = pEvent->GetInt(name);
+		if (index > 0) {
+			lastTransmitEntity->Clear(index);
+		}
+	}
+}
+
 void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount, CBitVec<16384> &unionTransmitEdicts,
 								const Entity2Networkable_t **pNetworkables, const uint16 *pEntityIndicies, int nEntities)
 {
@@ -691,6 +711,7 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 		if (!pSelfZEPlayer)
 			continue;
 
+		lastTransmitEntity = NULL;
 		for (int j = 0; j < gpGlobals->maxClients; j++)
 		{
 			CCSPlayerController* pController = CCSPlayerController::FromSlot(j);
@@ -707,7 +728,16 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 			{
 				pInfo->m_pTransmitEntity->Clear(pFlashLight->entindex());
 			}
-
+			lastTransmitEntity = NULL;
+			IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
+			if (pEvent)
+			{
+				lastTransmitEntity = pInfo->m_pTransmitEntity;
+				pEvent->SetString("custom_event", "pre_transmit_entity_clear");
+				pEvent->SetInt("player_index", pController->GetEntityIndex().Get());
+				g_gameEventManager->FireEvent(pEvent, true);
+			}
+			lastTransmitEntity = NULL;
 			// Always transmit other players if spectating
 			if (!g_bEnableHide || pSelfController->GetPawnState() == STATE_OBSERVER_MODE)
 				continue;
