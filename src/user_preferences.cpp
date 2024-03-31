@@ -196,7 +196,35 @@ void CUserPreferencesSystem::SetPreference(int iSlot, const char* sKey, const ch
 
     // Override the key-value pair and insert
 	m_mPreferencesMaps[iSlot].InsertOrReplace(iKeyHash, *prefValue);
+
+	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning");
+	if (pEvent) {
+		pEvent->SetString("custom_event", "cs2f_user_prefs_set");
+		pEvent->SetInt("player_slot", iSlot);
+		pEvent->SetString("prefs_key", sKey);
+		pEvent->SetString("prefs_value", sValue);
+		g_gameEventManager->FireEvent(pEvent, true);
+	}
 }
+
+GAME_EVENT_F2(choppers_incoming_warning, call_cs2f_user_prefs_set)
+{
+	auto customEventName = pEvent->GetString("custom_event", "");
+	if (strcmp(customEventName, "call_cs2f_user_prefs_set") != 0) {
+		return;
+	}
+	int iSlot = pEvent->GetInt("player_slot", -1);
+	if (iSlot < 0 || iSlot > 63) {
+		return;
+	}
+	auto key = pEvent->GetString("prefs_key", "");
+	if (strlen(key) < 1) {
+		return;
+	}
+	auto value = pEvent->GetString("prefs_value", "");
+	g_pUserPreferencesSystem->SetPreference(iSlot, key, value);
+}
+
 
 void CUserPreferencesSystem::SetPreferenceInt(int iSlot, const char* sKey, int iValue)
 {
