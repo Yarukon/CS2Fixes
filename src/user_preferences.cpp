@@ -124,6 +124,8 @@ bool CUserPreferencesSystem::PutPreferences(int iSlot, uint64 iSteamId, CUtlMap<
 
 void CUserPreferencesSystem::OnPutPreferences(int iSlot)
 {
+	ZEPlayer* player = g_playerManager->GetPlayer(CPlayerSlot(iSlot));
+	if (!player) return;
 	int iHideDistance = GetPreferenceInt(iSlot, HIDE_DISTANCE_PREF_KEY_NAME, 0);
 	int iSoundStatus = GetPreferenceInt(iSlot, SOUND_STATUS_PREF_KEY_NAME, 2);
 	bool bStopSound = (bool) (iSoundStatus & 1);
@@ -135,7 +137,6 @@ void CUserPreferencesSystem::OnPutPreferences(int iSlot)
 	g_playerManager->SetPlayerSilenceSound(iSlot, bSilenceSound);
 	g_playerManager->SetPlayerStopDecals(iSlot, bHideDecals);
 
-	ZEPlayer* player = g_playerManager->GetPlayer(CPlayerSlot(iSlot));
 	player->SetHideDistance(iHideDistance);
 }
 
@@ -225,6 +226,10 @@ GAME_EVENT_F2(choppers_incoming_warning, call_cs2f_user_prefs_set)
 	}
 	auto value = pEvent->GetString("prefs_value", "");
 	g_pUserPreferencesSystem->SetPreference(iSlot, key, value);
+	bool callPut = pEvent->GetBool("call_put", false);
+	if (callPut) {
+		g_pUserPreferencesSystem->OnPutPreferences(iSlot);
+	}
 }
 
 
