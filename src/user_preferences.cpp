@@ -22,6 +22,7 @@
 #include "user_preferences.h"
 #include "httpmanager.h"
 #include "playermanager.h"
+#include "eventlistener.h"
 #include "strtools.h"
 #include <string>
 #undef snprintf
@@ -29,6 +30,7 @@
 
 using json = nlohmann::json;
 
+extern IGameEventManager2* g_gameEventManager;
 
 CUserPreferencesStorage* g_pUserPreferencesStorage = nullptr;
 CUserPreferencesSystem* g_pUserPreferencesSystem = nullptr;
