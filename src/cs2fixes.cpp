@@ -684,8 +684,6 @@ GAME_EVENT_F2(choppers_incoming_warning, pre_transmit_entity_clear)
 	}
 }
 
-float evLastRunResetTransmit = 0;
-
 void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount, CBitVec<16384> &unionTransmitEdicts,
 								const Entity2Networkable_t **pNetworkables, const uint16 *pEntityIndicies, int nEntities)
 {
@@ -694,11 +692,6 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 
 	VPROF_ENTER_SCOPE(__FUNCTION__);
 
-	auto passed = g_flLastTickedTime - evLastRunResetTransmit;
-	bool callResetTransmit = passed >= 2 || passed < -10;
-	if (callResetTransmit) {
-		evLastRunResetTransmit = g_flLastTickedTime;
-	}
 	for (int i = 0; i < infoCount; i++)
 	{
 		auto &pInfo = ppInfoList[i];
@@ -717,19 +710,6 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 
 		if (!pSelfZEPlayer)
 			continue;
-		if (callResetTransmit) {
-			for (int j = 0; j < 1024; j++)
-			{
-				evClearTransmit[i][j] = 0;
-			}
-			IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
-			if (pEvent)
-			{
-				pEvent->SetString("custom_event", "pre_transmit_entity_clear");
-				pEvent->SetInt("player_index", pSelfController->GetEntityIndex().Get());
-				g_gameEventManager->FireEvent(pEvent, true);
-			}
-		}
 
 		for (int j = 0; j < 1024; j++)
 		{
