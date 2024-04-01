@@ -664,7 +664,7 @@ void CS2Fixes::Hook_GameFrame( bool simulating, bool bFirstTick, bool bLastTick 
 
 extern bool g_bFlashLightTransmitOthers;
 
-CBitVec<16384>* lastTransmitEntity;
+int evClearTransmit[64][1024];
 
 GAME_EVENT_F2(choppers_incoming_warning, pre_transmit_entity_clear)
 {
@@ -672,17 +672,20 @@ GAME_EVENT_F2(choppers_incoming_warning, pre_transmit_entity_clear)
 	if (strcmp(customEventName, "pre_transmit_entity_clear") != 0) {
 		return;
 	}
-	if (!lastTransmitEntity) { return; }
-	for (int i = 0; i <= 1024; i++)
+	int slot = pEvent->GetInt("player_index", -1);
+	if (slot < 1 || slot > 64) { return; }
+	slot = slot - 1;
+	for (int i = 0; i < 1024; i++)
 	{
 		char name[32];
 		V_snprintf(name, sizeof(name), "clear%d", i);
 		int index = pEvent->GetInt(name);
-		if (index > 0) {
-			lastTransmitEntity->Clear(index);
+		evClearTransmit[slot][i] = index;
 		}
 	}
 }
+
+float evLastRunResetTransmit = 0;
 
 void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount, CBitVec<16384> &unionTransmitEdicts,
 								const Entity2Networkable_t **pNetworkables, const uint16 *pEntityIndicies, int nEntities)
@@ -692,6 +695,11 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 
 	VPROF_ENTER_SCOPE(__FUNCTION__);
 
+	auto passed = g_flLastTickedTime - evLastRunResetTransmit;
+	bool callResetTransmit = passed >= 2 || passed < -10;
+	if (callResetTransmit) {
+		evLastRunResetTransmit = g_flLastTickedTime;
+	}
 	for (int i = 0; i < infoCount; i++)
 	{
 		auto &pInfo = ppInfoList[i];
@@ -710,8 +718,11 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 
 		if (!pSelfZEPlayer)
 			continue;
-
-		lastTransmitEntity = NULL;
+		if (callResetTransmit) {
+			for (int j = 0; j < 1024; j++)
+			{
+				evClearTransmit[i][j] = 0;
+			}
 		IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
 		if (pEvent)
 		{
@@ -720,7 +731,15 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 			pEvent->SetInt("player_index", pSelfController->GetEntityIndex().Get());
 			g_gameEventManager->FireEvent(pEvent, true);
 		}
-		lastTransmitEntity = NULL;
+		}
+
+		for (int j = 0; j < 1024; j++)
+		{
+			int entIndex = evClearTransmit[i][j];
+			if (entIndex > 0) {
+				pInfo->m_pTransmitEntity->Clear(entIndex);
+			}
+		}
 		for (int j = 0; j < gpGlobals->maxClients; j++)
 		{
 			CCSPlayerController* pController = CCSPlayerController::FromSlot(j);
