@@ -144,6 +144,21 @@ void FASTCALL Detour_CBaseEntity_TakeDamageOld(Z_CBaseEntity* pThis, CTakeDamage
 	if (g_bBlockMolotovSelfDmg && inputInfo->m_hAttacker == pThis && !V_strncmp(pszInflictorClass, "inferno", 7))
 		return;
 
+	if (pThis->IsPawn() && inputInfo->m_hAttacker.Get())
+	{
+		CCSPlayerPawn* pawn = (CCSPlayerPawn*)inputInfo->m_hAttacker.Get();
+		if (pawn && pawn->IsPawn())
+		{
+			IGameEvent* evt = g_gameEventManager->CreateEvent("choppers_incoming_warning");
+			evt->SetString("custom_event_name", "bullet_hit");
+			evt->SetInt("entity", pawn->entindex());
+			evt->SetFloat("bullet_x", inputInfo->m_vecDamagePosition.x);
+			evt->SetFloat("bullet_y", inputInfo->m_vecDamagePosition.y);
+			evt->SetFloat("bullet_z", inputInfo->m_vecDamagePosition.z);
+			g_gameEventManager->FireEvent(evt, true);
+		}
+	}
+
 	CBaseEntity_TakeDamageOld(pThis, inputInfo);
 }
 
