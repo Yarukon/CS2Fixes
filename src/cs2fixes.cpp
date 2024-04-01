@@ -722,14 +722,13 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 			{
 				evClearTransmit[i][j] = 0;
 			}
-		IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
-		if (pEvent)
-		{
-			lastTransmitEntity = pInfo->m_pTransmitEntity;
-			pEvent->SetString("custom_event", "pre_transmit_entity_clear");
-			pEvent->SetInt("player_index", pSelfController->GetEntityIndex().Get());
-			g_gameEventManager->FireEvent(pEvent, true);
-		}
+			IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
+			if (pEvent)
+			{
+				pEvent->SetString("custom_event", "pre_transmit_entity_clear");
+				pEvent->SetInt("player_index", pSelfController->GetEntityIndex().Get());
+				g_gameEventManager->FireEvent(pEvent, true);
+			}
 		}
 
 		for (int j = 0; j < 1024; j++)
