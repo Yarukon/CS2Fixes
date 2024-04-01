@@ -681,7 +681,6 @@ GAME_EVENT_F2(choppers_incoming_warning, pre_transmit_entity_clear)
 		V_snprintf(name, sizeof(name), "clear%d", i);
 		int index = pEvent->GetInt(name);
 		evClearTransmit[slot][i] = index;
-		}
 	}
 }
 
