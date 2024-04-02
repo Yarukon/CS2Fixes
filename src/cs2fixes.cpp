@@ -713,7 +713,7 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 
 		for (int j = 0; j < 1024; j++)
 		{
-			int entIndex = evClearTransmit[i][j];
+			int entIndex = evClearTransmit[iPlayerSlot][j];
 			if (entIndex > 0) {
 				pInfo->m_pTransmitEntity->Clear(entIndex);
 			}
