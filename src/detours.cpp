@@ -149,13 +149,18 @@ void FASTCALL Detour_CBaseEntity_TakeDamageOld(Z_CBaseEntity* pThis, CTakeDamage
 		CCSPlayerPawn* pawn = (CCSPlayerPawn*)inputInfo->m_hAttacker.Get();
 		if (pawn && pawn->IsPawn())
 		{
-			IGameEvent* evt = g_gameEventManager->CreateEvent("choppers_incoming_warning");
-			evt->SetString("custom_event_name", "bullet_hit");
-			evt->SetInt("entity", pawn->entindex());
-			evt->SetFloat("bullet_x", inputInfo->m_vecDamagePosition.x);
-			evt->SetFloat("bullet_y", inputInfo->m_vecDamagePosition.y);
-			evt->SetFloat("bullet_z", inputInfo->m_vecDamagePosition.z);
-			g_gameEventManager->FireEvent(evt, true);
+			CBasePlayerController* victimController = ((CCSPlayerPawn*)pThis)->GetController();
+			CBasePlayerController* attackerController = pawn->GetController();
+			if (victimController && attackerController && victimController->m_iTeamNum != attackerController->m_iTeamNum)
+			{
+				IGameEvent* evt = g_gameEventManager->CreateEvent("choppers_incoming_warning");
+				evt->SetString("custom_event", "bullet_hit");
+				evt->SetInt("entity", pawn->entindex());
+				evt->SetFloat("bullet_x", inputInfo->m_vecDamagePosition.x);
+				evt->SetFloat("bullet_y", inputInfo->m_vecDamagePosition.y);
+				evt->SetFloat("bullet_z", inputInfo->m_vecDamagePosition.z);
+				g_gameEventManager->FireEvent(evt, true);
+			}
 		}
 	}
 
