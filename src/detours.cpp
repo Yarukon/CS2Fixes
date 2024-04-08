@@ -207,11 +207,11 @@ GAME_EVENT_F2(choppers_incoming_warning, call_entity_take_damage)
 		inflictorIndex = 0;
 	}
 	DamageTypes_t damageType = (DamageTypes_t)pEvent->GetInt("damage_type");
-	auto victim = (Z_CBaseEntity*)g_pEntitySystem->GetBaseEntity(CEntityIndex(victimIndex));
+	auto victim = (Z_CBaseEntity*) g_pEntitySystem->GetBaseEntity(CEntityIndex(victimIndex));
 	if (!victim) { return; }
-	auto attacker = g_pEntitySystem->GetBaseEntity(CEntityIndex(attackerIndex));
+	auto attacker = (Z_CBaseEntity*) g_pEntitySystem->GetBaseEntity(CEntityIndex(attackerIndex));
 	if (!attacker) { return; }
-	auto inflictor = g_pEntitySystem->GetBaseEntity(CEntityIndex(inflictorIndex));
+	auto inflictor = (Z_CBaseEntity*) g_pEntitySystem->GetBaseEntity(CEntityIndex(inflictorIndex));
 	if (!inflictor) { return; }
 	auto info = new CTakeDamageInfo();
 	info->m_flDamage = damage;
