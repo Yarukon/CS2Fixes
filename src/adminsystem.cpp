@@ -131,7 +131,7 @@ CON_COMMAND_CHAT_FLAGS(ban, "<name> <minutes|0 (permament)> - ban a player", ADM
 
 	if (iNumClients > 1)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "More than one client matched.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "有多个匹配的玩家.");
 		return;
 	}
 
@@ -164,10 +164,10 @@ CON_COMMAND_CHAT_FLAGS(ban, "<name> <minutes|0 (permament)> - ban a player", ADM
 	infraction->ApplyInfraction(pTargetPlayer);
 	g_pAdminSystem->SaveInfractions();
 
-	const char *pszCommandPlayerName = player ? player->GetPlayerName() : "Console";
+	const char *pszCommandPlayerName = player ? player->GetPlayerName() : "控制台";
 
 	if (iDuration > 0)
-		PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "banned", (" for " + FormatTime(iDuration, false)).c_str());
+		PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "封禁了", (" 持续时长 " + FormatTime(iDuration, false)).c_str());
 	else
 		PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "永久封禁了");
 }
@@ -194,7 +194,7 @@ CON_COMMAND_CHAT_FLAGS(mute, "<name> <duration|0 (permament)> - mutes a player",
 
 	if (nType == ETargetType::PLAYER && iNumClients > 1)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "More than one client matched.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "有多个匹配的玩家.");
 		return;
 	}
 
@@ -212,7 +212,7 @@ CON_COMMAND_CHAT_FLAGS(mute, "<name> <duration|0 (permament)> - mutes a player",
 		return;
 	}
 
-	const char *pszCommandPlayerName = player ? player->GetPlayerName() : "Console";
+	const char *pszCommandPlayerName = player ? player->GetPlayerName() : "控制台";
 
 	for (int i = 0; i < iNumClients; i++)
 	{
@@ -241,14 +241,14 @@ CON_COMMAND_CHAT_FLAGS(mute, "<name> <duration|0 (permament)> - mutes a player",
 		g_pAdminSystem->SaveInfractions();
 
 		if (iDuration > 0)
-			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "muted", (" for " + FormatTime(iDuration, false)).c_str());
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "禁麦了", (" 持续时长 " + FormatTime(iDuration, false)).c_str());
 		else
 			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "永久禁麦了");
 	}
 
 	g_pAdminSystem->SaveInfractions();
 
-	PrintMultiAdminAction(nType, pszCommandPlayerName, "muted", (" for " + FormatTime(iDuration, false)).c_str());
+	PrintMultiAdminAction(nType, pszCommandPlayerName, "禁麦了", (" 持续时长 " + FormatTime(iDuration, false)).c_str());
 }
 
 CON_COMMAND_CHAT_FLAGS(unmute, "<name> - unmutes a player", ADMFLAG_CHAT)
@@ -273,13 +273,7 @@ CON_COMMAND_CHAT_FLAGS(unmute, "<name> - unmutes a player", ADMFLAG_CHAT)
 
 	if (nType == ETargetType::PLAYER && iNumClients > 1)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "More than one client matched.");
-		return;
-	}
-
-	if (nType == ETargetType::PLAYER && iNumClients > 1)
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "More than one client matched.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "有多个匹配的玩家.");
 		return;
 	}
 
@@ -334,7 +328,7 @@ CON_COMMAND_CHAT_FLAGS(gag, "<name> <duration|0 (permanent)> - gag a player", AD
 
 	if (nType == ETargetType::PLAYER && iNumClients > 1)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "More than one client matched.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "有多个匹配的玩家.");
 		return;
 	}
 
@@ -352,7 +346,7 @@ CON_COMMAND_CHAT_FLAGS(gag, "<name> <duration|0 (permanent)> - gag a player", AD
 		return;
 	}
 
-	const char *pszCommandPlayerName = player ? player->GetPlayerName() : "Console";
+	const char *pszCommandPlayerName = player ? player->GetPlayerName() : "控制台";
 
 	for (int i = 0; i < iNumClients; i++)
 	{
@@ -383,14 +377,14 @@ CON_COMMAND_CHAT_FLAGS(gag, "<name> <duration|0 (permanent)> - gag a player", AD
 			continue;
 
 		if (iDuration > 0)
-			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "gagged", (" for " + FormatTime(iDuration, false)).c_str());
+			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "禁言了", (" 持续时长 " + FormatTime(iDuration, false)).c_str());
 		else
 			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "永久禁言了");
 	}
 
 	g_pAdminSystem->SaveInfractions();
 
-	PrintMultiAdminAction(nType, pszCommandPlayerName, "gagged", (" for " + FormatTime(iDuration, false)).c_str());
+	PrintMultiAdminAction(nType, pszCommandPlayerName, "禁言了", (" 持续时长 " + FormatTime(iDuration, false)).c_str());
 }
 
 CON_COMMAND_CHAT_FLAGS(ungag, "<name> - ungags a player", ADMFLAG_CHAT)
@@ -415,13 +409,7 @@ CON_COMMAND_CHAT_FLAGS(ungag, "<name> - ungags a player", ADMFLAG_CHAT)
 
 	if (nType == ETargetType::PLAYER && iNumClients > 1)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "More than one client matched.");
-		return;
-	}
-
-	if (nType == ETargetType::PLAYER && iNumClients > 1)
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "More than one client matched.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "有多个匹配的玩家.");
 		return;
 	}
 
@@ -468,7 +456,7 @@ CON_COMMAND_CHAT_FLAGS(kick, "<name> - kick a player", ADMFLAG_KICK)
 
 	if (g_playerManager->TargetPlayerString(iCommandPlayer, args[1], iNumClients, pSlot) == ETargetType::PLAYER && iNumClients > 1)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "More than one client matched.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "有多个匹配的玩家.");
 		return;
 	}
 
@@ -517,7 +505,7 @@ CON_COMMAND_CHAT_FLAGS(slay, "<name> - slay a player", ADMFLAG_SLAY)
 
 	if (nType == ETargetType::PLAYER && iNumClients > 1)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "More than one client matched.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "有多个匹配的玩家.");
 		return;
 	}
 
@@ -561,7 +549,7 @@ CON_COMMAND_CHAT_FLAGS(slap, "<name> [damage] - slap a player", ADMFLAG_SLAY)
 
 	if (nType == ETargetType::PLAYER && iNumClients > 1)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "More than one client matched.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "有多个匹配的玩家.");
 		return;
 	}
 
@@ -679,7 +667,7 @@ CON_COMMAND_CHAT_FLAGS(bring, "<name> - bring a player", ADMFLAG_SLAY)
 
 	if (nType == ETargetType::PLAYER && iNumClients > 1)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "More than one client matched.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "有多个匹配的玩家.");
 		return;
 	}
 
@@ -723,7 +711,7 @@ CON_COMMAND_CHAT_FLAGS(setteam, "<name> <team (0-3)> - set a player's team", ADM
 
 	if (nType == ETargetType::PLAYER && iNumClients > 1)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "More than one client matched.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "有多个匹配的玩家.");
 		return;
 	}
 
@@ -878,7 +866,7 @@ CON_COMMAND_CHAT_FLAGS(entfirepawn, "<name> <inpu> [parameter] - fire outputs at
 
 	if (nType == ETargetType::PLAYER && iNumClients > 1)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "More than one client matched.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "有多个匹配的玩家.");
 		return;
 	}
 
@@ -920,7 +908,7 @@ CON_COMMAND_CHAT_FLAGS(entfirecontroller, "<name> <input> [parameter] - fire out
 
 	if (nType == ETargetType::PLAYER && iNumClients > 1)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "More than one client matched.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "有多个匹配的玩家.");
 		return;
 	}
 
@@ -1062,7 +1050,7 @@ CON_COMMAND_CHAT_FLAGS(pm, "<name> <message> - Private message a player. This wi
 			return;
 		if (ply->IsGagged())
 		{
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You may not private message players while gagged.");
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "在禁言的情况下无法进行私聊.");
 			return;
 		}
 	}
@@ -1073,19 +1061,19 @@ CON_COMMAND_CHAT_FLAGS(pm, "<name> <message> - Private message a player. This wi
 
 	if (g_playerManager->TargetPlayerString(iCommandPlayer, args[1], iNumClients, pSlot) > ETargetType::SELF)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You can only private message individual players.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你只能对1个玩家进行私信.");
 		return;
 	}
 
 	if (!iNumClients)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Target not found.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "未找到玩家.");
 		return;
 	}
 
 	if (iNumClients > 1)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "More than one client matched.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "有多个匹配的玩家.");
 		return;
 	}
 
@@ -1097,12 +1085,12 @@ CON_COMMAND_CHAT_FLAGS(pm, "<name> <message> - Private message a player. This wi
 
 	std::string strMessage = GetReason(args, 1, false);
 
-	const char* pszName = player ? player->GetPlayerName() : "CONSOLE";
+	const char* pszName = player ? player->GetPlayerName() : "控制台";
 
 	if (player == pTarget)
 	{
-	//Player is PMing themselves (bind to display message in chat probably), so no need to echo to all admins
-		ClientPrint(player, HUD_PRINTTALK, "\x0A[SELF]\x0C %s\1: \x0B%s", pszName, strMessage.c_str());
+		// Player is PMing themselves (bind to display message in chat probably), so no need to echo to all admins
+		ClientPrint(player, HUD_PRINTTALK, "\x0A[自己]\x0C %s\1: \x0B%s", pszName, strMessage.c_str());
 		return;
 	}
 
@@ -1114,12 +1102,12 @@ CON_COMMAND_CHAT_FLAGS(pm, "<name> <message> - Private message a player. This wi
 			continue;
 
 		if (pPlayer->IsAdminFlagSet(ADMFLAG_GENERIC) && CCSPlayerController::FromSlot(i) != player)
-			ClientPrint(CCSPlayerController::FromSlot(i), HUD_PRINTTALK, "\x0A[PM to %s]\x0C %s\1: \x0B%s", pTarget->GetPlayerName(), pszName, strMessage.c_str());
+			ClientPrint(CCSPlayerController::FromSlot(i), HUD_PRINTTALK, "\x0A[私信至 %s]\x0C %s\1: \x0B%s", pTarget->GetPlayerName(), pszName, strMessage.c_str());
 	}
 
-	ClientPrint(player, HUD_PRINTTALK, "\x0A[PM to %s]\x0C %s\1: \x0B%s", pTarget->GetPlayerName(), pszName, strMessage.c_str());
-	ClientPrint(pTarget, HUD_PRINTTALK, "\x0A[PM]\x0C %s\1: \x0B%s", pszName, strMessage.c_str());
-	Message("[PM to %s] %s: %s\n", pTarget->GetPlayerName(), pszName, strMessage.c_str());
+	ClientPrint(player, HUD_PRINTTALK, "\x0A[私信至 %s]\x0C %s\1: \x0B%s", pTarget->GetPlayerName(), pszName, strMessage.c_str());
+	ClientPrint(pTarget, HUD_PRINTTALK, "\x0A[私信]\x0C %s\1: \x0B%s", pszName, strMessage.c_str());
+	Message("[私信至 %s] %s: %s\n", pTarget->GetPlayerName(), pszName, strMessage.c_str());
 }
 
 CON_COMMAND_CHAT_FLAGS(who, "- List the flags of all online players", ADMFLAG_GENERIC)
@@ -1312,12 +1300,12 @@ CON_COMMAND_CHAT(status, "<name> - Checks a player's active punishments. Non-adm
 
 	if (iNumClients > 1)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "More than one client matched.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "有多个匹配的玩家.");
 		return;
 	}
 	else if (iNumClients <= 0)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Target not found.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "找不到玩家.");
 		return;
 	}
 
@@ -1329,29 +1317,29 @@ CON_COMMAND_CHAT(status, "<name> - Checks a player's active punishments. Non-adm
 
 	if (pTargetPlayer->IsFakeClient())
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Cannot target bot.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "无法选中机器人作为目标.");
 		return;
 	}
 		
 	if (!pTargetPlayer->IsMuted() && !pTargetPlayer->IsGagged())
 	{
 		if (target.length() == 0)
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You have no active punishments.");
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你没有生效的惩罚.");
 		else
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s has no active punishments.", pTarget->GetPlayerName());
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s 没有生效的惩罚.", pTarget->GetPlayerName());
 		return;
 	}
 
 	std::string punishment = "";
 	if (pTargetPlayer->IsMuted() && pTargetPlayer->IsGagged())
-		punishment = "\2gagged\1 and \2muted\1";
+		punishment = "\2禁言\1 并 \2禁麦\1";
 	else if (pTargetPlayer->IsMuted())
-		punishment = "\2muted\1";
+		punishment = "\2禁麦\1";
 	else if (pTargetPlayer->IsGagged())
-		punishment = "\2gagged\1";
+		punishment = "\2禁言\1";
 
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s %s.",
-				target.length() == 0 ? "You are" : (target + " is").c_str(), punishment.c_str());
+				target.length() == 0 ? "你被 " : (target + " 被 ").c_str(), punishment.c_str());
 }
 
 CON_COMMAND_CHAT_FLAGS(listdc, "- List recently disconnected players and their Steam64 IDs", ADMFLAG_GENERIC)
