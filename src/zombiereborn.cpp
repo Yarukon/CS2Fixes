@@ -70,8 +70,6 @@ static int g_iInfectSpawnMinCount = 1;
 static float g_flRespawnDelay = 5.0;
 static int g_iDefaultWinnerTeam = CS_TEAM_SPECTATOR;
 static int g_iMZImmunityReduction = 20;
-static int g_iGroanChance = 5;
-static float g_flMoanInterval = 30.f;
 static bool g_bNapalmGrenades = true;
 static float g_flNapalmDuration = 5.f;
 static float g_flNapalmFullDamage = 50.f;
@@ -96,8 +94,6 @@ FAKE_INT_CVAR(zr_infect_spawn_mz_min_count, "Minimum amount of Mother Zombies to
 FAKE_FLOAT_CVAR(zr_respawn_delay, "Time before a zombie is automatically respawned, negative values (e.g. -1.0) disable this, note maps can still manually respawn at any time", g_flRespawnDelay, 5.0f, false)
 FAKE_INT_CVAR(zr_default_winner_team, "Which team wins when time ran out [1 = Draw, 2 = Zombies, 3 = Humans]", g_iDefaultWinnerTeam, CS_TEAM_SPECTATOR, false)
 FAKE_INT_CVAR(zr_mz_immunity_reduction, "How much mz immunity to reduce for each player per round (0-100)", g_iMZImmunityReduction, 20, false)
-FAKE_INT_CVAR(zr_sounds_groan_chance, "How likely should a zombie groan whenever they take damage (1 / N)", g_iGroanChance, 5, false)
-FAKE_FLOAT_CVAR(zr_sounds_moan_interval, "How often in seconds should zombies moan", g_flMoanInterval, 5.f, false)
 FAKE_BOOL_CVAR(zr_napalm_enable, "Whether to use napalm grenades", g_bNapalmGrenades, true, false)
 FAKE_FLOAT_CVAR(zr_napalm_burn_duration, "How long in seconds should zombies burn from napalm grenades", g_flNapalmDuration, 5.f, false)
 FAKE_FLOAT_CVAR(zr_napalm_full_damage, "The amount of damage needed to apply full burn duration for napalm grenades (max grenade damage is 99)", g_flNapalmFullDamage, 50.f, false)
@@ -837,18 +833,6 @@ void ZR_Cure(CCSPlayerController* pTargetController)
 	g_pZRPlayerClassManager->ApplyPreferredOrDefaultHumanClass(pTargetPawn);
 }
 
-float ZR_MoanTimer(CHandle<CCSPlayerPawn> hPawn)
-{
-	CCSPlayerPawn *pPawn = hPawn;
-
-	if (!pPawn || !pPawn->IsAlive() || pPawn->GetOriginalController()->m_iTeamNum() != CS_TEAM_T)
-		return -1.f;
-
-	pPawn->EmitSound("zr.amb.zombie_voice_idle");
-
-	return g_flMoanInterval;
-}
-
 const char* playerInfectedEvent = "zr_on_player_infected";
 void ZR_Infect(CCSPlayerController* pAttackerController, CCSPlayerController* pVictimController, bool bDontBroadcast)
 {
@@ -882,9 +866,6 @@ void ZR_Infect(CCSPlayerController* pAttackerController, CCSPlayerController* pV
 		pEvent->SetInt("attacker_index", pAttackerController->GetEntityIndex().Get());
 		g_gameEventManager->FireEvent(pEvent, true);
 	}
-
-	CHandle<CCSPlayerPawn> hPawn = pVictimPawn->GetHandle();
-	new CTimer(g_flMoanInterval + (rand() % 5), false, [hPawn]() { return ZR_MoanTimer(hPawn); });
 }
 
 void ZR_InfectMotherZombie(CCSPlayerController* pVictimController)
@@ -895,8 +876,6 @@ void ZR_InfectMotherZombie(CCSPlayerController* pVictimController)
 	if (!pVictimPawn)
 		return;
 
-	pVictimPawn->EmitSound("zr.amb.scream");
-
 	ZR_StripAndGiveKnife(pVictimPawn);
 	ZRZombieClass* pClass = g_pZRPlayerClassManager->GetZombieClass("MotherZombie");
 	if (pClass)
@@ -904,11 +883,7 @@ void ZR_InfectMotherZombie(CCSPlayerController* pVictimController)
 	else
 		g_pZRPlayerClassManager->ApplyPreferredOrDefaultZombieClass(pVictimPawn);
 
-	CHandle<CCSPlayerPawn> hPawn = pVictimPawn->GetHandle();
-	new CTimer(g_flMoanInterval + (rand() % 5), false, [hPawn]() { return ZR_MoanTimer(hPawn); });
-
 	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
-
 	if (pEvent)
 	{
 		pEvent->SetString("custom_event", playerInfectedEvent);
@@ -1130,9 +1105,6 @@ bool ZR_Detour_TakeDamageOld(CCSPlayerPawn* pVictimPawn, CTakeDamageInfo* pInfo)
 		ZR_Infect(pAttackerController, pVictimController, false);
 		return true; // nullify the damage
 	}
-
-	if (g_iGroanChance && pVictimPawn->m_iTeamNum() == CS_TEAM_T && (rand() % g_iGroanChance) == 1)
-		pVictimController->GetPawn()->EmitSound("zr.amb.zombie_pain");
 
 	// grenade and molotov knockback
 	if (pAttackerPawn->m_iTeamNum() == CS_TEAM_CT && pVictimPawn->m_iTeamNum() == CS_TEAM_T)
