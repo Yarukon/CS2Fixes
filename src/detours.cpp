@@ -521,6 +521,24 @@ bool FASTCALL Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSym
 		if (pPawn->IsPawn() && IgnitePawn(pPawn, flDuration, pPawn, pPawn))
 			return true;
 	}
+	else if (STRCMP(pInputName->String(), "speedmod"))
+	{
+		Z_CBaseEntity* entity = reinterpret_cast<Z_CBaseEntity*>(pThis->m_pInstance);
+		if (entity && entity->IsPawn()) {
+			float flModifier = 1.f;
+
+			if ((value->m_type == FIELD_CSTRING || value->m_type == FIELD_STRING) && value->m_pszString)
+				flModifier = V_StringToFloat32(value->m_pszString, 1.f);
+			else
+				flModifier = value->m_float;
+
+			IGameEvent* evt = g_gameEventManager->CreateEvent("choppers_incoming_warning");
+			evt->SetString("custom_event", "speedmod");
+			evt->SetInt("entity_index", entity->entindex());
+			evt->SetFloat("speed_mod", flModifier);
+			g_gameEventManager->FireEvent(evt, true);
+		}
+	}
 
 	return CEntityIdentity_AcceptInput(pThis, pInputName, pActivator, pCaller, value, nOutputID);
 }

@@ -395,22 +395,11 @@ void CS2Fixes::Hook_DispatchConCommand(ConCommandHandle cmdHandle, const CComman
 			// Do the same trimming as with admin chat
 			char *pszMessage = (char *)(args.ArgS() + 2);
 
-			// Fix bind KEY "say XXX" not working
-			if (strncmp(args.ArgS(), "\"", 1) < 0)
-				pszMessage = (char*)(args.ArgS() + 1);
-
 			// Host_Say at some point removes the trailing " for whatever reason, so we only remove if it was never called
 			if (bSilent)
 				pszMessage[V_strlen(pszMessage) - 1] = 0;
 
 			ParseChatCommand(pszMessage, pController);
-		}
-
-		// Add support for "rtv" command
-		if (pController && pController->IsConnected() && strncmp(args.ArgS() + 1, "rtv", 3) == 0) {
-			uint16 index = g_CommandList.Find(hash_32_fnv1a_const("rtv"));
-			if (g_CommandList.IsValidIndex(index))
-				(*g_CommandList[index])(args, pController);
 		}
 
 		RETURN_META(MRES_SUPERCEDE);
