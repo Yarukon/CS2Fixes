@@ -523,7 +523,7 @@ bool FASTCALL Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSym
 	}
 	else if (STRCMP(pInputName->String(), "modifyspeed"))
 	{
-		Z_CBaseEntity* entity = reinterpret_cast<Z_CBaseEntity*>(pThis->m_pInstance);
+		Z_CBaseEntity* entity = reinterpret_cast<Z_CBaseEntity*>(pActivator);
 		if (entity && entity->IsPawn()) {
 			float flModifier = 1.f;
 
