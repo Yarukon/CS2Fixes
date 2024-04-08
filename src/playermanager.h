@@ -112,6 +112,7 @@ public:
 		m_flNominateTime = -60.0f;
 		m_iPlayerState = 1; // STATE_WELCOME is the initial state
 		m_bHoldingRMB = false;
+		m_flSpeedMod = 1.f;
 	}
 
 	~ZEPlayer()
@@ -160,6 +161,7 @@ public:
 	void SetBeaconParticle(CParticleSystem *pParticle) { m_hBeaconParticle.Set(pParticle); }
 	void SetPlayerState(uint32 iPlayerState) { m_iPlayerState = iPlayerState; }
 	void SetHoldingRMB(bool holdingRMB) { m_bHoldingRMB = holdingRMB; }
+	void SetSpeedMod(float flSpeedMod) { m_flSpeedMod = flSpeedMod; }
 
 	bool IsMuted() { return m_bMuted; }
 	bool IsGagged() { return m_bGagged; }
@@ -183,6 +185,7 @@ public:
 	ZEPlayerHandle GetHandle() { return m_Handle; }
 	uint32 GetPlayerState() { return m_iPlayerState; }
 	bool IsHoldingRMB() { return m_bHoldingRMB; }
+	float GetSpeedMod() { return m_flSpeedMod; }
 	
 	void OnAuthenticated();
 	void CheckAdmin();
@@ -221,6 +224,7 @@ private:
 	uint32 m_iPlayerState;
 	ZEPlayerHandle m_Handle;
 	bool m_bHoldingRMB;
+	float m_flSpeedMod;
 };
 
 class CPlayerManager

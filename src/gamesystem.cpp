@@ -24,6 +24,10 @@
 #include "zombiereborn.h"
 #include "adminsystem.h"
 
+#include "tier0/memdbgon.h"
+
+#include "tier0/memdbgon.h"
+
 extern CGameConfig* g_GameConfig;
 
 CBaseGameSystemFactory** CBaseGameSystemFactory::sm_pFirst = nullptr;
@@ -58,7 +62,7 @@ bool InitGameSystems()
 	return true;
 }
 
-extern IGameEventManager2* g_gameEventManager;
+extern std::string g_sBurnParticle;
 
 GS_EVENT_MEMBER(CGameSystem, BuildGameSessionManifest)
 {
@@ -73,6 +77,7 @@ GS_EVENT_MEMBER(CGameSystem, BuildGameSessionManifest)
 	ZR_Precache(pResourceManifest);
 	PrecacheAdminBeaconParticle(pResourceManifest);
 
+	pResourceManifest->AddResource(g_sBurnParticle.c_str());
 }
 
 // Called every frame before entities think
