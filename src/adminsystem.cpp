@@ -483,6 +483,46 @@ CON_COMMAND_CHAT_FLAGS(kick, "<name> - kick a player", ADMFLAG_KICK)
 	}
 }
 
+CON_COMMAND_CHAT_FLAGS(kickreason, "<name> - kick a player with a reason", ADMFLAG_KICK)
+{
+	if (args.ArgC() < 3)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "指令格式: !kickreason <name> <num>");
+		return;
+	}
+
+	int iCommandPlayer = player ? player->GetPlayerSlot() : -1;
+	int iNumClients = 0;
+	int pSlot[MAXPLAYERS];
+
+	if (g_playerManager->TargetPlayerString(iCommandPlayer, args[1], iNumClients, pSlot) == ETargetType::PLAYER && iNumClients > 1)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "有多个匹配的玩家.");
+		return;
+	}
+
+	if (!iNumClients)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "未找到玩家.");
+		return;
+	}
+
+	const char* pszCommandPlayerName = player ? player->GetPlayerName() : "控制台";
+
+	int reasonIndex = V_StringToFloat32(args[2], 0);
+
+	for (int i = 0; i < iNumClients; i++)
+	{
+		CCSPlayerController* pTarget = CCSPlayerController::FromSlot(pSlot[i]);
+
+		if (!pTarget)
+			continue;
+
+		g_pEngineServer2->DisconnectClient(pSlot[i], (ENetworkDisconnectionReason)reasonIndex);
+
+	}
+}
+
 CON_COMMAND_CHAT_FLAGS(slay, "<name> - slay a player", ADMFLAG_SLAY)
 {
 	if (args.ArgC() < 2)
