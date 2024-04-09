@@ -34,6 +34,7 @@ extern CGameConfig *g_GameConfig;
 CMemPatch g_CommonPatches[] =
 {
 	CMemPatch("ServerMovementUnlock", "ServerMovementUnlock"),
+	CMemPatch("VScriptEnable", "VScriptEnable"),
 	CMemPatch("CheckJumpButtonWater", "FixWaterFloorJump"),
 	CMemPatch("CategorizeUnderwater", "CategorizeUnderwater"),
 	CMemPatch("WaterLevelGravity", "WaterLevelGravity"),
