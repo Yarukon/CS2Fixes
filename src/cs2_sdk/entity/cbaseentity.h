@@ -161,6 +161,12 @@ public:
 		CALL_VIRTUAL(void, offset, this, position, angles, velocity);
 	}
 
+	bool PassesDamageFilter(const CTakeDamageInfo* info)
+	{
+		static int offset = g_GameConfig->GetOffset("CBaseEntity_PassesDamageFilter");
+		return CALL_VIRTUAL(bool, offset, this, info);
+	}
+
 	void SetCollisionGroup(Collision_Group_t nCollisionGroup)
 	{
 		if (!m_pCollision())

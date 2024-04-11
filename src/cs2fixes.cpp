@@ -499,6 +499,16 @@ void CS2Fixes::Hook_PostEvent(CSplitScreenSlot nSlot, bool bLocalOnly, int nClie
 	{
 		*(uint64 *)clients &= ~g_playerManager->GetStopDecalsMask();
 	}
+	else if (info->m_MessageId == TE_EffectDispatchId)
+	{
+		CMsgTEEffectDispatch* msg = (CMsgTEEffectDispatch*) pData;
+		if (msg->has_effectdata())
+		{
+			CMsgEffectData effectData = msg->effectdata();
+			if (effectData.has_effectname() && (effectData.effectname() == 9 || effectData.effectname() == 4))
+				*(uint64*)clients &= ~g_playerManager->GetStopDecalsMask();
+		}
+	}
 }
 
 void CS2Fixes::AllPluginsLoaded()

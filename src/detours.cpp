@@ -139,6 +139,9 @@ void FASTCALL Detour_CBaseEntity_TakeDamageOld(Z_CBaseEntity* pThis, CTakeDamage
 		inputInfo->m_flDamage = EvLastDamage;
 	}
 
+	if (!pThis->PassesDamageFilter(inputInfo))
+		return;
+
 	// Prevent everything but nades from inflicting blast damage
 	if (inputInfo->m_bitsDamageType == DamageTypes_t::DMG_BLAST && V_strncmp(pszInflictorClass, "hegrenade", 9))
 		inputInfo->m_bitsDamageType = DamageTypes_t::DMG_GENERIC;
@@ -493,6 +496,7 @@ bool FASTCALL Detour_CCSPlayer_WeaponServices_CanUse(CCSPlayer_WeaponServices* p
 
 bool FASTCALL Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSymbolLarge* pInputName, CEntityInstance* pActivator, CEntityInstance* pCaller, variant_t* value, int nOutputID)
 {
+	// Message("Input -> %s | Value -> %s\n", pInputName->String(), value->m_type == FIELD_CSTRING ? value->m_stringt.ToCStr() : "<other type>");
 	if (g_bEnableZR)
 		ZR_Detour_CEntityIdentity_AcceptInput(pThis, pInputName, pActivator, pCaller, value, nOutputID);
 

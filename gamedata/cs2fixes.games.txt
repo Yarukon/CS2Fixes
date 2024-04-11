@@ -436,6 +436,13 @@
 				"windows"		"1"
 				"linux"			"2"
 			}
+
+			// Below TakeDamageOld -> if ( (*(_DWORD *)(a2 + 112) & 0x100) == 0 )
+			"CBaseEntity_PassesDamageFilter"
+			{
+				"windows"		"111"
+				"linux"			"110" // guess
+			}
 		}
 		"Patches"
 		{
