@@ -486,12 +486,43 @@ void FASTCALL Detour_UTIL_SayText2Filter(
 	UTIL_SayText2Filter(filter, pEntity, eMessageType, msg_name, param1, param2, param3, param4);
 }
 
+bool evEntWatchBan[64];
+
 bool FASTCALL Detour_CCSPlayer_WeaponServices_CanUse(CCSPlayer_WeaponServices* pWeaponServices, CBasePlayerWeapon* pPlayerWeapon)
 {
 	if (g_bEnableZR && !ZR_Detour_CCSPlayer_WeaponServices_CanUse(pWeaponServices, pPlayerWeapon))
 		return false;
 
+	auto hammerId = pPlayerWeapon->m_sUniqueHammerID().Get();
+	if (strlen(hammerId) > 0) {
+		CCSPlayerPawn* pPawn = pWeaponServices->__m_pChainEntity();
+		if (pPawn) {
+			auto ply = pPawn->GetOriginalController();
+			if (ply) {
+				int slot = ply->GetPlayerSlot();
+				if (evEntWatchBan[slot]) {
+					return false;
+				}
+			}
+		}
+	}
 	return CCSPlayer_WeaponServices_CanUse(pWeaponServices, pPlayerWeapon);
+}
+
+// 设置哪些玩家不能捡起有 hammer id 的武器
+GAME_EVENT_F2(choppers_incoming_warning, call_set_entwatch_ban)
+{
+	auto customEventName = pEvent->GetString("custom_event", "");
+	if (strcmp(customEventName, "call_set_entwatch_ban") != 0) {
+		return;
+	}
+	for (int i = 0; i < 64; i++)
+	{
+		char name[32];
+		V_snprintf(name, sizeof(name), "ban%d", i);
+		bool isBan = pEvent->GetBool(name, false);
+		evEntWatchBan[i] = isBan;
+	}
 }
 
 bool FASTCALL Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSymbolLarge* pInputName, CEntityInstance* pActivator, CEntityInstance* pCaller, variant_t* value, int nOutputID)
