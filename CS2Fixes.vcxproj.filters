@@ -292,5 +292,11 @@
     <ClInclude Include="src\serversideclient.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\entities.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cs2_sdk\entity\cgameplayerequip.h">
+      <Filter>Header Files\cs2_sdk\entity</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
