@@ -682,6 +682,7 @@ void CS2Fixes::Hook_GameFrame( bool simulating, bool bFirstTick, bool bLastTick 
 extern bool g_bFlashLightTransmitOthers;
 
 int evClearTransmit[64][1024];
+bool evAddTransmit[64][64];
 
 GAME_EVENT_F2(choppers_incoming_warning, pre_transmit_entity_clear)
 {
@@ -698,6 +699,13 @@ GAME_EVENT_F2(choppers_incoming_warning, pre_transmit_entity_clear)
 		V_snprintf(name, sizeof(name), "clear%d", i);
 		int index = pEvent->GetInt(name);
 		evClearTransmit[slot][i] = index;
+	}
+	for (int i = 0; i < 64; i++)
+	{
+		char name[32];
+		V_snprintf(name, sizeof(name), "add%d", i);
+		bool forceAdd = pEvent->GetBool(name, false);
+		evAddTransmit[slot][i] = forceAdd;
 	}
 }
 
@@ -764,7 +772,20 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 
 			// Hide players marked as hidden or ANY dead player, it seems that a ragdoll of a previously hidden player can crash?
 			// TODO: Revert this if/when valve fixes the issue?
-			if (pSelfZEPlayer->ShouldBlockTransmit(j) || !pPawn->IsAlive())
+
+			bool shouldHide = false;
+			if (!pPawn->IsAlive()) {
+				shouldHide = true;  // 死亡的玩家一定不传输
+			}
+			else {
+				if (evAddTransmit[iPlayerSlot][j]) {
+					shouldHide = false;  // 白名单里要求的进行传输
+				}
+				else if (pSelfZEPlayer->ShouldBlockTransmit(j)) {
+					shouldHide = true;  // 没有要求的玩家按距离控制管理
+				}
+			}
+			if (shouldHide)
 				pInfo->m_pTransmitEntity->Clear(pPawn->entindex());
 		}
 	}
