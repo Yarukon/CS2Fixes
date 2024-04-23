@@ -26,6 +26,8 @@
 #include "entity/cgamerules.h"
 #include "zombiereborn.h"
 #include "votemanager.h"
+#include "serversideclient.h"
+#include "netmessages.pb.h"
 
 #include "tier0/memdbgon.h"
 
@@ -34,6 +36,9 @@ extern IServerGameClients *g_pSource2GameClients;
 extern CGameEntitySystem *g_pEntitySystem;
 extern CGlobalVars *gpGlobals;
 extern CCSGameRules *g_pGameRules;
+
+extern CServerSideClient* GetClientBySlot(CPlayerSlot slot);
+extern INetworkSerializable* FindNetworkMessageByName(const char* name);
 
 CUtlVector<CGameEventListener *> g_vecEventListeners;
 
@@ -272,4 +277,37 @@ GAME_EVENT_F(round_time_warning)
 {
 	if (g_bEnableZR)
 		ZR_OnRoundTimeWarning(pEvent);
+}
+
+// Custom events
+#define STRCMP(str1, str2) strcmp(str1, str2) == 0
+GAME_EVENT_F2(choppers_incoming_warning, set_fake_convar)
+{
+	auto customEventName = pEvent->GetString("custom_event", "");
+	if (STRCMP(customEventName, "set_fake_convar")) {
+		int slot = pEvent->GetInt("slot", -1);
+
+		if (slot < 0 || slot > 63)
+			return;
+
+		ZEPlayer* player = g_playerManager->GetPlayer(slot);
+
+		if (!player || player->IsFakeClient())
+			return;
+
+		CServerSideClient* pClient = GetClientBySlot(player->GetPlayerSlot());
+		if (!pClient)
+			return;
+
+		INetworkSerializable* netMessage = FindNetworkMessageByName("SetConVar");
+		if (!netMessage)
+			return;
+
+		CNETMsg_SetConVar msg;
+		CMsg_CVars_CVar* cvar = msg.mutable_convars()->add_cvars();
+		cvar->set_name(pEvent->GetString("cvar"));
+		cvar->set_value(pEvent->GetString("value"));
+
+		pClient->GetNetChannel()->SendNetMessage(netMessage, &msg, BUF_RELIABLE);
+	}
 }

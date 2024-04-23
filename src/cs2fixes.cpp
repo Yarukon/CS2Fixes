@@ -566,6 +566,13 @@ CServerSideClient *GetClientBySlot(CPlayerSlot slot)
 	return pClients->Element(slot.Get());
 }
 
+// It can be partial name
+INetworkSerializable* FindNetworkMessageByName(const char* name)
+{
+	static int offset = g_GameConfig->GetOffset("FindNetworkMessageByName");
+	return CALL_VIRTUAL(INetworkSerializable*, offset, g_pNetworkMessages, name);
+}
+
 void CS2Fixes::Hook_ClientActive( CPlayerSlot slot, bool bLoadGame, const char *pszName, uint64 xuid )
 {
 	Message( "Hook_ClientActive(%d, %d, \"%s\", %lli)\n", slot, bLoadGame, pszName, xuid );
