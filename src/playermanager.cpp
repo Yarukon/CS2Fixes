@@ -486,7 +486,7 @@ void CPlayerManager::UpdatePlayerStates()
 		if (g_bEnableHide && pController->IsConnected() && pController->IsAlive())
 		{
 			uint64* pButtons = pController->GetPawn()->m_pMovementServices->m_nButtons().m_pButtonStates();
-			pPlayer->SetHoldingRMB((pButtons[0] & IN_USE) != 0);
+			pPlayer->SetHoldingRMB((pButtons[0] & IN_ATTACK2) != 0);
 		}
 
 		if (iCurrentPlayerState != iPreviousPlayerState)
