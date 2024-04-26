@@ -492,17 +492,7 @@ void CPlayerManager::UpdatePlayerStates()
 		if (iCurrentPlayerState != iPreviousPlayerState)
 		{
 			Message("Player %s changed states from %s to %s\n", pController->GetPlayerName(), g_szPlayerStates[iPreviousPlayerState], g_szPlayerStates[iCurrentPlayerState]);
-
 			pPlayer->SetPlayerState(iCurrentPlayerState);
-
-			// Send full update to people going in/out of spec as a mitigation for hide crashes
-			if (g_bEnableHide && (iCurrentPlayerState == STATE_OBSERVER_MODE || iPreviousPlayerState == STATE_OBSERVER_MODE))
-			{
-				CServerSideClient *pClient = GetClientBySlot(i);
-
-				if (pClient)
-					pClient->ForceFullUpdate();
-			}
 		}
 	}
 }
