@@ -363,7 +363,7 @@ void CZRPlayerClassManager::ApplyBaseClass(ZRClass* pClass, CCSPlayerPawn* pPawn
 	pPawn->SetModel(pClass->szModelPath.c_str());
 	pPawn->m_clrRender = clrRender;
 	pPawn->AcceptInput("Skin", pClass->iSkin);
-	pPawn->m_flVelocityModifier = pClass->flSpeed;
+	// pPawn->m_flVelocityModifier = pClass->flSpeed;
 	pPawn->m_flGravityScale = pClass->flGravity;
 
 	// This has to be done a bit later
