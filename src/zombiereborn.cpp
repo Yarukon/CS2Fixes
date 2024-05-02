@@ -90,11 +90,6 @@ static std::string g_szZombieWinOverlayParticle;
 static std::string g_szZombieWinOverlayMaterial;
 static float g_flZombieWinOverlaySize;
 
-static bool g_bInfectShake = true;
-static float g_flInfectShakeAmplitude = 15.f;
-static float g_flInfectShakeFrequency = 2.f;
-static float g_flInfectShakeDuration = 5.f;
-
 FAKE_BOOL_CVAR(zr_enable, "Whether to enable ZR features", g_bEnableZR, false, false)
 FAKE_FLOAT_CVAR(zr_ztele_max_distance, "Maximum distance players are allowed to move after starting ztele", g_flMaxZteleDistance, 150.0f, false)
 FAKE_BOOL_CVAR(zr_ztele_allow_humans, "Whether to allow humans to use ztele", g_bZteleHuman, false, false)
@@ -116,10 +111,6 @@ FAKE_FLOAT_CVAR(zr_human_win_overlay_size, "Size of human's win overlay particle
 FAKE_STRING_CVAR(zr_zombie_win_overlay_particle, "Screenspace particle to display when zombie win", g_szZombieWinOverlayParticle, false)
 FAKE_STRING_CVAR(zr_zombie_win_overlay_material, "Material override for zombie's win overlay particle", g_szZombieWinOverlayMaterial, false)
 FAKE_FLOAT_CVAR(zr_zombie_win_overlay_size, "Size of zombie's win overlay particle", g_flZombieWinOverlaySize, 5.0f, false)
-FAKE_BOOL_CVAR(zr_infect_shake, "Whether to shake a player's view on infect", g_bInfectShake, true, false);
-FAKE_FLOAT_CVAR(zr_infect_shake_amp, "Amplitude of shaking effect", g_flInfectShakeAmplitude, 15.f, false);
-FAKE_FLOAT_CVAR(zr_infect_shake_frequency, "Frequency of shaking effect", g_flInfectShakeFrequency, 2.f, false);
-FAKE_FLOAT_CVAR(zr_infect_shake_duration, "Duration of shaking effect", g_flInfectShakeDuration, 5.f, false);
 
 void ZR_Precache(IEntityResourceManifest* pResourceManifest)
 {
@@ -942,8 +933,6 @@ void ZR_Infect(CCSPlayerController* pAttackerController, CCSPlayerController* pV
 
 	g_pZRPlayerClassManager->ApplyPreferredOrDefaultZombieClass(pVictimPawn);
 
-	ZR_InfectShake(pVictimController);
-
 	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
 	if (pEvent)
 	{
@@ -1655,7 +1644,7 @@ CON_COMMAND_CHAT_FLAGS(infect, "infect a player", ADMFLAG_GENERIC)
 
 	if (nType == ETargetType::PLAYER && iNumClients > 1)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "More than one client matched.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "找到多个匹配的玩家.");
 		return;
 	}
 
@@ -1729,7 +1718,7 @@ CON_COMMAND_CHAT_FLAGS(revive, "revive a player", ADMFLAG_GENERIC)
 
 	if (nType == ETargetType::PLAYER && iNumClients > 1)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "More than one client matched.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "找到多个匹配的玩家.");
 		return;
 	}
 

@@ -557,7 +557,7 @@ bool FASTCALL Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSym
 		if (pPawn->IsPawn() && IgnitePawn(pPawn, flDuration, pPawn, pPawn))
 			return true;
 	}
-	else if (STRCMP(pInputName->String(), "modifyspeed"))
+	else if (STRCMP(pInputName->String(), "ModifySpeed"))
 	{
 		Z_CBaseEntity* entity = reinterpret_cast<Z_CBaseEntity*>(pActivator);
 		if (entity && entity->IsPawn()) {
