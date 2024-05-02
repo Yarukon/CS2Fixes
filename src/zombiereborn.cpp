@@ -17,6 +17,8 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "cstrike15_usermessages.pb.h"
+
 #include "commands.h"
 #include "utils/entity.h"
 #include "playermanager.h"
@@ -27,9 +29,14 @@
 #include "entity/services.h"
 #include "entity/cteam.h"
 #include "entity/cparticlesystem.h"
+#include "engine/igameeventsystem.h"
+#include "networksystem/inetworkmessages.h"
+#include "recipientfilters.h"
+#include "serversideclient.h"
 #include "user_preferences.h"
 #include "customio.h"
 #include <sstream>
+#include "leader.h"
 
 #include "tier0/memdbgon.h"
 
@@ -38,6 +45,7 @@ extern IVEngineServer2* g_pEngineServer2;
 extern CGlobalVars* gpGlobals;
 extern CCSGameRules* g_pGameRules;
 extern IGameEventManager2* g_gameEventManager;
+extern IGameEventSystem *g_gameEventSystem;
 extern double g_flUniversalTime;
 
 void ZR_Infect(CCSPlayerController* pAttackerController, CCSPlayerController* pVictimController, bool bBroadcast);
@@ -82,6 +90,11 @@ static std::string g_szZombieWinOverlayParticle;
 static std::string g_szZombieWinOverlayMaterial;
 static float g_flZombieWinOverlaySize;
 
+static bool g_bInfectShake = true;
+static float g_flInfectShakeAmplitude = 15.f;
+static float g_flInfectShakeFrequency = 2.f;
+static float g_flInfectShakeDuration = 5.f;
+
 FAKE_BOOL_CVAR(zr_enable, "Whether to enable ZR features", g_bEnableZR, false, false)
 FAKE_FLOAT_CVAR(zr_ztele_max_distance, "Maximum distance players are allowed to move after starting ztele", g_flMaxZteleDistance, 150.0f, false)
 FAKE_BOOL_CVAR(zr_ztele_allow_humans, "Whether to allow humans to use ztele", g_bZteleHuman, false, false)
@@ -103,6 +116,10 @@ FAKE_FLOAT_CVAR(zr_human_win_overlay_size, "Size of human's win overlay particle
 FAKE_STRING_CVAR(zr_zombie_win_overlay_particle, "Screenspace particle to display when zombie win", g_szZombieWinOverlayParticle, false)
 FAKE_STRING_CVAR(zr_zombie_win_overlay_material, "Material override for zombie's win overlay particle", g_szZombieWinOverlayMaterial, false)
 FAKE_FLOAT_CVAR(zr_zombie_win_overlay_size, "Size of zombie's win overlay particle", g_flZombieWinOverlaySize, 5.0f, false)
+FAKE_BOOL_CVAR(zr_infect_shake, "Whether to shake a player's view on infect", g_bInfectShake, true, false);
+FAKE_FLOAT_CVAR(zr_infect_shake_amp, "Amplitude of shaking effect", g_flInfectShakeAmplitude, 15.f, false);
+FAKE_FLOAT_CVAR(zr_infect_shake_frequency, "Frequency of shaking effect", g_flInfectShakeFrequency, 2.f, false);
+FAKE_FLOAT_CVAR(zr_infect_shake_duration, "Duration of shaking effect", g_flInfectShakeDuration, 5.f, false);
 
 void ZR_Precache(IEntityResourceManifest* pResourceManifest)
 {
@@ -363,8 +380,37 @@ void CZRPlayerClassManager::ApplyBaseClass(ZRClass* pClass, CCSPlayerPawn* pPawn
 	pPawn->SetModel(pClass->szModelPath.c_str());
 	pPawn->m_clrRender = clrRender;
 	pPawn->AcceptInput("Skin", pClass->iSkin);
-	// pPawn->m_flVelocityModifier = pClass->flSpeed;
 	pPawn->m_flGravityScale = pClass->flGravity;
+
+	// I don't know why, I don't want to know why,
+	// I shouldn't have to wonder why, but for whatever reason
+	// this shit caused crashes on ROUND END or MAP CHANGE after the 26/04/2024 update
+	//pPawn->m_flVelocityModifier = pClass->flSpeed;
+
+	// This has to be done a bit later
+	UTIL_AddEntityIOEvent(pPawn, "SetScale", nullptr, nullptr, pClass->flScale);
+
+	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
+	if (pEvent)
+	{
+		pEvent->SetString("custom_event", "zr_on_zclass_set");
+		pEvent->SetInt("pawn_index", pPawn->GetEntityIndex().Get());
+		pEvent->SetString("zclass_name", pClass->szClassName.c_str());
+		pEvent->SetString("zclass_model", pClass->szModelPath.c_str());
+		pEvent->SetInt("zclass_health", pClass->iHealth);
+		g_gameEventManager->FireEvent(pEvent, true);
+	}
+}
+
+// only changes that should not (directly) affect gameplay
+void CZRPlayerClassManager::ApplyBaseClassVisuals(ZRClass *pClass, CCSPlayerPawn *pPawn)
+{
+	Color clrRender;
+	V_StringToColor(pClass->szColor.c_str(), clrRender);
+	
+	pPawn->SetModel(pClass->szModelPath.c_str());
+	pPawn->m_clrRender = clrRender;
+	pPawn->AcceptInput("Skin", pClass->iSkin);
 
 	// This has to be done a bit later
 	UTIL_AddEntityIOEvent(pPawn, "SetScale", nullptr, nullptr, pClass->flScale);
@@ -395,6 +441,19 @@ void CZRPlayerClassManager::ApplyHumanClass(ZRHumanClass* pClass, CCSPlayerPawn*
 	CCSPlayerController* pController = CCSPlayerController::FromPawn(pPawn);
 	if (pController)
 		CZRRegenTimer::StopRegen(pController);
+	
+	if (!g_bEnableLeader || !pController)
+		return;
+	
+	ZEPlayer *pPlayer = g_playerManager->GetPlayer(pController->GetPlayerSlot());
+
+	if (pPlayer && pPlayer->IsLeader())
+		new CTimer(0.02f, false, [pPawn]()
+		{
+			if (pPawn)
+				Leader_ApplyLeaderVisuals(pPawn);
+			return -1.0f;
+		});
 }
 
 void CZRPlayerClassManager::ApplyPreferredOrDefaultHumanClass(CCSPlayerPawn* pPawn)
@@ -421,6 +480,30 @@ void CZRPlayerClassManager::ApplyPreferredOrDefaultHumanClass(CCSPlayerPawn* pPa
 	}
 
 	ApplyHumanClass(humanClass, pPawn);
+}
+
+void CZRPlayerClassManager::ApplyPreferredOrDefaultHumanClassVisuals(CCSPlayerPawn *pPawn)
+{
+	CCSPlayerController *pController = CCSPlayerController::FromPawn(pPawn);
+	if (!pController) return;
+
+	// Get the human class user preference, or default if no class is set
+	int iSlot = pController->GetPlayerSlot();
+	ZRHumanClass* humanClass = nullptr;
+	const char* sPreferredHumanClass = g_pUserPreferencesSystem->GetPreference(iSlot, HUMAN_CLASS_KEY_NAME);
+
+	// If the preferred human class exists and can be applied, override the default
+	uint16 index = m_HumanClassMap.Find(hash_32_fnv1a_const(sPreferredHumanClass));
+	if (m_HumanClassMap.IsValidIndex(index) && m_HumanClassMap[index]->IsApplicableTo(pController)) {
+		humanClass = m_HumanClassMap[index];
+	} else if (m_vecHumanDefaultClass.Count()) {
+		humanClass = m_vecHumanDefaultClass[rand() % m_vecHumanDefaultClass.Count()];
+	} else if (!humanClass) {
+		Warning("Missing default human class or valid preferences!\n");
+		return;
+	}
+
+	ApplyBaseClassVisuals((ZRClass *)humanClass, pPawn);
 }
 
 ZRZombieClass* CZRPlayerClassManager::GetZombieClass(const char* pszClassName)
@@ -563,16 +646,22 @@ void ZR_OnLevelInit()
 {
 	g_ZRRoundState = EZRRoundState::ROUND_START;
 
-	// Here we force some cvars that are necessary for the gamemode
-	g_pEngineServer2->ServerCommand("mp_give_player_c4 0");
-	g_pEngineServer2->ServerCommand("mp_friendlyfire 0");
-	g_pEngineServer2->ServerCommand("bot_quota_mode fill"); // Necessary to fix bots kicked/joining infinitely when forced to CT https://github.com/Source2ZE/ZombieReborn/issues/64
-	g_pEngineServer2->ServerCommand("mp_ignore_round_win_conditions 1");
-	// These disable most of the buy menu for zombies
-	g_pEngineServer2->ServerCommand("mp_weapons_allow_pistols 3");
-	g_pEngineServer2->ServerCommand("mp_weapons_allow_smgs 3");
-	g_pEngineServer2->ServerCommand("mp_weapons_allow_heavy 3");
-	g_pEngineServer2->ServerCommand("mp_weapons_allow_rifles 3");
+	// Delay one tick to override any .cfg's
+	new CTimer(0.02f, false, []()
+	{
+		// Here we force some cvars that are necessary for the gamemode
+		g_pEngineServer2->ServerCommand("mp_give_player_c4 0");
+		g_pEngineServer2->ServerCommand("mp_friendlyfire 0");
+		g_pEngineServer2->ServerCommand("bot_quota_mode fill"); // Necessary to fix bots kicked/joining infinitely when forced to CT https://github.com/Source2ZE/ZombieReborn/issues/64
+		g_pEngineServer2->ServerCommand("mp_ignore_round_win_conditions 1");
+		// These disable most of the buy menu for zombies
+		g_pEngineServer2->ServerCommand("mp_weapons_allow_pistols 3");
+		g_pEngineServer2->ServerCommand("mp_weapons_allow_smgs 3");
+		g_pEngineServer2->ServerCommand("mp_weapons_allow_heavy 3");
+		g_pEngineServer2->ServerCommand("mp_weapons_allow_rifles 3");
+
+		return -1.0f;
+	});
 
 	g_pZRPlayerClassManager->LoadPlayerClass();
 	g_pZRWeaponConfig->LoadWeaponConfig();
@@ -707,8 +796,14 @@ void ZR_OnPlayerSpawn(IGameEvent* pEvent)
 		bool bInfect = g_ZRRoundState == EZRRoundState::POST_INFECTION;
 
 		// We're infecting this guy with a delay, disable all damage as they have 100 hp until then
-		if (bInfect)
+		// also set team immediately in case the spawn teleport is team filtered
+		if (bInfect) 
+		{
 			pController->GetPawn()->m_bTakesDamage(false);
+			pController->SwitchTeam(CS_TEAM_T);
+		}
+		else
+			pController->SwitchTeam(CS_TEAM_CT);
 
 		CHandle<CCSPlayerController> handle = pController->GetHandle();
 		new CTimer(0.05f, false, [iRoundNum, handle, bInfect]()
@@ -846,6 +941,8 @@ void ZR_Infect(CCSPlayerController* pAttackerController, CCSPlayerController* pV
 	ZR_StripAndGiveKnife(pVictimPawn);
 
 	g_pZRPlayerClassManager->ApplyPreferredOrDefaultZombieClass(pVictimPawn);
+
+	ZR_InfectShake(pVictimController);
 
 	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
 	if (pEvent)

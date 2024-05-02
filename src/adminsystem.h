@@ -144,6 +144,7 @@ public:
 	void SaveInfractions();
 	bool ApplyInfractions(ZEPlayer *player);
 	bool FindAndRemoveInfraction(ZEPlayer *player, CInfractionBase::EInfractionType type);
+	bool FindAndRemoveInfractionSteamId64(uint64 steamid64, CInfractionBase::EInfractionType type);
 	CAdmin *FindAdmin(uint64 iSteamID);
 	uint64 ParseFlags(const char* pszFlags);
 	void AddDisconnectedPlayer(const char* pszName, uint64 xuid, const char* pszIP);
@@ -159,8 +160,6 @@ private:
 };
 
 extern CAdminSystem *g_pAdminSystem;
-
-void PrecacheAdminBeaconParticle(IEntityResourceManifest* pResourceManifest);
 
 // Given a formatted time entered by an admin, return the minutes
 int ParseTimeInput(std::string strTime);

@@ -33,6 +33,8 @@
 #include "entity/cparticlesystem.h"
 #include "entity/cgamerules.h"
 #include "gamesystem.h"
+#include "votemanager.h"
+#include "map_votes.h"
 #include <vector>
 
 extern IVEngineServer2 *g_pEngineServer2;
@@ -43,10 +45,6 @@ extern CCSGameRules *g_pGameRules;
 CAdminSystem* g_pAdminSystem = nullptr;
 
 CUtlMap<uint32, CChatCommand *> g_CommandList(0, 0, DefLessFunc(uint32));
-
-static std::string g_sBeaconParticle = "particles/testsystems/test_cross_product.vpcf";
-
-FAKE_STRING_CVAR(cs2f_admin_beacon_particle, ".vpcf file to be precached and used for admin beacon", g_sBeaconParticle, false)
 
 void PrintSingleAdminAction(const char* pszAdminName, const char* pszTargetName, const char* pszAction, const char* pszAction2 = "", const char* prefix = CHAT_PREFIX)
 {
@@ -170,6 +168,30 @@ CON_COMMAND_CHAT_FLAGS(ban, "<name> <minutes|0 (permament)> - ban a player", ADM
 		PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "封禁了", (" 持续时长 " + FormatTime(iDuration, false)).c_str());
 	else
 		PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "永久封禁了");
+}
+
+CON_COMMAND_CHAT_FLAGS(unban, "<steamid64> - unbans a player. Takes decimal STEAMID64", ADMFLAG_BAN)
+{
+	if (args.ArgC() < 2)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !unban <steamid64>");
+		return;
+	}
+
+	uint64 iTargetSteamId64 = V_StringToUint64(args[1], 0);
+
+	bool bResult = g_pAdminSystem->FindAndRemoveInfractionSteamId64(iTargetSteamId64, CInfractionBase::Ban);
+
+	if (!bResult)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Couldn't find user with STEAMID64 <%llu> in ban infractions.", iTargetSteamId64);
+		return;		
+	}
+
+	g_pAdminSystem->SaveInfractions();
+
+	// no need to broadcast this
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "User with STEAMID64 <%llu> has been unbanned.", iTargetSteamId64);
 }
 
 CON_COMMAND_CHAT_FLAGS(mute, "<name> <duration|0 (permament)> - mutes a player", ADMFLAG_CHAT)
@@ -978,11 +1000,32 @@ CON_COMMAND_CHAT_FLAGS(map, "<mapname> - change map", ADMFLAG_CHANGEMAP)
 
 	if (!g_pEngineServer2->IsMapValid(args[1]))
 	{
-		// This might be a workshop map, and right now there's no easy way to get the list from a collection
-		// So blindly attempt the change for now, as the command does nothing if the map isn't found
-		std::string sCommand = "ds_workshop_changelevel " + std::string(args[1]);
+		// Injection prevention, because we pass user input to ServerCommand
+		for (int i = 0; i < strlen(args[1]); i++)
+		{
+			if (args[1][i] == ';')
+				return;
+		}
 
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "5秒后尝试更改地图至创意工坊地图 %s...", args[1]);
+		std::string sCommand;
+
+		// Check if input is numeric (workshop ID)
+		// Not safe to expose until crashing on failed workshop addon downloads is fixed
+		/*if (V_StringToUint64(args[1], 0) != 0)
+		{
+			sCommand = "host_workshop_map " + std::string(args[1]);
+		}*/
+		if (g_bVoteManagerEnable && g_pMapVoteSystem->GetMapIndexFromSubstring(args[1]) != -1)
+		{
+			sCommand = "host_workshop_map " + std::to_string(g_pMapVoteSystem->GetMapWorkshopId(g_pMapVoteSystem->GetMapIndexFromSubstring(args[1])));
+		}
+		else
+		{
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "找不到地图 %s.", args[1]);
+			return;
+		}
+
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "更改地图至 %s...", args[1]);
 
 		new CTimer(5.0f, false, [sCommand]()
 		{
@@ -1409,150 +1452,6 @@ CON_COMMAND_CHAT_FLAGS(add_dc, "<name> <SteamID 64> <IP Address> - Adds a fake p
 }
 #endif
 
-void PrecacheAdminBeaconParticle(IEntityResourceManifest* pResourceManifest)
-{
-	pResourceManifest->AddResource(g_sBeaconParticle.c_str());
-}
-
-void KillBeacon(int playerSlot)
-{
-	ZEPlayer* pPlayer = g_playerManager->GetPlayer(playerSlot);
-
-	if (!pPlayer)
-		return;
-
-	CParticleSystem* pParticle = pPlayer->GetBeaconParticle();
-
-	if (!pParticle)
-		return;
-
-	pParticle->AcceptInput("DestroyImmediately");
-
-	// delayed Kill because default particle is being silly and remains floating if not Destroyed first
-	CHandle<CParticleSystem> hParticle = pParticle->GetHandle();
-	new CTimer(0.02f, false, [hParticle]()
-	{
-		CParticleSystem* particle = hParticle.Get();
-		if (particle)
-			particle->AcceptInput("Kill");
-		return -1.0f;
-	});
-}
-
-void CreateBeacon(int playerSlot)
-{
-	CCSPlayerController* pTarget = CCSPlayerController::FromSlot(playerSlot);
-
-	Vector vecAbsOrigin = pTarget->GetPawn()->GetAbsOrigin();
-
-	vecAbsOrigin.z += 10;
-
-	CParticleSystem* particle = (CParticleSystem*)CreateEntityByName("info_particle_system");
-
-	CEntityKeyValues* pKeyValues = new CEntityKeyValues();
-
-	pKeyValues->SetString("effect_name", g_sBeaconParticle.c_str());
-	pKeyValues->SetInt("tint_cp", 1);
-	pKeyValues->SetVector("origin", vecAbsOrigin);
-	// ugly angle change because default particle is rotated
-	if (strcmp(g_sBeaconParticle.c_str(), "particles/testsystems/test_cross_product.vpcf") == 0)
-		pKeyValues->SetQAngle("angles", QAngle(90, 0, 0));
-	
-	particle->DispatchSpawn(pKeyValues);
-	particle->SetParent(pTarget->GetPawn());
-
-	ZEPlayer* pPlayer = g_playerManager->GetPlayer(playerSlot);
-	
-	pPlayer->SetBeaconParticle(particle);
-
-	CHandle<CParticleSystem> hParticle = particle->GetHandle();
-
-	// timer persists through map change so serial reset on StartupServer is not needed
-	new CTimer(0.0f, true, [playerSlot, hParticle]()
-	{
-		CCSPlayerController* pPlayer = CCSPlayerController::FromSlot(playerSlot);
-		
-		if (!pPlayer || pPlayer->m_iTeamNum < CS_TEAM_T || !pPlayer->GetPlayerPawn()->IsAlive())
-		{
-			KillBeacon(playerSlot);
-			return -1.0f;
-		}
-
-		CParticleSystem* pParticle = hParticle.Get();
-
-		if (!pParticle)
-		{
-			return -1.0f;
-		}
-
-		// team-based tint of Control Point 1
-		if (pPlayer->m_iTeamNum == CS_TEAM_T)
-			pParticle->m_clrTint->SetColor(185, 93, 63, 255);
-		else
-			pParticle->m_clrTint->SetColor(40, 100, 255, 255);
-		
-		pParticle->AcceptInput("Start");
-		// delayed DestroyImmediately input so particle effect can be replayed (and default particle doesn't bug out)
-		new CTimer(0.5f, false, [hParticle]()
-		{
-			CParticleSystem* particle = hParticle.Get();
-			if (particle)
-				particle->AcceptInput("DestroyImmediately");
-			return -1.0f;
-		});
-
-		return 1.0f;
-	});
-}
-
-void PerformBeacon(int playerSlot)
-{
-	ZEPlayer *pPlayer = g_playerManager->GetPlayer(playerSlot);
-
-	if (!pPlayer->GetBeaconParticle())
-		CreateBeacon(playerSlot);
-	else
-		KillBeacon(playerSlot);
-}
-
-CON_COMMAND_CHAT_FLAGS(beacon, "Toggle beacon on a player", ADMFLAG_GENERIC)
-{
-	if (args.ArgC() < 2)
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "指令格式: !beacon <name>");
-		return;
-	}
-
-	int iCommandPlayer = player ? player->GetPlayerSlot() : -1;
-	int iNumClients = 0;
-	int pSlots[MAXPLAYERS];
-
-	ETargetType nType = g_playerManager->TargetPlayerString(iCommandPlayer, args[1], iNumClients, pSlots);
-
-	if (!iNumClients)
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "找不到目标.");
-		return;
-	}
-
-	const char *pszCommandPlayerName = player ? player->GetPlayerName() : "控制台";
-
-	for (int i = 0; i < iNumClients; i++)
-	{
-		CCSPlayerController* pTarget = CCSPlayerController::FromSlot(pSlots[i]);
-
-		if (!pTarget)
-			continue;
-
-		PerformBeacon(pSlots[i]);
-
-		if (nType < ETargetType::ALL)
-			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "触发了", "的高亮");
-	}
-
-	PrintMultiAdminAction(nType, pszCommandPlayerName, "触发了", "的高亮");
-}
-
 CAdminSystem::CAdminSystem()
 {
 	LoadAdmins();
@@ -1742,6 +1641,21 @@ bool CAdminSystem::FindAndRemoveInfraction(ZEPlayer *player, CInfractionBase::EI
 		if (m_vecInfractions[i]->GetSteamId64() == player->GetSteamId64() && m_vecInfractions[i]->GetType() == type)
 		{
 			m_vecInfractions[i]->UndoInfraction(player);
+			m_vecInfractions.Remove(i);
+			
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool CAdminSystem::FindAndRemoveInfractionSteamId64(uint64 steamid64, CInfractionBase::EInfractionType type)
+{
+	FOR_EACH_VEC(m_vecInfractions, i)
+	{
+		if (m_vecInfractions[i]->GetSteamId64() == steamid64 && m_vecInfractions[i]->GetType() == type)
+		{
 			m_vecInfractions.Remove(i);
 			
 			return true;
