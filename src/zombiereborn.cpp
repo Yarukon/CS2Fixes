@@ -825,14 +825,14 @@ void ZR_ApplyKnockback(CCSPlayerPawn* pHuman, CCSPlayerPawn* pVictim, int iDamag
 	pVictim->m_vecAbsVelocity = pVictim->m_vecAbsVelocity() + vecKnockback;
 }
 
-void ZR_ApplyKnockbackExplosion(Z_CBaseEntity* pProjectile, CCSPlayerPawn* pVictim, int iDamage, bool bMolotov)
+void ZR_ApplyKnockbackExplosion(CCSPlayerPawn* pHuman, Z_CBaseEntity* pProjectile, CCSPlayerPawn* pVictim, int iDamage, bool bMolotov)
 {
 	ZRWeapon* pWeapon = g_pZRWeaponConfig->FindWeapon(pProjectile->GetClassname());
 	if (!pWeapon)
 		return;
 	float flWeaponKnockbackScale = pWeapon->flKnockback;
 
-	Vector vecDisplacement = pVictim->GetAbsOrigin() - pProjectile->GetAbsOrigin();
+	Vector vecDisplacement = pVictim->GetAbsOrigin() - pHuman->GetAbsOrigin();
 	vecDisplacement.z += 36;
 	VectorNormalize(vecDisplacement);
 	Vector vecKnockback = vecDisplacement;
@@ -1203,7 +1203,7 @@ bool ZR_Detour_TakeDamageOld(CCSPlayerPawn* pVictimPawn, CTakeDamageInfo* pInfo)
 		}
 
 		if (bGrenade || bInferno)
-			ZR_ApplyKnockbackExplosion((Z_CBaseEntity*)pInflictor, (CCSPlayerPawn*)pVictimPawn, (int)pInfo->m_flDamage, bInferno);
+			ZR_ApplyKnockbackExplosion(pAttackerPawn, (Z_CBaseEntity*)pInflictor, (CCSPlayerPawn*)pVictimPawn, (int)pInfo->m_flDamage, bInferno);
 	}
 	return false;
 }
