@@ -1513,11 +1513,11 @@ CON_COMMAND_CHAT(ztele, "- teleport to spawn")
 	//Get initial player position so we can do distance check
 	Vector initialpos = pPawn->GetAbsOrigin();
 
-	ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX"5秒后传送到出生点, 不要移动.");
+	ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX"3秒后传送到出生点, 不要移动.");
 
 	CHandle<CBasePlayerPawn> pawnHandle = pPawn->GetHandle();
 
-	new CTimer(5.0f, false, [spawnHandle, pawnHandle, initialpos]()
+	new CTimer(3.0f, false, [spawnHandle, pawnHandle, initialpos]()
 		{
 			CBasePlayerPawn* pPawn = pawnHandle.Get();
 			SpawnPoint* pSpawn = spawnHandle.Get();
