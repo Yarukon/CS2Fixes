@@ -653,7 +653,6 @@ void CZRPlayerClassManager::ApplyBaseClass(ZRClass* pClass, CCSPlayerPawn* pPawn
 		pEvent->SetString("custom_event", "zr_on_zclass_set");
 		pEvent->SetInt("pawn_index", pPawn->GetEntityIndex().Get());
 		pEvent->SetString("zclass_name", pClass->szClassName.c_str());
-		pEvent->SetString("zclass_model", pClass->szModelPath.c_str());
 		pEvent->SetInt("zclass_health", pClass->iHealth);
 		g_gameEventManager->FireEvent(pEvent, true);
 	}
@@ -679,7 +678,6 @@ void CZRPlayerClassManager::ApplyBaseClassVisuals(ZRClass *pClass, CCSPlayerPawn
 		pEvent->SetString("custom_event", "zr_on_zclass_set");
 		pEvent->SetInt("pawn_index", pPawn->GetEntityIndex().Get());
 		pEvent->SetString("zclass_name", pClass->szClassName.c_str());
-		pEvent->SetString("zclass_model", pClass->szModelPath.c_str());
 		pEvent->SetInt("zclass_health", pClass->iHealth);
 		g_gameEventManager->FireEvent(pEvent, true);
 	}
