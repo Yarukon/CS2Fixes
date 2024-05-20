@@ -324,14 +324,17 @@ const char* snd10 = "Player.DeathHeadShotArmor.Onlooker";
 const char* snd11 = "Flesh.BulletImpact";
 
 #define STRCMP(str1, str2) strcmp(str1, str2) == 0
-void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase* pSoundEmitterSystem, uint32* guid, IRecipientFilter* filter, CEntityIndex index, EmitSound2_t* params)
+void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase* pSoundEmitterSystem, SndOpEventGuid_t* guid, IRecipientFilter* filter, CEntityIndex index, EmitSound2_t* params)
 {
 	const char* sndName = params->m_pSoundName;
 	// ConMsg("Detour_CSoundEmitterSystem_EmitSound: index: %d recipientcnt: %d snd: %s chn: %d\n", index.Get(), filter->GetRecipientCount(), sndName, params->channel);
 	// ConMsg("vol: %f lvl: %d flags: %d pitch: %d\n", params->m_flVolume, params->m_SoundLevel, params->m_nFlags, params->m_nPitch);
 
 	// for (int i = 0; i < filter->GetRecipientCount(); ++i)
-	//  	ConMsg("recipient slot %d : %d\n", i, filter->GetRecipientIndex(i));
+	// {
+	// 	CPlayerSlot index = filter->GetRecipientIndex(i);
+	// 	ConMsg("recipient slot %d : %d\n", i, index);
+	// }
 
 	if (STRCMP(sndName, snd1) || STRCMP(sndName, snd2) || STRCMP(sndName, snd3) || STRCMP(sndName, snd4) || STRCMP(sndName, snd5) || STRCMP(sndName, snd6) || STRCMP(sndName, snd7) || STRCMP(sndName, snd8) || STRCMP(sndName, snd9) || STRCMP(sndName, snd10) || STRCMP(sndName, snd11))
 	{
@@ -527,8 +530,9 @@ GAME_EVENT_F2(choppers_incoming_warning, call_set_entwatch_ban)
 }
 
 bool FASTCALL Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSymbolLarge* pInputName, CEntityInstance* pActivator, CEntityInstance* pCaller, variant_t* value, int nOutputID)
-{
-	// Message("Input -> %s | Value -> %s\n", pInputName->String(), value->m_type == FIELD_CSTRING ? value->m_stringt.ToCStr() : "<other type>");
+{	
+	// Message("Input -> %s | Value -> %s\n", pInputName->String(), (value->m_type == FIELD_CSTRING || value->m_type == FIELD_STRING) && value->m_pszString ? value->m_pszString : "<other type>");
+
 	if (g_bEnableZR)
 		ZR_Detour_CEntityIdentity_AcceptInput(pThis, pInputName, pActivator, pCaller, value, nOutputID);
 
