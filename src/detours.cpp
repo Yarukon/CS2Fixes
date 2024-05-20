@@ -141,9 +141,6 @@ void FASTCALL Detour_CBaseEntity_TakeDamageOld(Z_CBaseEntity* pThis, CTakeDamage
 		inputInfo->m_flDamage = EvLastDamage;
 	}
 
-	if (!pThis->PassesDamageFilter(inputInfo))
-		return;
-
 	// Prevent everything but nades from inflicting blast damage
 	if (inputInfo->m_bitsDamageType == DamageTypes_t::DMG_BLAST && V_strncmp(pszInflictorClass, "hegrenade", 9))
 		inputInfo->m_bitsDamageType = DamageTypes_t::DMG_GENERIC;

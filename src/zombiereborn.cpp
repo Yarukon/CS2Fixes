@@ -1468,7 +1468,7 @@ void ZR_StartInitialCountdown()
 		});
 }
 
-bool ZR_Detour_TakeDamageOld(CCSPlayerPawn* pVictimPawn, CTakeDamageInfo* pInfo)
+bool ZR_Hook_OnTakeDamage_Alive(CCSPlayerPawn* pVictimPawn, CTakeDamageInfo* pInfo)
 {
 	CCSPlayerPawn* pAttackerPawn = (CCSPlayerPawn*)pInfo->m_hAttacker.Get();
 
