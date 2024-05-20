@@ -26,6 +26,8 @@
 #include "leader.h"
 #include "adminsystem.h"
 #include "entities.h"
+#include "tier0/vprof.h"
+#include "idlemanager.h"
 
 #include "tier0/memdbgon.h"
 
@@ -86,13 +88,15 @@ GS_EVENT_MEMBER(CGameSystem, BuildGameSessionManifest)
 // Called every frame before entities think
 GS_EVENT_MEMBER(CGameSystem, ServerPreEntityThink)
 {
-	// This could've gone into CS2Fixes::Hook_GameFrame but I've kept it here as an example
+	VPROF_BUDGET("CGameSystem::ServerPreEntityThink", "CS2FixesPerFrame")
 	g_playerManager->FlashLightThink();
+	g_pIdleSystem->UpdateIdleTimes();
 	EntityHandler_OnGameFramePre(gpGlobals->m_bInSimulation, gpGlobals->tickcount);
 }
 
 // Called every frame after entities think
 GS_EVENT_MEMBER(CGameSystem, ServerPostEntityThink)
 {
+	VPROF_BUDGET("CGameSystem::ServerPostEntityThink", "CS2FixesPerFrame")
 	g_playerManager->UpdatePlayerStates();
 }

@@ -37,6 +37,7 @@
 #include "httpmanager.h"
 #include "discord.h"
 #include "zombiereborn.h"
+#include "tier0/vprof.h"
 #undef snprintf
 #include "vendor/nlohmann/json.hpp"
 
@@ -103,6 +104,8 @@ void ParseWeaponCommand(const CCommand& args, CCSPlayerController* player)
 {
 	if (!g_bEnableWeapons || !player || !player->m_hPawn())
 		return;
+
+	VPROF("ParseWeaponCommand");
 
 	CCSPlayerPawn* pPawn = (CCSPlayerPawn*)player->GetPawn();
 	WeaponMapEntry_t weaponEntry;
@@ -249,6 +252,8 @@ void ParseChatCommand(const char *pMessage, CCSPlayerController *pController)
 {
 	if (!pController || !pController->IsConnected())
 		return;
+
+	VPROF("ParseChatCommand");
 
 	CCommand args;
 	args.Tokenize(pMessage);

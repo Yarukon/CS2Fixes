@@ -28,6 +28,7 @@
 #include "icvar.h"
 #include "interface.h"
 #include "tier0/dbg.h"
+#include "tier0/vprof.h"
 #include "schemasystem/schemasystem.h"
 #include "plat.h"
 #include "entitysystem.h"
@@ -45,6 +46,7 @@
 #include "votemanager.h"
 #include "zombiereborn.h"
 #include "httpmanager.h"
+#include "idlemanager.h"
 #include "discord.h"
 #include "map_votes.h"
 #include "user_preferences.h"
@@ -62,6 +64,7 @@
 double g_flUniversalTime;
 float g_flLastTickedTime;
 bool g_bHasTicked;
+int g_iRoundNum = 0;
 
 void Message(const char *msg, ...)
 {
@@ -109,6 +112,7 @@ SH_DECL_HOOK2_void(IServerGameClients, ClientCommand, SH_NOATTRIB, 0, CPlayerSlo
 SH_DECL_HOOK3_void(ICvar, DispatchConCommand, SH_NOATTRIB, 0, ConCommandHandle, const CCommandContext&, const CCommand&);
 SH_DECL_MANUALHOOK1_void(CGamePlayerEquipUse, 0, 0, 0, InputData_t*);
 SH_DECL_MANUALHOOK2_void(CreateWorkshopMapGroup, 0, 0, 0, const char*, const CUtlStringList&);
+SH_DECL_MANUALHOOK2_void(OnTakeDamage_Alive, 0, 0, 0, CTakeDamageInfo*, void*);
 
 CS2Fixes g_CS2Fixes;
 
@@ -127,6 +131,7 @@ CCSGameRules *g_pGameRules = nullptr;
 IGameTypes* g_pGameTypes = nullptr;
 int g_iCGamePlayerEquipUseId = -1;
 int g_iCreateWorkshopMapGroupId = -1;
+int g_iOnTakeDamageAliveId = -1;
 
 CGameEntitySystem *GameEntitySystem()
 {
@@ -221,25 +226,43 @@ bool CS2Fixes::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 	if (!InitGameSystems())
 		bRequiredInitLoaded = false;
 
+	const auto pCGamePlayerEquipVTable = modules::server->FindVirtualTable("CGamePlayerEquip");
+	if (!pCGamePlayerEquipVTable)
+	{
+		snprintf(error, maxlen, "Failed to find CGamePlayerEquip vtable\n");
+		bRequiredInitLoaded = false;
+	}
+
+	offset = g_GameConfig->GetOffset("CBaseEntity::Use");
+	if (offset == -1)
+	{
+		snprintf(error, maxlen, "Failed to find CBaseEntity::Use\n");
+		bRequiredInitLoaded = false;
+	}
+	SH_MANUALHOOK_RECONFIGURE(CGamePlayerEquipUse, offset, 0, 0);
+	g_iCGamePlayerEquipUseId = SH_ADD_MANUALDVPHOOK(CGamePlayerEquipUse, pCGamePlayerEquipVTable, SH_MEMBER(this, &CS2Fixes::Hook_CGamePlayerEquipUse), false);
+
+	const auto pCCSPlayerPawnVTable = modules::server->FindVirtualTable("CCSPlayerPawn");
+	if (!pCCSPlayerPawnVTable)
+	{
+		snprintf(error, maxlen, "Failed to find CCSPlayerPawn vtable\n");
+		bRequiredInitLoaded = false;
+	}
+
+	offset = g_GameConfig->GetOffset("CBasePlayerPawn::OnTakeDamage_Alive");
+	if (offset == -1)
+	{
+		snprintf(error, maxlen, "Failed to find CBasePlayerPawn::OnTakeDamage_Alive\n");
+		bRequiredInitLoaded = false;
+	}
+	SH_MANUALHOOK_RECONFIGURE(OnTakeDamage_Alive, offset, 0, 0);
+	g_iOnTakeDamageAliveId = SH_ADD_MANUALDVPHOOK(OnTakeDamage_Alive, pCCSPlayerPawnVTable, SH_MEMBER(this, &CS2Fixes::Hook_OnTakeDamage_Alive), false);
+
 	if (!bRequiredInitLoaded)
 	{
 		snprintf(error, maxlen, "One or more address lookups, patches or detours failed, please refer to startup logs for more information");
 		return false;
 	}
-
-	const auto pCGamePlayerEquipVTable = modules::server->FindVirtualTable("CGamePlayerEquip");
-	if (!pCGamePlayerEquipVTable)
-	{
-		snprintf(error, maxlen, "Failed to find CGamePlayerEquip vtable\n");
-		return false;
-	}
-	if (g_GameConfig->GetOffset("CBaseEntity::Use") == -1)
-	{
-		snprintf(error, maxlen, "Failed to find CBaseEntity::Use\n");
-		return false;
-	}
-	SH_MANUALHOOK_RECONFIGURE(CGamePlayerEquipUse, g_GameConfig->GetOffset("CBaseEntity::Use"), 0, 0);
-	g_iCGamePlayerEquipUseId = SH_ADD_MANUALDVPHOOK(CGamePlayerEquipUse, pCGamePlayerEquipVTable, SH_MEMBER(this, &CS2Fixes::Hook_CGamePlayerEquipUse), false);
 
 	Message( "All hooks started!\n" );
 
@@ -265,27 +288,37 @@ bool CS2Fixes::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 	g_pUserPreferencesStorage = new CUserPreferencesREST();
 	g_pZRWeaponConfig = new ZRWeaponConfig();
 	g_pEntityListener = new CEntityListener();
+	g_pIdleSystem = new CIdleSystem();
 
 	RegisterWeaponCommands();
 
 	// Check hide distance
-	new CTimer(0.5f, true, []()
+	new CTimer(0.5f, true, true, []()
 	{
 		g_playerManager->CheckHideDistances();
 		return 0.5f;
 	});
 
 	// Check for the expiration of infractions like mutes or gags
-	new CTimer(30.0f, true, []()
+	new CTimer(30.0f, true, true, []()
 	{
 		g_playerManager->CheckInfractions();
 		return 30.0f;
+	});
+
+	// Check for idle players and kick them if permitted by cs2f_idle_kick_* 'convars'
+	new CTimer(5.0f, true, true, []()
+	{
+		g_pIdleSystem->CheckForIdleClients();
+		return 5.0f;
 	});
 
 	// run our cfg
 	g_pEngineServer2->ServerCommand("exec cs2fixes/cs2fixes");
 
 	srand(time(0));
+
+	Message("Plugin successfully started!\n");
 
 	return true;
 }
@@ -308,6 +341,7 @@ bool CS2Fixes::Unload(char *error, size_t maxlen)
 	SH_REMOVE_HOOK(ISource2GameEntities, CheckTransmit, g_pSource2GameEntities, SH_MEMBER(this, &CS2Fixes::Hook_CheckTransmit), true);
 	SH_REMOVE_HOOK(ICvar, DispatchConCommand, g_pCVar, SH_MEMBER(this, &CS2Fixes::Hook_DispatchConCommand), false);
 	SH_REMOVE_HOOK_ID(g_iCreateWorkshopMapGroupId);
+	SH_REMOVE_HOOK_ID(g_iOnTakeDamageAliveId);
 
 	ConVar_Unregister();
 
@@ -345,6 +379,9 @@ bool CS2Fixes::Unload(char *error, size_t maxlen)
 	if (g_pEntityListener)
 		delete g_pEntityListener;
 
+	if (g_pIdleSystem)
+		delete g_pIdleSystem;
+
 	if (g_iCGamePlayerEquipUseId != -1)
 		SH_REMOVE_HOOK_ID(g_iCGamePlayerEquipUseId);
 
@@ -353,6 +390,8 @@ bool CS2Fixes::Unload(char *error, size_t maxlen)
 
 void CS2Fixes::Hook_DispatchConCommand(ConCommandHandle cmdHandle, const CCommandContext& ctx, const CCommand& args)
 {
+	VPROF_BUDGET("CS2Fixes::Hook_DispatchConCommand", "ConCommands");
+
 	if (!g_pEntitySystem)
 		RETURN_META(MRES_IGNORED);
 
@@ -458,7 +497,7 @@ void CS2Fixes::Hook_StartupServer(const GameSessionConfiguration_t& config, ISou
 	g_ExtendState = EExtendState::MAP_START;
 
 	// Allow RTV and Extend votes after 20 minutes post map start
-	new CTimer(600.0f, false, []()
+	new CTimer(600.0f, false, true, []()
 	{
 		if (g_RTVState != ERTVState::BLOCKED_BY_ADMIN)
 			g_RTVState = ERTVState::RTV_ALLOWED;
@@ -467,6 +506,8 @@ void CS2Fixes::Hook_StartupServer(const GameSessionConfiguration_t& config, ISou
 			g_ExtendState = EExtendState::EXTEND_ALLOWED;
 		return -1.0f;
 	});
+
+	g_pIdleSystem->Reset();
 }
 
 class CGamePlayerEquip;
@@ -594,6 +635,20 @@ INetworkSerializable* FindNetworkMessageByName(const char* name)
 	return CALL_VIRTUAL(INetworkSerializable*, offset, g_pNetworkMessages, name);
 }
 
+void FullUpdateAllClients()
+{
+	auto pClients = GetClientList();
+
+	FOR_EACH_VEC(*pClients, i)
+		(*pClients)[i]->ForceFullUpdate();
+}
+
+// Because sv_fullupdate doesn't work
+CON_COMMAND_F(cs2f_fullupdate, "Force a full update for all clients.", FCVAR_LINKED_CONCOMMAND | FCVAR_SPONLY)
+{
+	FullUpdateAllClients();
+}
+
 void CS2Fixes::Hook_ClientActive( CPlayerSlot slot, bool bLoadGame, const char *pszName, uint64 xuid )
 {
 	Message( "Hook_ClientActive(%d, %d, \"%s\", %lli)\n", slot, bLoadGame, pszName, xuid );
@@ -604,6 +659,14 @@ void CS2Fixes::Hook_ClientCommand( CPlayerSlot slot, const CCommand &args )
 #ifdef _DEBUG
 	Message( "Hook_ClientCommand(%d, \"%s\")\n", slot, args.GetCommandString() );
 #endif
+
+	if (g_fIdleKickTime > 0.0f)
+	{
+		ZEPlayer* pPlayer = g_playerManager->GetPlayer(slot);
+
+		if (pPlayer)
+			pPlayer->UpdateLastInputTime();
+	}
 
 	if (g_bVoteManagerEnable && V_stricmp(args[0], "endmatch_votenextmap") == 0 && args.ArgC() == 2)
 	{
@@ -673,6 +736,8 @@ void CS2Fixes::Hook_GameFramePost(bool simulating, bool bFirstTick, bool bLastTi
 	 * false | game is not ticking
 	 */
 
+	VPROF_BUDGET("CS2Fixes::Hook_GameFramePost", "CS2FixesPerFrame");
+
 	if (simulating && g_bHasTicked)
 	{
 		g_flUniversalTime += gpGlobals->curtime - g_flLastTickedTime;
@@ -694,7 +759,7 @@ void CS2Fixes::Hook_GameFramePost(bool simulating, bool bFirstTick, bool bLastTi
 		// Timer execute 
 		if (timer->m_flLastExecute + timer->m_flInterval <= g_flUniversalTime)
 		{
-			if (!timer->Execute())
+			if ((!timer->m_bPreserveRoundChange && timer->m_iRoundNum != g_iRoundNum) || !timer->Execute())
 			{
 				delete timer;
 				g_timers.Remove(prevIndex);
@@ -705,6 +770,9 @@ void CS2Fixes::Hook_GameFramePost(bool simulating, bool bFirstTick, bool bLastTi
 			}
 		}
 	}
+
+	extern std::unordered_set<uint64> g_PushEntSet;
+	g_PushEntSet.clear();
 
 	if (g_bEnableZR)
 		CZRRegenTimer::Tick();
@@ -747,6 +815,8 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 {
 	if (!g_pEntitySystem)
 		return;
+
+	VPROF("CS2Fixes::Hook_CheckTransmit");
 
 	for (int i = 0; i < infoCount; i++)
 	{
@@ -849,6 +919,15 @@ void CS2Fixes::Hook_CreateWorkshopMapGroup(const char* name, const CUtlStringLis
 		RETURN_META(MRES_IGNORED);
 }
 
+void CS2Fixes::Hook_OnTakeDamage_Alive(CTakeDamageInfo *pInfo, void *a3)
+{
+	CCSPlayerPawn *pPawn = META_IFACEPTR(CCSPlayerPawn);
+
+	if (g_bEnableZR && ZR_Hook_OnTakeDamage_Alive(pInfo, pPawn))
+		RETURN_META(MRES_SUPERCEDE);
+	RETURN_META(MRES_IGNORED);
+}
+
 void CS2Fixes::OnLevelInit( char const *pMapName,
 									 char const *pMapEntities,
 									 char const *pOldLevel,
@@ -857,6 +936,7 @@ void CS2Fixes::OnLevelInit( char const *pMapName,
 									 bool background )
 {
 	Message("OnLevelInit(%s)\n", pMapName);
+	g_iRoundNum = 0;
 
 	// run our cfg
 	g_pEngineServer2->ServerCommand("exec cs2fixes/cs2fixes");
