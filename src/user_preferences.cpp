@@ -127,7 +127,7 @@ void CUserPreferencesSystem::OnPutPreferences(int iSlot)
 	ZEPlayer* player = g_playerManager->GetPlayer(CPlayerSlot(iSlot));
 	if (!player) return;
 	int iHideDistance = GetPreferenceInt(iSlot, HIDE_DISTANCE_PREF_KEY_NAME, 0);
-	int iSoundStatus = GetPreferenceInt(iSlot, SOUND_STATUS_PREF_KEY_NAME, 2);
+	int iSoundStatus = GetPreferenceInt(iSlot, SOUND_STATUS_PREF_KEY_NAME, 1);
 	bool bStopSound = (bool) (iSoundStatus & 1);
 	bool bSilenceSound = (bool) (iSoundStatus & 2);
 	bool bHideDecals = (bool) GetPreferenceInt(iSlot, DECAL_PREF_KEY_NAME, 1);
