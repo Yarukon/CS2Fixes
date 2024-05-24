@@ -64,7 +64,7 @@ public: //hooks
 	void Hook_StartupServer(const GameSessionConfiguration_t& config, ISource2WorldSession*, const char*);
 	void Hook_ApplyGameSettings(KeyValues* pKV);
 	void Hook_CreateWorkshopMapGroup(const char* name, const CUtlStringList& mapList);
-	bool Hook_OnTakeDamage_Alive(CTakeDamageInfo *pInfo, void *a3);
+	bool Hook_OnTakeDamage_Alive(CTakeDamageInfo *pInfo);
 	void Hook_CheckMovingGround(double frametime);
 	int Hook_LoadEventsFromFile(const char* filename, bool bSearchAll);
 
