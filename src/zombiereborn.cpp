@@ -1625,9 +1625,6 @@ void ZR_OnPlayerDeath(IGameEvent* pEvent)
 
 	ZR_CheckTeamWinConditions(pVictimPawn->m_iTeamNum() == CS_TEAM_T ? CS_TEAM_CT : CS_TEAM_T);
 
-	if (pVictimPawn->m_iTeamNum() == CS_TEAM_T && g_ZRRoundState == EZRRoundState::POST_INFECTION)
-		pVictimPawn->EmitSound("zr.amb.zombie_die");
-
 	// respawn player
 	CHandle<CCSPlayerController> handle = pVictimController->GetHandle();
 	new CTimer(g_flRespawnDelay < 0.0f ? 2.0f : g_flRespawnDelay, false, false, [handle]()

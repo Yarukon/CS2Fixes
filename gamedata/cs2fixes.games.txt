@@ -375,42 +375,42 @@
 			}
 			"CBaseEntity::Use"
 			{
-				"windows"    	"141"
-				"linux"      	"0"
+				"windows"    	"133"
+				"linux"      	"132"
 			}
 			"Teleport"
 			{
 				"windows"		"155"
-				"linux"			"0"
+				"linux"			"154"
 			}
 			"CollisionRulesChanged"
 			{
-				"windows"		"178"
-				"linux"			"0"
+				"windows"		"174"
+				"linux"			"173"
 			}
 			"IsEntityPawn"
 			{
-				"windows"		"160"
-				"linux"			"0"
+				"windows"		"165"
+				"linux"			"164"
 			}
 			"IsEntityController"
 			{
 				"windows"		"161"
-				"linux"			"0"
+				"linux"			"160"
 			}
 			// String: "%s<%i><%s><%s>" ChangeTeam() CTMDBG..."
 			"CCSPlayerController_ChangeTeam"
 			{
 				"windows"		"98"
-				"linux"			"0"
+				"linux"			"97"
 			}
 			// Look for the kill command, go through its callback and you should a find call like this, with v9 being a pawn pointer:
-			// return (*(*v9 + 2872LL))(v9, v27, 0LL);
-			// 2872 (359 * 8) is the offset
+			// return (*(*v9 + 2976LL))(v9, v27, 0LL);
+			// 2976 (372 * 8) is the offset
 			"CBasePlayerPawn_CommitSuicide"
 			{
 				"windows"		"372"
-				"linux"			"0"
+				"linux"			"372"
 			}
 			// In the function with "[%03d] Found: %s, firing\n", you'll find a call into a pointer offset just a bit higher, that's the offset * 8
 			"CGameRules_FindPickerEntity"
@@ -421,17 +421,17 @@
 			"PassesTriggerFilters"
 			{
 				"windows"		"258"
-				"linux"			"0"
+				"linux"			"259"
 			}
 			"CCSPlayerController_Respawn"
 			{
-				"windows"		"254"
-				"linux"			"0"
+				"windows"		"244"
+				"linux"			"246"
 			}
 			"GetHammerUniqueId"
 			{
-				"windows"		"107"
-				"linux"			"0"
+				"windows"		"102"
+				"linux"			"101"
 			}
 			"CheckTransmitPlayerSlot"
 			{
@@ -443,7 +443,7 @@
 			"CNetworkGameServer_ClientList"
 			{
 				"windows"		"78"
-				"linux"			"0"
+				"linux"			"80"
 			}
 			// Right above "mapgroup workshop;" string there is a virtual call to this on g_pGameTypes using "workshop" string
 			"IGameTypes_CreateWorkshopMapGroup"
@@ -455,7 +455,7 @@
 			"CBasePlayerPawn::OnTakeDamage_Alive"
 			{
 				"windows"		"231"
-				"linux"			"0"
+				"linux"			"230"
 			}
 			// There's no easy way to find this, but it's a function that checks entity flags (0x370) and ends by calling RemoveFlag with 0x800000 (FL_BASEVELOCITY)
 			"CCSPlayer_MovementServices::CheckMovingGround"
