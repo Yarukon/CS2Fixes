@@ -206,11 +206,11 @@ GAME_EVENT_F2(choppers_incoming_warning, call_entity_take_damage)
 		inflictorIndex = 0;
 	}
 	DamageTypes_t damageType = (DamageTypes_t)pEvent->GetInt("damage_type");
-	auto victim = (Z_CBaseEntity*) g_pEntitySystem->GetBaseEntity(CEntityIndex(victimIndex));
+	auto victim = (CBaseEntity*) g_pEntitySystem->GetEntityInstance(CEntityIndex(victimIndex));
 	if (!victim) { return; }
-	auto attacker = (Z_CBaseEntity*) g_pEntitySystem->GetBaseEntity(CEntityIndex(attackerIndex));
+	auto attacker = (CBaseEntity*) g_pEntitySystem->GetEntityInstance(CEntityIndex(attackerIndex));
 	if (!attacker) { return; }
-	auto inflictor = (Z_CBaseEntity*) g_pEntitySystem->GetBaseEntity(CEntityIndex(inflictorIndex));
+	auto inflictor = (CBaseEntity*) g_pEntitySystem->GetEntityInstance(CEntityIndex(inflictorIndex));
 	if (!inflictor) { return; }
 	auto info = new CTakeDamageInfo();
 	info->m_flDamage = damage;
@@ -556,7 +556,7 @@ bool FASTCALL Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSym
 	}
 	else if (STRCMP(pInputName->String(), "ModifySpeed"))
 	{
-		Z_CBaseEntity* entity = reinterpret_cast<Z_CBaseEntity*>(pActivator);
+		CBaseEntity* entity = reinterpret_cast<CBaseEntity*>(pActivator);
 		if (entity && entity->IsPawn()) {
 			float flModifier = 1.f;
 

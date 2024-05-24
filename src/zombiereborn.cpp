@@ -605,7 +605,7 @@ GAME_EVENT_F2(choppers_incoming_warning, zr_call_zclass_set)
 	}
 	int pawnIndex = pEvent->GetInt("pawn_index", 0);
 	if (pawnIndex < 1) { return; }
-	auto ent = g_pEntitySystem->GetBaseEntity(CEntityIndex(pawnIndex));
+	auto ent = g_pEntitySystem->GetEntityInstance(CEntityIndex(pawnIndex));
 	if (!ent) { return; }
 	if (strcmp(ent->GetClassname(), "player") != 0) { return; }
 	auto pawn = (CCSPlayerPawn*)ent;
@@ -705,8 +705,11 @@ void CZRPlayerClassManager::ApplyHumanClass(ZRHumanClass* pClass, CCSPlayerPawn*
 
 	if (pPlayer && pPlayer->IsLeader())
 	{
-		new CTimer(0.02f, false, false, [pPawn]()
+		CHandle<CCSPlayerPawn> hPawn = pPawn->GetHandle();
+
+		new CTimer(0.02f, false, false, [hPawn]()
 		{
+			CCSPlayerPawn* pPawn = hPawn.Get();
 			if (pPawn)
 				Leader_ApplyLeaderVisuals(pPawn);
 			return -1.0f;
@@ -1181,6 +1184,24 @@ void ZR_Cure(CCSPlayerController* pTargetController)
 		return;
 
 	g_pZRPlayerClassManager->ApplyPreferredOrDefaultHumanClass(pTargetPawn);
+}
+
+std::vector<SpawnPoint*> ZR_GetSpawns()
+{
+	CUtlVector<SpawnPoint*>* ctSpawns = g_pGameRules->m_CTSpawnPoints();
+	CUtlVector<SpawnPoint*>* tSpawns = g_pGameRules->m_TerroristSpawnPoints();
+	std::vector<SpawnPoint*> spawns;
+
+	FOR_EACH_VEC(*ctSpawns, i)
+		spawns.push_back((*ctSpawns)[i]);
+
+	FOR_EACH_VEC(*tSpawns, i)
+		spawns.push_back((*tSpawns)[i]);
+
+	if (!spawns.size())
+		Panic("There are no spawns!\n");
+
+	return spawns;
 }
 
 const char* playerInfectedEvent = "zr_on_player_infected";
