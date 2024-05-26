@@ -709,7 +709,7 @@ void CZRPlayerClassManager::ApplyHumanClass(ZRHumanClass* pClass, CCSPlayerPawn*
 
 		new CTimer(0.02f, false, false, [hPawn]()
 		{
-			CCSPlayerPawn* pPawn = hPawn.Get();
+			CCSPlayerPawn *pPawn = hPawn.Get();
 			if (pPawn)
 				Leader_ApplyLeaderVisuals(pPawn);
 			return -1.0f;

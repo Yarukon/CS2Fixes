@@ -114,7 +114,7 @@ SH_DECL_MANUALHOOK1_void(CGamePlayerEquipUse, 0, 0, 0, InputData_t*);
 SH_DECL_MANUALHOOK2_void(CreateWorkshopMapGroup, 0, 0, 0, const char*, const CUtlStringList&);
 SH_DECL_MANUALHOOK1(OnTakeDamage_Alive, 0, 0, 0, bool, CTakeDamageInfoContainer*);
 SH_DECL_MANUALHOOK1_void(CheckMovingGround, 0, 0, 0, double);
-SH_DECL_HOOK2(IGameEventManager2, LoadEventsFromFile, SH_NOATTRIB, 0, int, const char*, bool);
+SH_DECL_HOOK2(IGameEventManager2, LoadEventsFromFile, SH_NOATTRIB, 0, int, const char *, bool);
 
 CS2Fixes g_CS2Fixes;
 
@@ -731,7 +731,7 @@ void CS2Fixes::Hook_ClientPutInServer( CPlayerSlot slot, char const *pszName, in
 
 void CS2Fixes::Hook_ClientDisconnect( CPlayerSlot slot, ENetworkDisconnectionReason reason, const char *pszName, uint64 xuid, const char *pszNetworkID )
 {
-	Message( "Hook_ClientDisconnect(%d, %d, \"%s\", %lli, \"%s\")\n", slot, reason, pszName, xuid, pszNetworkID );
+	Message( "Hook_ClientDisconnect(%d, %d, \"%s\", %lli)\n", slot, reason, pszName, xuid );
 	ZEPlayer* pPlayer = g_playerManager->GetPlayer(slot);
 
 	g_pAdminSystem->AddDisconnectedPlayer(pszName, xuid, pPlayer ? pPlayer->GetIpAddress() : "");
@@ -935,7 +935,7 @@ bool CS2Fixes::Hook_OnTakeDamage_Alive(CTakeDamageInfoContainer *pInfoContainer)
 {
 	CCSPlayerPawn *pPawn = META_IFACEPTR(CCSPlayerPawn);
 
-	if (g_bEnableZR && ZR_Hook_OnTakeDamage_Alive(pPawn, pInfoContainer->pInfo))
+	if (g_bEnableZR && ZR_Hook_OnTakeDamage_Alive(pInfo, pPawn))
 		RETURN_META_VALUE(MRES_SUPERCEDE, false);
 
 	// This is a shit place to be doing this, but player_death event is too late and there is no pre-hook alternative
@@ -969,7 +969,7 @@ void CS2Fixes::Hook_CheckMovingGround(double frametime)
 	RETURN_META(MRES_IGNORED);
 }
 
-int CS2Fixes::Hook_LoadEventsFromFile(const char* filename, bool bSearchAll)
+int CS2Fixes::Hook_LoadEventsFromFile(const char *filename, bool bSearchAll)
 {
 	ExecuteOnce(g_gameEventManager = META_IFACEPTR(IGameEventManager2));
 

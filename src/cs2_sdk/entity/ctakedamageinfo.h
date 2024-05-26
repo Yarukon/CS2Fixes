@@ -70,7 +70,7 @@ enum TakeDamageFlags_t : uint32_t
 // No idea what this is meant to have, but OnTakeDamage_Alive expects this and we only care about pInfo
 struct CTakeDamageInfoContainer
 {
-	CTakeDamageInfo* pInfo;
+	CTakeDamageInfo *pInfo;
 };
 
 class CTakeDamageInfo
