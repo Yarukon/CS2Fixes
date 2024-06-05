@@ -166,45 +166,36 @@ void ZEPlayer::SpawnFlashLight()
 	CCSPlayerPawn *pPawn = (CCSPlayerPawn *)CCSPlayerController::FromSlot(GetPlayerSlot())->GetPawn();
 
 	Vector origin = pPawn->GetAbsOrigin();
-	Vector forward;
-	AngleVectors(pPawn->m_angEyeAngles(), &forward);
+	origin.z += 72;
 
-	origin.z += 64.0f;
-	origin += forward * g_flFlashLightDistance;
+	COmniLight *pLight = (COmniLight*) CreateEntityByName("light_omni2");
 
-	CBarnLight *pLight = (CBarnLight *)CreateEntityByName("light_barn");
+	CEntityKeyValues* pKeyValues = new CEntityKeyValues();
 
-	pLight->m_bEnabled = true;
-	pLight->m_Color->SetColor(g_clrFlashLightColor[0], g_clrFlashLightColor[1], g_clrFlashLightColor[2]);
-	pLight->m_flBrightness = g_flFlashLightBrightness;
-	pLight->m_flRange = 2048.0f;
-	pLight->m_flSoftX = 1.0f;
-	pLight->m_flSoftY = 1.0f;
-	pLight->m_flSkirt = 0.5f;
-	pLight->m_flSkirtNear = 1.0f;
-	pLight->m_vSizeParams->Init(45.0f, 45.0f, 0.02f);
-	pLight->m_nCastShadows = g_bFlashLightShadows;
-	pLight->m_nDirectLight = 3;
-	pLight->Teleport(&origin, &pPawn->m_angEyeAngles(), nullptr);
+	pKeyValues->SetBool("enabled", true);
+	pKeyValues->SetInt("directlight", 3);
+	pKeyValues->SetInt("brightness_units", 0);
+	pKeyValues->SetColor("color", Color(255, 255, 255));
+	pKeyValues->SetFloat("brightness_lumens", 6000);
+	pKeyValues->SetInt("range", 2500);
+	pKeyValues->SetFloat("skirt", 0.1f);
+	pKeyValues->SetInt("shape", 0);
+	pKeyValues->SetVector("size_params", Vector(16, 16, 16));
+	pKeyValues->SetFloat("outer_angle", 360);
+	pKeyValues->SetFloat("inner_angle", 180);
+	pKeyValues->SetInt("castshadows", 2);
 
-	// Have to use keyvalues for this since the schema prop is a resource handle
-	CEntityKeyValues *pKeyValues = new CEntityKeyValues();
-	pKeyValues->SetString("lightcookie", "materials/effects/lightcookies/flashlight.vtex");
+	pLight->Teleport(&origin, nullptr, nullptr);
 
 	pLight->DispatchSpawn(pKeyValues);
 
 	pLight->SetParent(pPawn);
-	pLight->AcceptInput("SetParentAttachmentMaintainOffset", g_sFlashLightAttachment.c_str());
 
 	SetFlashLight(pLight);
 }
 
 void ZEPlayer::ToggleFlashLight()
 {
-	// Play the "click" sound
-	// CSingleRecipientFilter filter(GetPlayerSlot());
-	// CCSPlayerController::FromSlot(GetPlayerSlot())->EmitSoundFilter(filter, "HudChat.Message");
-
 	CBarnLight *pLight = GetFlashLight();
 
 	// Create a flashlight if we don't have one, and don't bother with the input since it spawns enabled

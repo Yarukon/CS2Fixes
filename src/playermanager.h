@@ -164,7 +164,7 @@ public:
 	void SetInGame(bool bInGame) { m_bInGame = bInGame; }
 	void SetImmunity(int iMZImmunity) { m_iMZImmunity = iMZImmunity; }
 	void SetNominateTime(float flCurtime) { m_flNominateTime = flCurtime; }
-	void SetFlashLight(CBarnLight *pLight) { m_hFlashLight.Set(pLight); }
+	void SetFlashLight(COmniLight *pLight) { m_hFlashLight.Set(pLight); }
 	void SetBeaconParticle(CParticleSystem *pParticle) { m_hBeaconParticle.Set(pParticle); }
 	void SetPlayerState(uint32 iPlayerState) { m_iPlayerState = iPlayerState; }
 	void SetLeader(int leaderIndex);
@@ -193,7 +193,7 @@ public:
 	bool IsInGame() { return m_bInGame; }
 	int GetImmunity() { return m_iMZImmunity; }
 	float GetNominateTime() { return m_flNominateTime; }
-	CBarnLight *GetFlashLight() { return m_hFlashLight.Get(); }
+	COmniLight *GetFlashLight() { return m_hFlashLight.Get(); }
 	CParticleSystem *GetBeaconParticle() { return m_hBeaconParticle.Get(); }
 	ZEPlayerHandle GetHandle() { return m_Handle; }
 	uint32 GetPlayerState() { return m_iPlayerState; }
@@ -248,7 +248,7 @@ private:
 	bool m_bInGame;
 	int m_iMZImmunity;
 	float m_flNominateTime;
-	CHandle<CBarnLight> m_hFlashLight;
+	CHandle<COmniLight> m_hFlashLight;
 	CHandle<CParticleSystem> m_hBeaconParticle;
 	uint32 m_iPlayerState;
 	ZEPlayerHandle m_Handle;
