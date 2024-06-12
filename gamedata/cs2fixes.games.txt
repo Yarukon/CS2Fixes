@@ -479,8 +479,8 @@
 			}
 			"FindNetworkMessageByName"
 			{
-				"windows"		"13"
-				"linux"			"12" // idk cuz i dont have linux binary file
+				"windows"		"16"
+				"linux"			"0" // idk cuz i dont have linux binary file
 			}
 		}
 		"Patches"
