@@ -477,11 +477,6 @@
 				"windows"		"20"
 				"linux"			"21"
 			}
-			"FindNetworkMessageByName"
-			{
-				"windows"		"16"
-				"linux"			"0" // idk cuz i dont have linux binary file
-			}
 		}
 		"Patches"
 		{

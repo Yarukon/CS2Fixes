@@ -31,6 +31,7 @@
 #include "netmessages.pb.h"
 #include "leader.h"
 #include "recipientfilters.h"
+#include "networksystem/inetworkmessages.h"
 
 #include "tier0/memdbgon.h"
 
@@ -44,7 +45,6 @@ extern IVEngineServer2* g_pEngineServer2;
 extern int g_iRoundNum;
 
 extern CServerSideClient* GetClientBySlot(CPlayerSlot slot);
-extern INetworkSerializable* FindNetworkMessageByName(const char* name);
 
 CUtlVector<CGameEventListener *> g_vecEventListeners;
 
@@ -350,15 +350,17 @@ GAME_EVENT_F2(choppers_incoming_warning, set_fake_convar)
 		if (!pClient)
 			return;
 
-		INetworkSerializable* netMessage = FindNetworkMessageByName("SetConVar");
+		INetworkMessageInternal* netMessage = g_pNetworkMessages->FindNetworkMessagePartial("SetConVar");
 		if (!netMessage)
 			return;
 
-		CNETMsg_SetConVar msg;
-		CMsg_CVars_CVar* cvar = msg.mutable_convars()->add_cvars();
+		Message("found %s\n", netMessage->GetUnscopedName());
+
+		auto msg = netMessage->AllocateMessage()->ToPB<CNETMsg_SetConVar>();
+		CMsg_CVars_CVar* cvar = msg->mutable_convars()->add_cvars();
 		cvar->set_name(pEvent->GetString("cvar"));
 		cvar->set_value(pEvent->GetString("value"));
 
-		pClient->GetNetChannel()->SendNetMessage(netMessage, &msg, BUF_RELIABLE);
+		pClient->GetNetChannel()->SendNetMessage(netMessage, msg, BUF_RELIABLE);
 	}
 }
