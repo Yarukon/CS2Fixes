@@ -354,8 +354,6 @@ GAME_EVENT_F2(choppers_incoming_warning, set_fake_convar)
 		if (!netMessage)
 			return;
 
-		Message("found %s\n", netMessage->GetUnscopedName());
-
 		auto msg = netMessage->AllocateMessage()->ToPB<CNETMsg_SetConVar>();
 		CMsg_CVars_CVar* cvar = msg->mutable_convars()->add_cvars();
 		cvar->set_name(pEvent->GetString("cvar"));
