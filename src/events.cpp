@@ -32,6 +32,7 @@
 #include "leader.h"
 #include "recipientfilters.h"
 #include "networksystem/inetworkmessages.h"
+#include "panoramavote.h"
 
 #include "tier0/memdbgon.h"
 
@@ -125,13 +126,19 @@ FAKE_BOOL_CVAR(cs2f_noblock_enable, "Whether to use noblock, which sets debris c
 
 GAME_EVENT_F(player_spawn)
 {
-	if (g_bEnableZR)
-		ZR_OnPlayerSpawn(pEvent);
-
 	CCSPlayerController *pController = (CCSPlayerController *)pEvent->GetPlayerController("userid");
 
 	if (!pController)
 		return;
+
+	ZEPlayer* pPlayer = pController->GetZEPlayer();
+
+	// always reset when player spawns
+	if (pPlayer)
+		pPlayer->SetMaxSpeed(1.f);
+
+	if (g_bEnableZR)
+		ZR_OnPlayerSpawn(pController);
 
 	if (pController->IsConnected())
 		pController->GetZEPlayer()->OnSpawn();
@@ -218,6 +225,8 @@ FAKE_BOOL_CVAR(cs2f_full_alltalk, "Whether to enforce sv_full_alltalk 1", g_bFul
 
 GAME_EVENT_F(round_start)
 {
+	g_pPanoramaVoteHandler->Init();
+
 	if (g_bEnableZR)
 		ZR_OnRoundStart(pEvent);
 
@@ -361,4 +370,9 @@ GAME_EVENT_F2(choppers_incoming_warning, set_fake_convar)
 
 		pClient->GetNetChannel()->SendNetMessage(netMessage, msg, BUF_RELIABLE);
 	}
+}
+
+GAME_EVENT_F(vote_cast)
+{
+	g_pPanoramaVoteHandler->VoteCast(pEvent);
 }

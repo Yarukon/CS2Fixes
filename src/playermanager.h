@@ -119,6 +119,7 @@ public:
 		m_flLeaderVoteTime = -30.0f;
 		m_bHoldingRMB = false;
 		m_flSpeedMod = 1.f;
+		m_flMaxSpeed = 1.f;
 		m_iLastInputs = IN_NONE;
 		m_iLastInputTime = std::time(0);
 	}
@@ -175,6 +176,7 @@ public:
 	void SetSpeedMod(float flSpeedMod) { m_flSpeedMod = flSpeedMod; }
 	void SetLastInputs(uint64 iLastInputs) { m_iLastInputs = iLastInputs; }
 	void UpdateLastInputTime() { m_iLastInputTime = std::time(0); }
+	void SetMaxSpeed(float flMaxSpeed) { m_flMaxSpeed = flMaxSpeed; }
 
 	bool IsMuted() { return m_bMuted; }
 	bool IsGagged() { return m_bGagged; }
@@ -206,6 +208,7 @@ public:
 	CBaseModelEntity *GetGlowModel() { return m_hGlowModel.Get(); }
 	bool IsHoldingRMB() { return m_bHoldingRMB; }
 	float GetSpeedMod() { return m_flSpeedMod; }
+	float GetMaxSpeed() { return m_flMaxSpeed; }
 	uint64 GetLastInputs() { return m_iLastInputs; }
 	std::time_t GetLastInputTime() { return m_iLastInputTime; }
 	
@@ -259,6 +262,7 @@ private:
 	float m_flLeaderVoteTime;
 	CHandle<CBaseModelEntity> m_hGlowModel;
 	float m_flSpeedMod;
+	float m_flMaxSpeed;
 	uint64 m_iLastInputs;
 	std::time_t m_iLastInputTime;
 };

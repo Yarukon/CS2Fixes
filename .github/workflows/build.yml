@@ -39,6 +39,12 @@ jobs:
           path: cs2fixes
           submodules: recursive
 
+      - name: Install Clang 16
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          apt update && apt install -y clang-16
+          ln -sf /usr/bin/clang-16 /usr/bin/clang && ln -sf /usr/bin/clang++-16 /usr/bin/clang++
+
       - name: Compiling files
         working-directory: cs2fixes
         shell: cmd

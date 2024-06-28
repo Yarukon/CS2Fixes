@@ -169,7 +169,7 @@ bool Leader_CreateDefendMarker(ZEPlayer *pPlayer, Color clrTint, int iDuration)
 	return true;
 }
 
-void Leader_PostEventAbstract_Source1LegacyGameEvent(const uint64 *clients, const CNetMessage* pData)
+void Leader_PostEventAbstract_Source1LegacyGameEvent(const uint64 *clients, const CNetMessage *pData)
 {
 	if (!g_bEnableLeader)
 		return;

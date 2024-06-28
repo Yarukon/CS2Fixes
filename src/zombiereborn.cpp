@@ -17,7 +17,7 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "cstrike15_usermessages.pb.h"
+#include "usermessages.pb.h"
 
 #include "commands.h"
 #include "utils/entity.h"
@@ -643,6 +643,11 @@ void CZRPlayerClassManager::ApplyBaseClass(ZRClass* pClass, CCSPlayerPawn* pPawn
 	// I shouldn't have to wonder why, but for whatever reason
 	// this shit caused crashes on ROUND END or MAP CHANGE after the 26/04/2024 update
 	//pPawn->m_flVelocityModifier = pClass->flSpeed;
+	const auto pController = reinterpret_cast<CCSPlayerController*>(pPawn->GetController());
+	if (const auto pPlayer = pController != nullptr ? pController->GetZEPlayer() : nullptr)
+	{
+		pPlayer->SetMaxSpeed(pClass->flSpeed);
+	}
 
 	// This has to be done a bit later
 	UTIL_AddEntityIOEvent(pPawn, "SetScale", nullptr, nullptr, pClass->flScale);
@@ -1070,13 +1075,8 @@ void ZR_OnRoundStart(IGameEvent* pEvent)
 	}
 }
 
-void ZR_OnPlayerSpawn(IGameEvent* pEvent)
+void ZR_OnPlayerSpawn(CCSPlayerController* pController)
 {
-	CCSPlayerController* pController = (CCSPlayerController*)pEvent->GetPlayerController("userid");
-
-	if (!pController)
-		return;
-
 	// delay infection a bit
 	bool bInfect = g_ZRRoundState == EZRRoundState::POST_INFECTION;
 
@@ -1165,7 +1165,7 @@ void ZR_StripAndGiveKnife(CCSPlayerPawn* pPawn)
 		return;
 
 	pPawn->DropMapWeapons();
-	pItemServices->StripPlayerWeapons();
+	pItemServices->StripPlayerWeapons(true);
 	pItemServices->GiveNamedItem("weapon_knife");
 }
 
