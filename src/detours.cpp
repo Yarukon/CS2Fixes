@@ -77,7 +77,7 @@ DECLARE_DETOUR(CGamePlayerEquip_InputTriggerForAllPlayers, Detour_CGamePlayerEqu
 DECLARE_DETOUR(CGamePlayerEquip_InputTriggerForActivatedPlayer, Detour_CGamePlayerEquip_InputTriggerForActivatedPlayer);
 DECLARE_DETOUR(CCSGameRules_GoToIntermission, Detour_CCSGameRules_GoToIntermission);
 DECLARE_DETOUR(GetFreeClient, Detour_GetFreeClient);
-DECLARE_DETOUR(CCSPlayerPawn_GetMaxSpeed, Detour_CCSPlayerPawn_GetMaxSpeed);
+// DECLARE_DETOUR(CCSPlayerPawn_GetMaxSpeed, Detour_CCSPlayerPawn_GetMaxSpeed);
 
 void FASTCALL Detour_CGameRules_Constructor(CGameRules* pThis)
 {
@@ -721,18 +721,18 @@ CServerSideClient* FASTCALL Detour_GetFreeClient(int64_t unk1, const __m128i* un
 	return nullptr;
 }
 
-float FASTCALL Detour_CCSPlayerPawn_GetMaxSpeed(CCSPlayerPawn* pPawn)
-{
-	auto flMaxSpeed = CCSPlayerPawn_GetMaxSpeed(pPawn);
-
-	const auto pController = reinterpret_cast<CCSPlayerController*>(pPawn->GetController());
-	if (const auto pPlayer = pController != nullptr ? pController->GetZEPlayer() : nullptr)
-	{
-		flMaxSpeed *= pPlayer->GetMaxSpeed();
-	}
-
-	return flMaxSpeed;
-}
+//float FASTCALL Detour_CCSPlayerPawn_GetMaxSpeed(CCSPlayerPawn* pPawn)
+//{
+//	auto flMaxSpeed = CCSPlayerPawn_GetMaxSpeed(pPawn);
+//
+//	const auto pController = reinterpret_cast<CCSPlayerController*>(pPawn->GetController());
+//	if (const auto pPlayer = pController != nullptr ? pController->GetZEPlayer() : nullptr)
+//	{
+//		flMaxSpeed *= pPlayer->GetMaxSpeed();
+//	}
+//
+//	return flMaxSpeed;
+//}
 
 bool InitDetours(CGameConfig* gameConfig)
 {
