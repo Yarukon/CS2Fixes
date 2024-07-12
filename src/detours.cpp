@@ -229,6 +229,9 @@ FAKE_BOOL_CVAR(cs2f_use_old_push, "Whether to use the old CSGO trigger_push beha
 static bool g_bLogPushes = false;
 FAKE_BOOL_CVAR(cs2f_log_pushes, "Whether to log pushes (cs2f_use_old_push must be enabled)", g_bLogPushes, false, false)
 
+static float g_oldPushScale = 1;
+FAKE_FLOAT_CVAR(cs2f_old_push_scale, "scale the old push velocity", g_oldPushScale, false, false)
+
 void FASTCALL Detour_TriggerPush_Touch(CTriggerPush* pPush, CBaseEntity* pOther)
 {
 	// This trigger pushes only once (and kills itself) or pushes only on StartTouch, both of which are fine already
@@ -266,7 +269,7 @@ void FASTCALL Detour_TriggerPush_Touch(CTriggerPush* pPush, CBaseEntity* pOther)
 	Vector vecPushDir = pPush->m_vecPushDirEntitySpace();
 	VectorRotate(vecPushDir, matTransform, vecAbsDir);
 
-	Vector vecPush = vecAbsDir * pPush->m_flSpeed();
+	Vector vecPush = vecAbsDir * pPush->m_flSpeed() * g_oldPushScale;
 
 	uint32 flags = pOther->m_fFlags();
 
@@ -289,14 +292,15 @@ void FASTCALL Detour_TriggerPush_Touch(CTriggerPush* pPush, CBaseEntity* pOther)
 		Vector vecEntBaseVelocity = pOther->m_vecBaseVelocity;
 		Vector vecOrigPush = vecAbsDir * pPush->m_flSpeed();
 
-		Message("Pushing entity %i | frame = %i | tick = %i | entity basevelocity %s = %.2f %.2f %.2f | original push velocity = %.2f %.2f %.2f | final push velocity = %.2f %.2f %.2f\n",
+		Message("Pushing entity %i | frame = %i | tick = %i | entity basevelocity %s = %.2f %.2f %.2f | original push velocity = %.2f %.2f %.2f | final push velocity = %.2f %.2f %.2f | scale: %.2f\n",
 				pOther->GetEntityIndex(),
 				gpGlobals->framecount,
 				gpGlobals->tickcount,
 				(flags & FL_BASEVELOCITY) ? "WITH FLAG" : "",
 				vecEntBaseVelocity.x, vecEntBaseVelocity.y, vecEntBaseVelocity.z,
 				vecOrigPush.x, vecOrigPush.y, vecOrigPush.z,
-				vecPush.x, vecPush.y, vecPush.z);
+				vecPush.x, vecPush.y, vecPush.z,
+				g_oldPushScale);
 	}
 
 	pOther->m_vecBaseVelocity(vecPush);
