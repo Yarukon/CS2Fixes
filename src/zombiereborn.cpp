@@ -1755,6 +1755,9 @@ void ZR_EndRoundAndAddTeamScore(int iTeamNum)
 	}
 }
 
+static bool g_bZallowZtele = false;
+FAKE_BOOL_CVAR(zr_ztele_enable, "allow players to use !ztele", g_bZallowZtele, false, false)
+
 CON_COMMAND_CHAT(ztele, "- teleport to spawn")
 {
 	// Silently return so the command is completely hidden
@@ -1764,6 +1767,12 @@ CON_COMMAND_CHAT(ztele, "- teleport to spawn")
 	if (!player)
 	{
 		ClientPrint(player, HUD_PRINTCONSOLE, ZR_PREFIX "你不能在控制台使用该指令.");
+		return;
+	}
+
+	if (!g_bZallowZtele)
+	{
+		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "ztele 在当前地图被禁用了.");
 		return;
 	}
 
