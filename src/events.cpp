@@ -339,39 +339,6 @@ GAME_EVENT_F(bullet_impact)
 		Leader_BulletImpact(pEvent);
 }
 
-// Custom events
-#define STRCMP(str1, str2) strcmp(str1, str2) == 0
-GAME_EVENT_F2(choppers_incoming_warning, set_fake_convar)
-{
-	auto customEventName = pEvent->GetString("custom_event", "");
-	if (STRCMP(customEventName, "set_fake_convar")) {
-		int slot = pEvent->GetInt("slot", -1);
-
-		if (slot < 0 || slot > 63)
-			return;
-
-		ZEPlayer* player = g_playerManager->GetPlayer(slot);
-
-		if (!player || player->IsFakeClient())
-			return;
-
-		CServerSideClient* pClient = GetClientBySlot(player->GetPlayerSlot());
-		if (!pClient)
-			return;
-
-		INetworkMessageInternal* netMessage = g_pNetworkMessages->FindNetworkMessagePartial("SetConVar");
-		if (!netMessage)
-			return;
-
-		auto msg = netMessage->AllocateMessage()->ToPB<CNETMsg_SetConVar>();
-		CMsg_CVars_CVar* cvar = msg->mutable_convars()->add_cvars();
-		cvar->set_name(pEvent->GetString("cvar"));
-		cvar->set_value(pEvent->GetString("value"));
-
-		pClient->GetNetChannel()->SendNetMessage(netMessage, msg, BUF_RELIABLE);
-	}
-}
-
 GAME_EVENT_F(vote_cast)
 {
 	g_pPanoramaVoteHandler->VoteCast(pEvent);
