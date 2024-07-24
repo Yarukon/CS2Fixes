@@ -47,6 +47,7 @@ void UnlockConVars();
 void UnlockConCommands();
 
 void Message(const char *, ...);
+void MessageDebug(const char*, ...);
 void Panic(const char *, ...);
 
 // CONVAR_TODO

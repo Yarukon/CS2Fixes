@@ -193,6 +193,7 @@ GAME_EVENT_F2(choppers_incoming_warning, call_entity_take_damage)
 	if (strcmp(customEventName, "call_entity_take_damage") != 0) {
 		return;
 	}
+	MessageDebug("call_entity_take_damage");
 	float damage = pEvent->GetFloat("damage");
 	if (damage < 1) {
 		return;
@@ -520,6 +521,7 @@ GAME_EVENT_F2(choppers_incoming_warning, call_set_entwatch_ban)
 	if (strcmp(customEventName, "call_set_entwatch_ban") != 0) {
 		return;
 	}
+	MessageDebug("call_set_entwatch_ban");
 	for (int i = 0; i < 64; i++)
 	{
 		char name[32];
