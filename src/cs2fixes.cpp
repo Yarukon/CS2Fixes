@@ -903,8 +903,22 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 					shouldHide = true;  // 没有要求的玩家按距离控制管理
 				}
 			}
-			if (shouldHide)
+			if (shouldHide) {
 				pInfo->m_pTransmitEntity->Clear(pPawn->entindex());
+
+				if (g_bEnableHideWeapons) {
+					CUtlVector<CHandle<CBasePlayerWeapon>>* weapons = pPawn->m_pWeaponServices->m_hMyWeapons();
+
+					FOR_EACH_VEC(*weapons, i)
+					{
+						CBasePlayerWeapon* weapon = (*weapons)[i].Get();
+
+						if (!weapon)
+							continue;
+						pInfo->m_pTransmitEntity->Clear(weapon->entindex());
+					}
+				}
+			}
 		}
 
 		// Don't transmit glow model to it's owner

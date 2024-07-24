@@ -39,6 +39,7 @@ extern bool g_bEnableCommands;
 extern bool g_bEnableAdminCommands;
 
 extern bool g_bEnableHide;
+extern bool g_bEnableHideWeapons;
 extern bool g_bEnableStopSound;
 
 void ClientPrintAll(int destination, const char *msg, ...);
