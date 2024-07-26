@@ -353,36 +353,22 @@ CON_COMMAND_CHAT(toggledecals, "- toggle world decals, if you're into having 10 
 }
 
 bool g_bEnableHide = false;
-bool g_bEnableHideWeapons = false;
 static int g_iDefaultHideDistance = 250;
 static int g_iMaxHideDistance = 2000;
 
 FAKE_BOOL_CVAR(cs2f_hide_enable, "Whether to enable hide", g_bEnableHide, false, false)
 FAKE_INT_CVAR(cs2f_hide_distance_default, "The default distance for hide", g_iDefaultHideDistance, 250, false)
 FAKE_INT_CVAR(cs2f_hide_distance_max, "The max distance for hide", g_iMaxHideDistance, 2000, false)
-FAKE_INT_CVAR(cs2f_hide_enable_weapons, "hide player with their weapons", g_bEnableHideWeapons, false, false)
 
 CON_COMMAND_CHAT(hide, "<distance> - hides nearby players")
 {
-	
+	// Silently return so the command is completely hidden
+	if (!g_bEnableHide)
+		return;
+
 	if (!player)
 	{
 		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "你无法在控制台执行该指令.");
-		return;
-	}
-
-	int iPlayer = player->GetPlayerSlot();
-
-	ZEPlayer *pZEPlayer = g_playerManager->GetPlayer(iPlayer);
-
-	// Something has to really go wrong for this to happen
-	if (!pZEPlayer)
-	{
-		Warning("%s Tried to access a null ZEPlayer!!\n", player->GetPlayerName());
-		return;
-	}
-	if (!g_bEnableHide) {
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "当前地图没有允许使用 hide.");
 		return;
 	}
 
@@ -399,6 +385,17 @@ CON_COMMAND_CHAT(hide, "<distance> - hides nearby players")
 		return;
 	}
 
+	int iPlayer = player->GetPlayerSlot();
+
+	ZEPlayer *pZEPlayer = g_playerManager->GetPlayer(iPlayer);
+
+	// Something has to really go wrong for this to happen
+	if (!pZEPlayer)
+	{
+		Warning("%s Tried to access a null ZEPlayer!!\n", player->GetPlayerName());
+		return;
+	}
+
 	// allows for toggling hide by turning off when hide distance matches.
 	if (pZEPlayer->GetHideDistance() == distance)
 		distance = 0;
@@ -406,7 +403,7 @@ CON_COMMAND_CHAT(hide, "<distance> - hides nearby players")
 	pZEPlayer->SetHideDistance(distance);
 
 	if (distance == 0)
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你的玩家隐藏已取消.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "玩家隐藏已禁用.");
 	else
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "玩家隐藏已启用 范围 %i 个单位 (按住鼠标右键可以暂时取消隐藏).", distance);
 }
