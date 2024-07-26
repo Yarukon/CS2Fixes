@@ -81,26 +81,6 @@ void Message(const char *msg, ...)
 	va_end(args);
 }
 
-static bool g_bMessageDebug = false;
-
-FAKE_BOOL_CVAR(cs2f_log_debug, "enable MessageDebug", g_bMessageDebug, false, false)
-
-void MessageDebug(const char* msg, ...)
-{
-	if (!g_bMessageDebug) {
-		return;
-	}
-	va_list args;
-	va_start(args, msg);
-
-	char buf[1024] = {};
-	V_vsnprintf(buf, sizeof(buf) - 1, msg, args);
-
-	ConColorMsg(Color(255, 0, 255, 255), "[cs2f-d] %s\n", buf);
-
-	va_end(args);
-}
-
 void Panic(const char *msg, ...)
 {
 	va_list args;

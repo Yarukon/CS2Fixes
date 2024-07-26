@@ -161,7 +161,6 @@ FAKE_STRING_CVAR(cs2f_flashlight_attachment, "Which attachment to parent a flash
 
 void ZEPlayer::SpawnFlashLight()
 {
-	MessageDebug("ZEPlayer::SpawnFlashLight ");
 	if (GetFlashLight())
 		return;
 
@@ -203,7 +202,6 @@ void ZEPlayer::SpawnFlashLight()
 
 void ZEPlayer::ToggleFlashLight()
 {
-	MessageDebug("ZEPlayer::ToggleFlashLight ");
 	// Play the "click" sound
 	// CSingleRecipientFilter filter(GetPlayerSlot());
 	// CCSPlayerController::FromSlot(GetPlayerSlot())->EmitSoundFilter(filter, "HudChat.Message");
@@ -266,7 +264,6 @@ void PrecacheBeaconParticle(IEntityResourceManifest* pResourceManifest)
 
 void ZEPlayer::StartBeacon(Color color, ZEPlayerHandle hGiver/* = 0*/)
 {
-	MessageDebug("ZEPlayer::StartBeacon ");
 	CCSPlayerController* pPlayer = CCSPlayerController::FromSlot(m_slot);
 
 	Vector vecAbsOrigin = pPlayer->GetPawn()->GetAbsOrigin();
@@ -335,7 +332,6 @@ void ZEPlayer::StartBeacon(Color color, ZEPlayerHandle hGiver/* = 0*/)
 
 void ZEPlayer::EndBeacon()
 {
-	MessageDebug("ZEPlayer::EndBeacon ");
 	CParticleSystem *pParticle = m_hBeaconParticle.Get();
 
 	if (pParticle)
@@ -344,7 +340,6 @@ void ZEPlayer::EndBeacon()
 
 void ZEPlayer::SetLeader(int leaderIndex)
 {
-	MessageDebug("ZEPlayer::SetLeader ");
 	if (leaderIndex >= g_nLeaderColorMapSize)
 	{
 		m_iLeaderIndex = g_iLeaderIndex = 1;
@@ -392,7 +387,6 @@ void ZEPlayer::PurgeLeaderVotes()
 
 void ZEPlayer::StartGlow(Color color, int duration)
 {
-	MessageDebug("ZEPlayer::StartGlow ");
 	CCSPlayerController *pController = CCSPlayerController::FromSlot(m_slot);
 	CCSPlayerPawn *pPawn = (CCSPlayerPawn*)pController->GetPawn();
 	
@@ -480,7 +474,6 @@ void ZEPlayer::StartGlow(Color color, int duration)
 
 void ZEPlayer::EndGlow()
 {
-	MessageDebug("ZEPlayer::EndGlow ");
 	CBaseModelEntity *pGlowModel = m_hGlowModel.Get();
 
 	if (!pGlowModel)
