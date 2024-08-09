@@ -239,7 +239,7 @@ void CPanoramaVoteHandler::SendVoteStartUM(IRecipientFilter *pFilter)
 
 	g_gameEventSystem->PostEventAbstract(-1, false, pFilter, pNetMsg, data, 0);
 
-	pNetMsg->DeallocateMessage(data);
+	delete data;
 }
 
 void CPanoramaVoteHandler::InitVoters(IRecipientFilter *pFilter)
@@ -372,7 +372,7 @@ void CPanoramaVoteHandler::SendVoteFailed()
 	pFilter.AddAllPlayers();
 	g_gameEventSystem->PostEventAbstract(-1, false, &pFilter, pNetMsg, data, 0);
 
-	pNetMsg->DeallocateMessage(data);
+	delete data;
 }
 
 void CPanoramaVoteHandler::SendVotePassed()
@@ -390,7 +390,7 @@ void CPanoramaVoteHandler::SendVotePassed()
 	pFilter.AddAllPlayers();
 	g_gameEventSystem->PostEventAbstract(-1, false, &pFilter, pNetMsg, data, 0);
 
-	pNetMsg->DeallocateMessage(data);
+	delete data;
 }
 
 CON_COMMAND_CHAT_FLAGS(cancelvote, "Cancels the ongoing vote.", ADMFLAG_CHANGEMAP)
