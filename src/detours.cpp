@@ -322,6 +322,9 @@ const char* snd8 = "Player.DeathHeadShot.Onlooker";
 const char* snd9 = "Player.DeathHeadShotArmor.Victim";
 const char* snd10 = "Player.DeathHeadShotArmor.Onlooker";
 const char* snd11 = "Flesh.BulletImpact";
+const char* snd12 = "Player.DamageBodyArmor.Onlooker";
+const char* snd13 = "Player.DamageBodyArmor.Victim";
+const char* snd14 = "Weapon_Revolver.Prepare";
 
 #define STRCMP(str1, str2) strcmp(str1, str2) == 0
 void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase* pSoundEmitterSystem, SndOpEventGuid_t* guid, IRecipientFilter* filter, CEntityIndex index, EmitSound2_t* params)
@@ -336,7 +339,7 @@ void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase* pSou
 	// 	ConMsg("recipient slot %d : %d\n", i, index);
 	// }
 
-	if (STRCMP(sndName, snd1) || STRCMP(sndName, snd2) || STRCMP(sndName, snd3) || STRCMP(sndName, snd4) || STRCMP(sndName, snd5) || STRCMP(sndName, snd6) || STRCMP(sndName, snd7) || STRCMP(sndName, snd8) || STRCMP(sndName, snd9) || STRCMP(sndName, snd10) || STRCMP(sndName, snd11))
+	if (STRCMP(sndName, snd1) || STRCMP(sndName, snd2) || STRCMP(sndName, snd3) || STRCMP(sndName, snd4) || STRCMP(sndName, snd5) || STRCMP(sndName, snd6) || STRCMP(sndName, snd7) || STRCMP(sndName, snd8) || STRCMP(sndName, snd9) || STRCMP(sndName, snd10) || STRCMP(sndName, snd11) || STRCMP(sndName, snd12) || STRCMP(sndName, snd13) || STRCMP(sndName, snd14))
 	{
 		// ConMsg("block snd -> %s\n", sndName);
 
