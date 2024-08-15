@@ -142,7 +142,7 @@ void ZR_Precache(IEntityResourceManifest* pResourceManifest)
 
 void ZR_CreateOverlay(const char* pszOverlayParticlePath, float flAlpha, float flRadius, float flLifeTime, Color clrTint, const char* pszMaterialOverride)
 {
-	CEnvParticleGlow* particle = (CEnvParticleGlow*)CreateEntityByName("env_particle_glow");
+	CEnvParticleGlow* particle = CreateEntityByName<CEnvParticleGlow>("env_particle_glow");
 
 	CEntityKeyValues* pKeyValues = new CEntityKeyValues();
 
@@ -934,8 +934,10 @@ void ZR_OnLevelInit()
 		// Here we force some cvars that are necessary for the gamemode
 		g_pEngineServer2->ServerCommand("mp_give_player_c4 0");
 		g_pEngineServer2->ServerCommand("mp_friendlyfire 0");
-		g_pEngineServer2->ServerCommand("bot_quota_mode fill"); // Necessary to fix bots kicked/joining infinitely when forced to CT https://github.com/Source2ZE/ZombieReborn/issues/64
 		g_pEngineServer2->ServerCommand("mp_ignore_round_win_conditions 1");
+		// Necessary to fix bots kicked/joining infinitely when forced to CT https://github.com/Source2ZE/ZombieReborn/issues/64
+		g_pEngineServer2->ServerCommand("bot_quota_mode fill");
+		g_pEngineServer2->ServerCommand("mp_autoteambalance 0");
 		// These disable most of the buy menu for zombies
 		g_pEngineServer2->ServerCommand("mp_weapons_allow_pistols 3");
 		g_pEngineServer2->ServerCommand("mp_weapons_allow_smgs 3");
@@ -1808,7 +1810,7 @@ CON_COMMAND_CHAT(ztele, "- teleport to spawn")
 	CHandle<SpawnPoint> spawnHandle = spawns[randomindex]->GetHandle();
 
 	//Here's where the mess starts
-	CBasePlayerPawn* pPawn = player->GetPawn();
+	CBasePlayerPawn *pPawn = player->GetPawn();
 
 	if (!pPawn)
 		return;
@@ -1824,11 +1826,11 @@ CON_COMMAND_CHAT(ztele, "- teleport to spawn")
 
 	ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX"3秒后传送到出生点, 不要移动.");
 
-	CHandle<CBasePlayerPawn> pawnHandle = pPawn->GetHandle();
+	CHandle<CCSPlayerPawn> pawnHandle = pPawn->GetHandle();
 
 	new CTimer(3.0f, false, false, [spawnHandle, pawnHandle, initialpos]()
 	{
-		CBasePlayerPawn* pPawn = pawnHandle.Get();
+		CCSPlayerPawn* pPawn = pawnHandle.Get();
 		SpawnPoint* pSpawn = spawnHandle.Get();
 
 			if (!pPawn || !pSpawn)
@@ -1842,11 +1844,11 @@ CON_COMMAND_CHAT(ztele, "- teleport to spawn")
 				QAngle rotation = pSpawn->GetAbsRotation();
 
 				pPawn->Teleport(&origin, &rotation, nullptr);
-				ClientPrint(pPawn->GetController(), HUD_PRINTTALK, ZR_PREFIX "已传送至出生点.");
+				ClientPrint(pPawn->GetOriginalController(), HUD_PRINTTALK, ZR_PREFIX "已传送至出生点.");
 			}
 			else
 			{
-				ClientPrint(pPawn->GetController(), HUD_PRINTTALK, ZR_PREFIX "传送失败! 你移动的太远了.");
+				ClientPrint(pPawn->GetOriginalController(), HUD_PRINTTALK, ZR_PREFIX "传送失败! 你移动的太远了.");
 			}
 
 			return -1.0f;

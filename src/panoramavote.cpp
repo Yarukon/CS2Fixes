@@ -31,6 +31,8 @@
 #include "entity/cvotecontroller.h"
 #include "ctimer.h"
 
+#include "tier0/memdbgon.h"
+
 extern IGameEventManager2* g_gameEventManager;
 extern IGameEventSystem *g_gameEventSystem;
 extern INetworkMessages *g_pNetworkMessages;
