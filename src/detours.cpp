@@ -76,7 +76,6 @@ DECLARE_DETOUR(ProcessUsercmds, Detour_ProcessUsercmds);
 DECLARE_DETOUR(CGamePlayerEquip_InputTriggerForAllPlayers, Detour_CGamePlayerEquip_InputTriggerForAllPlayers);
 DECLARE_DETOUR(CGamePlayerEquip_InputTriggerForActivatedPlayer, Detour_CGamePlayerEquip_InputTriggerForActivatedPlayer);
 DECLARE_DETOUR(GetFreeClient, Detour_GetFreeClient);
-DECLARE_DETOUR(CCSPlayerPawn_GetMaxSpeed, Detour_CCSPlayerPawn_GetMaxSpeed);
 
 static bool g_bBlockMolotovSelfDmg = false;
 static bool g_bBlockAllDamage = false;
