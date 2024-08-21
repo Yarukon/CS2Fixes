@@ -117,7 +117,7 @@ SH_DECL_MANUALHOOK2_void(CreateWorkshopMapGroup, 0, 0, 0, const char*, const CUt
 SH_DECL_MANUALHOOK1(OnTakeDamage_Alive, 0, 0, 0, bool, CTakeDamageInfoContainer*);
 SH_DECL_MANUALHOOK1_void(CheckMovingGround, 0, 0, 0, double);
 SH_DECL_HOOK2(IGameEventManager2, LoadEventsFromFile, SH_NOATTRIB, 0, int, const char *, bool);
-SH_DECL_MANUALHOOK2(GoToIntermission, 0, 0, 0, int64_t*, int64_t, char);
+// SH_DECL_MANUALHOOK2(GoToIntermission, 0, 0, 0, int64_t*, int64_t, char);
 
 CS2Fixes g_CS2Fixes;
 
@@ -192,8 +192,8 @@ bool CS2Fixes::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 	int offset = g_GameConfig->GetOffset("IGameTypes_CreateWorkshopMapGroup");
 	SH_MANUALHOOK_RECONFIGURE(CreateWorkshopMapGroup, offset, 0, 0);
 
-	offset = g_GameConfig->GetOffset("CCSGameRules_GoToIntermission");
-	SH_MANUALHOOK_RECONFIGURE(GoToIntermission, offset, 0, 0);
+	// offset = g_GameConfig->GetOffset("CCSGameRules_GoToIntermission");
+	// SH_MANUALHOOK_RECONFIGURE(GoToIntermission, offset, 0, 0);
 
 	SH_ADD_HOOK(IServerGameDLL, GameFrame, g_pSource2Server, SH_MEMBER(this, &CS2Fixes::Hook_GameFramePost), true);
 	SH_ADD_HOOK(IServerGameDLL, GameServerSteamAPIActivated, g_pSource2Server, SH_MEMBER(this, &CS2Fixes::Hook_GameServerSteamAPIActivated), false);
@@ -935,23 +935,23 @@ void CS2Fixes::Hook_CreateWorkshopMapGroup(const char* name, const CUtlStringLis
 		RETURN_META(MRES_IGNORED);
 }
 
-void CS2Fixes::CreateGoToIntermissionHook()
-{
-	g_iGoToIntermissionId = SH_ADD_MANUALVPHOOK(GoToIntermission, g_pGameRules, SH_MEMBER(this, &CS2Fixes::Hook_GoToIntermission), false);
-}
+//void CS2Fixes::CreateGoToIntermissionHook()
+//{
+//	g_iGoToIntermissionId = SH_ADD_MANUALVPHOOK(GoToIntermission, g_pGameRules, SH_MEMBER(this, &CS2Fixes::Hook_GoToIntermission), false);
+//}
 
-void CS2Fixes::RemoveGoToIntermissionHook()
-{
-	SH_REMOVE_HOOK_ID(g_iGoToIntermissionId);
-}
+//void CS2Fixes::RemoveGoToIntermissionHook()
+//{
+//	SH_REMOVE_HOOK_ID(g_iGoToIntermissionId);
+//}
 
-int64_t* CS2Fixes::Hook_GoToIntermission(int64_t unk1, char unk2)
-{
-	if (!g_pMapVoteSystem->IsIntermissionAllowed())
-		RETURN_META_VALUE(MRES_SUPERCEDE, nullptr);
-
-	RETURN_META_NOREF(MRES_IGNORED, int64_t*);
-}
+//int64_t* CS2Fixes::Hook_GoToIntermission(int64_t unk1, char unk2)
+//{
+//	if (!g_pMapVoteSystem->IsIntermissionAllowed())
+//		RETURN_META_VALUE(MRES_SUPERCEDE, nullptr);
+//
+//	RETURN_META_NOREF(MRES_IGNORED, int64_t*);
+//}
 
 bool g_bDropMapWeapons = false;
 
