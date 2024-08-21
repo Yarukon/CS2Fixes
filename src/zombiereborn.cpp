@@ -1844,11 +1844,11 @@ CON_COMMAND_CHAT(ztele, "- teleport to spawn")
 				QAngle rotation = pSpawn->GetAbsRotation();
 
 				pPawn->Teleport(&origin, &rotation, nullptr);
-				ClientPrint(pPawn->GetOriginalController(), HUD_PRINTTALK, ZR_PREFIX "已传送至出生点.");
+				ClientPrint(pPawn->GetOriginalOriginalController(), HUD_PRINTTALK, ZR_PREFIX "已传送至出生点.");
 			}
 			else
 			{
-				ClientPrint(pPawn->GetOriginalController(), HUD_PRINTTALK, ZR_PREFIX "传送失败! 你移动的太远了.");
+				ClientPrint(pPawn->GetOriginalOriginalController(), HUD_PRINTTALK, ZR_PREFIX "传送失败! 你移动的太远了.");
 			}
 
 			return -1.0f;
