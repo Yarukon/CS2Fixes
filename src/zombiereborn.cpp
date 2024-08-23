@@ -861,6 +861,7 @@ bool CZRRegenTimer::Execute()
 
 void CZRRegenTimer::StartRegen(float flRegenInterval, int iRegenAmount, CCSPlayerController* pController)
 {
+	if (iRegenAmount < 1) { return; }
 	int slot = pController->GetPlayerSlot();
 	CZRRegenTimer* pTimer = s_vecRegenTimers[slot];
 	if (pTimer != nullptr)
@@ -1855,73 +1856,73 @@ CON_COMMAND_CHAT(ztele, "- teleport to spawn")
 		});
 }
 
-CON_COMMAND_CHAT(zclass, "<teamname/class name/number> - find and select your Z:R classes")
-{
-	// Silently return so the command is completely hidden
-	if (!g_bEnableZR)
-		return;
+// CON_COMMAND_CHAT(zclass, "<teamname/class name/number> - find and select your Z:R classes")
+// {
+// 	// Silently return so the command is completely hidden
+// 	if (!g_bEnableZR)
+// 		return;
 
-	if (!player)
-	{
-		ClientPrint(player, HUD_PRINTCONSOLE, ZR_PREFIX "你无法在控制台执行该指令.");
-		return;
-	}
+// 	if (!player)
+// 	{
+// 		ClientPrint(player, HUD_PRINTCONSOLE, ZR_PREFIX "你无法在控制台执行该指令.");
+// 		return;
+// 	}
 
-	CUtlVector<ZRClass*> vecClasses;
-	int iSlot = player->GetPlayerSlot();
-	bool bListingZombie = true;
-	bool bListingHuman = true;
+// 	CUtlVector<ZRClass*> vecClasses;
+// 	int iSlot = player->GetPlayerSlot();
+// 	bool bListingZombie = true;
+// 	bool bListingHuman = true;
 
-	if (args.ArgC() > 1)
-	{
-		bListingZombie = !V_strcasecmp(args[1], "zombie") || !V_strcasecmp(args[1], "zm") || !V_strcasecmp(args[1], "z");
-		bListingHuman = !V_strcasecmp(args[1], "human") || !V_strcasecmp(args[1], "hm") || !V_strcasecmp(args[1], "h");
-	}
+// 	if (args.ArgC() > 1)
+// 	{
+// 		bListingZombie = !V_strcasecmp(args[1], "zombie") || !V_strcasecmp(args[1], "zm") || !V_strcasecmp(args[1], "z");
+// 		bListingHuman = !V_strcasecmp(args[1], "human") || !V_strcasecmp(args[1], "hm") || !V_strcasecmp(args[1], "h");
+// 	}
 
-	g_pZRPlayerClassManager->GetZRClassList(CS_TEAM_NONE, vecClasses, player);
+// 	g_pZRPlayerClassManager->GetZRClassList(CS_TEAM_NONE, vecClasses, player);
 
-	if (bListingZombie || bListingHuman)
-	{
-		for (int team = CS_TEAM_T; team <= CS_TEAM_CT; team++)
-		{
-			if ((team == CS_TEAM_T && !bListingZombie) || (team == CS_TEAM_CT && !bListingHuman))
-				continue;
+// 	if (bListingZombie || bListingHuman)
+// 	{
+// 		for (int team = CS_TEAM_T; team <= CS_TEAM_CT; team++)
+// 		{
+// 			if ((team == CS_TEAM_T && !bListingZombie) || (team == CS_TEAM_CT && !bListingHuman))
+// 				continue;
 
-			const char* sTeamName = team == CS_TEAM_CT ? "Human" : "Zombie";
-			const char* sCurrentClass = g_pUserPreferencesSystem->GetPreference(iSlot, team == CS_TEAM_CT ? HUMAN_CLASS_KEY_NAME : ZOMBIE_CLASS_KEY_NAME);
+// 			const char* sTeamName = team == CS_TEAM_CT ? "Human" : "Zombie";
+// 			const char* sCurrentClass = g_pUserPreferencesSystem->GetPreference(iSlot, team == CS_TEAM_CT ? HUMAN_CLASS_KEY_NAME : ZOMBIE_CLASS_KEY_NAME);
 			
-			if (sCurrentClass[0] != '\0')
-				ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "Your current %s class is: \x10%s\x1. Available classes:", sTeamName, sCurrentClass);
-			else
-				ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "Available %s classes:", sTeamName);
+// 			if (sCurrentClass[0] != '\0')
+// 				ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "Your current %s class is: \x10%s\x1. Available classes:", sTeamName, sCurrentClass);
+// 			else
+// 				ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "Available %s classes:", sTeamName);
 
-			FOR_EACH_VEC(vecClasses, i)
-			{
-				if (vecClasses[i]->iTeam == team)
-					ClientPrint(player, HUD_PRINTTALK, "%i. %s", i+1, vecClasses[i]->szClassName.c_str());
-			}
-		}
+// 			FOR_EACH_VEC(vecClasses, i)
+// 			{
+// 				if (vecClasses[i]->iTeam == team)
+// 					ClientPrint(player, HUD_PRINTTALK, "%i. %s", i+1, vecClasses[i]->szClassName.c_str());
+// 			}
+// 		}
 
-		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "Select a class using \x2!zclass <class name/number>");
-		return;
-	}
+// 		ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "Select a class using \x2!zclass <class name/number>");
+// 		return;
+// 	}
 
-	FOR_EACH_VEC(vecClasses, i)
-	{
-		const char* sClassName = vecClasses[i]->szClassName.c_str();
-		bool bClassMatches = !V_stricmp(sClassName, args[1]) || (V_StringToInt32(args[1], -1) - 1) == i;
-		ZRClass* pClass = vecClasses[i];
+// 	FOR_EACH_VEC(vecClasses, i)
+// 	{
+// 		const char* sClassName = vecClasses[i]->szClassName.c_str();
+// 		bool bClassMatches = !V_stricmp(sClassName, args[1]) || (V_StringToInt32(args[1], -1) - 1) == i;
+// 		ZRClass* pClass = vecClasses[i];
 
-		if (bClassMatches)
-		{
-			ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "Your %s class is now set to \x10%s\x1.", pClass->iTeam == CS_TEAM_CT ? "Human" : "Zombie", sClassName);
-			g_pUserPreferencesSystem->SetPreference(iSlot, pClass->iTeam == CS_TEAM_CT ? HUMAN_CLASS_KEY_NAME : ZOMBIE_CLASS_KEY_NAME, sClassName);
-			return;
-		}
-	}
+// 		if (bClassMatches)
+// 		{
+// 			ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "Your %s class is now set to \x10%s\x1.", pClass->iTeam == CS_TEAM_CT ? "Human" : "Zombie", sClassName);
+// 			g_pUserPreferencesSystem->SetPreference(iSlot, pClass->iTeam == CS_TEAM_CT ? HUMAN_CLASS_KEY_NAME : ZOMBIE_CLASS_KEY_NAME, sClassName);
+// 			return;
+// 		}
+// 	}
 
-	ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "No available classes matched \x10%s\x1.", args[1]);
-}
+// 	ClientPrint(player, HUD_PRINTTALK, ZR_PREFIX "No available classes matched \x10%s\x1.", args[1]);
+// }
 
 CON_COMMAND_CHAT_FLAGS(infect, "infect a player", ADMFLAG_GENERIC)
 {
