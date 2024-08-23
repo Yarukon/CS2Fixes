@@ -196,6 +196,7 @@ bool CS2Fixes::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 	// SH_MANUALHOOK_RECONFIGURE(GoToIntermission, offset, 0, 0);
 
 	SH_ADD_HOOK(IServerGameDLL, GameFrame, g_pSource2Server, SH_MEMBER(this, &CS2Fixes::Hook_GameFramePost), true);
+	SH_ADD_HOOK(IServerGameDLL, GameFrame, g_pSource2Server, SH_MEMBER(this, &CS2Fixes::Hook_GameFramePost), true);
 	SH_ADD_HOOK(IServerGameDLL, GameServerSteamAPIActivated, g_pSource2Server, SH_MEMBER(this, &CS2Fixes::Hook_GameServerSteamAPIActivated), false);
 	SH_ADD_HOOK(IServerGameDLL, GameServerSteamAPIDeactivated, g_pSource2Server, SH_MEMBER(this, &CS2Fixes::Hook_GameServerSteamAPIDeactivated), false);
 	SH_ADD_HOOK(IServerGameDLL, ApplyGameSettings, g_pSource2Server, SH_MEMBER(this, &CS2Fixes::Hook_ApplyGameSettings), false);
@@ -280,6 +281,17 @@ bool CS2Fixes::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 		return false;
 	}
 
+	auto pCCSGameRulesVTable = modules::server->FindVirtualTable("CCSGameRules");
+
+	offset = g_GameConfig->GetOffset("CCSGameRules_GoToIntermission");
+	if (offset == -1)
+	{
+		snprintf(error, maxlen, "Failed to find CCSGameRules::GoToIntermission\n");
+		bRequiredInitLoaded = false;
+	}
+	//SH_MANUALHOOK_RECONFIGURE(GoToIntermission, offset, 0, 0);
+	//g_iGoToIntermissionId = SH_ADD_MANUALDVPHOOK(GoToIntermission, pCCSGameRulesVTable, SH_MEMBER(this, &CS2Fixes::Hook_GoToIntermission), false);
+
 	Message( "All hooks started!\n" );
 
 	UnlockConVars();
@@ -361,6 +373,9 @@ bool CS2Fixes::Unload(char *error, size_t maxlen)
 	SH_REMOVE_HOOK_ID(g_iCreateWorkshopMapGroupId);
 	SH_REMOVE_HOOK_ID(g_iOnTakeDamageAliveId);
 	SH_REMOVE_HOOK_ID(g_iCheckMovingGroundId);
+
+	if (g_iGoToIntermissionId != -1)
+		SH_REMOVE_HOOK_ID(g_iGoToIntermissionId);
 
 	if (g_iGoToIntermissionId != -1)
 		SH_REMOVE_HOOK_ID(g_iGoToIntermissionId);

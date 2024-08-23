@@ -24,8 +24,10 @@
 #include "cs2_sdk/entity/cbaseentity.h"
 #include "plat.h"
 #include "entity/cgamerules.h"
+#include "entity/cgamerules.h"
 
 extern CGameConfig *g_GameConfig;
+extern CCSGameRules* g_pGameRules;
 extern CCSGameRules* g_pGameRules;
 
 void Patch_GetHammerUniqueId(CEntityInstance *pEntity)

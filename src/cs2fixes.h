@@ -26,7 +26,7 @@
 #include "networksystem/inetworkserializer.h"
 #include <iserver.h>
 
-class CTakeDamageInfoContainer;
+struct CTakeDamageInfoContainer;
 class CCSPlayer_MovementServices;
 
 class CS2Fixes : public ISmmPlugin, public IMetamodListener
