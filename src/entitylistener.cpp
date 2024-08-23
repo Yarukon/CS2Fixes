@@ -28,7 +28,6 @@
 
 extern CGameConfig *g_GameConfig;
 extern CCSGameRules* g_pGameRules;
-extern CCSGameRules* g_pGameRules;
 
 void Patch_GetHammerUniqueId(CEntityInstance *pEntity)
 {
