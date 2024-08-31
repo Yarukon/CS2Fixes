@@ -638,29 +638,29 @@ GAME_EVENT_F2(choppers_incoming_warning, zr_call_zclass_set)
 
 void CZRPlayerClassManager::ApplyBaseClass(ZRClass* pClass, CCSPlayerPawn* pPawn)
 {
-	ZRModelEntry *pModelEntry = pClass->GetRandomModelEntry();
-	Color clrRender;
-	V_StringToColor(pModelEntry->szColor.c_str(), clrRender);
+	//ZRModelEntry *pModelEntry = pClass->GetRandomModelEntry();
+	//Color clrRender;
+	//V_StringToColor(pModelEntry->szColor.c_str(), clrRender);
 
-	pPawn->m_iMaxHealth = pClass->iHealth;
-	pPawn->m_iHealth = pClass->iHealth;
-	pPawn->SetModel(pModelEntry->szModelPath.c_str());
-	pPawn->m_clrRender = clrRender;
-	pPawn->AcceptInput("Skin", pModelEntry->GetRandomSkin());
-	pPawn->m_flGravityScale = pClass->flGravity;
+	//pPawn->m_iMaxHealth = pClass->iHealth;
+	//pPawn->m_iHealth = pClass->iHealth;
+	//pPawn->SetModel(pModelEntry->szModelPath.c_str());
+	//pPawn->m_clrRender = clrRender;
+	//pPawn->AcceptInput("Skin", pModelEntry->GetRandomSkin());
+	//pPawn->m_flGravityScale = pClass->flGravity;
 
-	// I don't know why, I don't want to know why,
-	// I shouldn't have to wonder why, but for whatever reason
-	// this shit caused crashes on ROUND END or MAP CHANGE after the 26/04/2024 update
-	//pPawn->m_flVelocityModifier = pClass->flSpeed;
-	const auto pController = reinterpret_cast<CCSPlayerController*>(pPawn->GetController());
-	if (const auto pPlayer = pController != nullptr ? pController->GetZEPlayer() : nullptr)
-	{
-		pPlayer->SetMaxSpeed(pClass->flSpeed);
-	}
+	//// I don't know why, I don't want to know why,
+	//// I shouldn't have to wonder why, but for whatever reason
+	//// this shit caused crashes on ROUND END or MAP CHANGE after the 26/04/2024 update
+	////pPawn->m_flVelocityModifier = pClass->flSpeed;
+	//const auto pController = reinterpret_cast<CCSPlayerController*>(pPawn->GetController());
+	//if (const auto pPlayer = pController != nullptr ? pController->GetZEPlayer() : nullptr)
+	//{
+	//	pPlayer->SetMaxSpeed(pClass->flSpeed);
+	//}
 
-	// This has to be done a bit later
-	UTIL_AddEntityIOEvent(pPawn, "SetScale", nullptr, nullptr, pClass->flScale);
+	//// This has to be done a bit later
+	//UTIL_AddEntityIOEvent(pPawn, "SetScale", nullptr, nullptr, pClass->flScale);
 
 	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
 	if (pEvent)
@@ -1200,6 +1200,14 @@ void ZR_Cure(CCSPlayerController* pTargetController)
 		return;
 
 	g_pZRPlayerClassManager->ApplyPreferredOrDefaultHumanClass(pTargetPawn);
+
+	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
+	if (pEvent)
+	{
+		pEvent->SetString("custom_event", "zr_on_player_cure");
+		pEvent->SetInt("player_index", pTargetController->entindex());
+		g_gameEventManager->FireEvent(pEvent, true);
+	}
 }
 
 std::vector<SpawnPoint*> ZR_GetSpawns()
