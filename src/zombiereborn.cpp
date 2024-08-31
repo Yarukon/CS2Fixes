@@ -1235,6 +1235,10 @@ void ZR_Infect(CCSPlayerController* pAttackerController, CCSPlayerController* pV
 	if (!pVictimController)
 		return;
 
+	if (g_pGameRules->m_bWarmupPeriod || g_pGameRules->m_bFreezePeriod) {
+		return;
+	}
+
 	if (pVictimController->m_iTeamNum() == CS_TEAM_CT)
 		pVictimController->SwitchTeam(CS_TEAM_T);
 
@@ -1274,6 +1278,10 @@ void ZR_InfectMotherZombie(CCSPlayerController* pVictimController, std::vector<S
 	CCSPlayerPawn *pVictimPawn = (CCSPlayerPawn*)pVictimController->GetPawn();
 	if (!pVictimPawn)
 		return;
+
+	if (g_pGameRules->m_bWarmupPeriod || g_pGameRules->m_bFreezePeriod) {
+		return;
+	}
 
 	ZR_StripAndGiveKnife(pVictimPawn);
 
