@@ -1096,6 +1096,10 @@ void ZR_OnPlayerSpawn(CCSPlayerController* pController)
 	// delay infection a bit
 	bool bInfect = g_ZRRoundState == EZRRoundState::POST_INFECTION;
 
+	if (g_pGameRules->m_bWarmupPeriod || g_pGameRules->m_bFreezePeriod) {
+		bInfect = false;
+	}
+
 	// We're infecting this guy with a delay, disable all damage as they have 100 hp until then
 	// also set team immediately in case the spawn teleport is team filtered
 	if (bInfect) 
