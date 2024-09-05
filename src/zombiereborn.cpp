@@ -642,8 +642,8 @@ void CZRPlayerClassManager::ApplyBaseClass(ZRClass* pClass, CCSPlayerPawn* pPawn
 	//Color clrRender;
 	//V_StringToColor(pModelEntry->szColor.c_str(), clrRender);
 
-	//pPawn->m_iMaxHealth = pClass->iHealth;
-	//pPawn->m_iHealth = pClass->iHealth;
+	pPawn->m_iMaxHealth = pClass->iHealth;
+	pPawn->m_iHealth = pClass->iHealth;
 	//pPawn->SetModel(pModelEntry->szModelPath.c_str());
 	//pPawn->m_clrRender = clrRender;
 	//pPawn->AcceptInput("Skin", pModelEntry->GetRandomSkin());
@@ -1513,6 +1513,7 @@ bool ZR_Hook_OnTakeDamage_Alive(CCSPlayerPawn* pVictimPawn, CTakeDamageInfo* pIn
 	const char* pszAbilityClass = pInfo->m_hAbility.Get() ? pInfo->m_hAbility.Get()->GetClassname() : "";
 	if (pAttackerPawn->m_iTeamNum() == CS_TEAM_T && pVictimPawn->m_iTeamNum() == CS_TEAM_CT && !V_strncmp(pszAbilityClass, "weapon_knife", 12))
 	{
+		pInfo->m_flDamage = 1;
 		ZR_Infect(pAttackerController, pVictimController, false);
 		return true; // nullify the damage
 	}
