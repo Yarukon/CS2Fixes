@@ -382,8 +382,8 @@ CON_COMMAND_CHAT(toggledecals, "- toggle world decals, if you're into having 10 
 }
 
 bool g_bEnableHide = false;
-static int g_iDefaultHideDistance = 250;
-static int g_iMaxHideDistance = 2000;
+int g_iDefaultHideDistance = 250;
+int g_iMaxHideDistance = 2000;
 
 FAKE_BOOL_CVAR(cs2f_hide_enable, "Whether to enable hide", g_bEnableHide, false, false)
 FAKE_INT_CVAR(cs2f_hide_distance_default, "The default distance for hide", g_iDefaultHideDistance, 250, false)

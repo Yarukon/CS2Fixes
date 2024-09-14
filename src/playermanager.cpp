@@ -41,6 +41,7 @@
 extern IVEngineServer2 *g_pEngineServer2;
 extern CGameEntitySystem *g_pEntitySystem;
 extern CGlobalVars *gpGlobals;
+extern int g_iMaxHideDistance;
 
 ZEPlayerHandle::ZEPlayerHandle() : m_Index(INVALID_ZEPLAYERHANDLE_INDEX) {};
 
@@ -137,7 +138,11 @@ bool ZEPlayer::IsAdminFlagSet(uint64 iFlag)
 
 int ZEPlayer::GetHideDistance()
 {
-	return g_pUserPreferencesSystem->GetPreferenceInt(m_slot.Get(), HIDE_DISTANCE_PREF_KEY_NAME, 0);
+	int v = g_pUserPreferencesSystem->GetPreferenceInt(m_slot.Get(), HIDE_DISTANCE_PREF_KEY_NAME, 0);
+	if (v > g_iMaxHideDistance) {
+		v = g_iMaxHideDistance;
+	}
+	return v;
 }
 
 void ZEPlayer::SetHideDistance(int distance)
@@ -716,7 +721,7 @@ void CPlayerManager::CheckHideDistances()
 		player->ClearTransmit();
 		auto hideDistance = player->GetHideDistance();
 
-		if (!hideDistance)
+		if (!hideDistance || !g_bEnableHide)
 			continue;
 
 		CCSPlayerController* pController = CCSPlayerController::FromSlot(i);
