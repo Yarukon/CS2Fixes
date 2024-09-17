@@ -889,7 +889,7 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 			}
 			
 			// Always transmit other players if spectating
-			if (pSelfController->GetPawnState() == STATE_OBSERVER_MODE)
+			if (!g_bEnableHide || pSelfController->GetPawnState() == STATE_OBSERVER_MODE)
 				continue;
 
 			// Get the actual pawn as the player could be currently spectating
