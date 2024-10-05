@@ -49,7 +49,7 @@ enum DamageTypes_t : uint32_t
 	DMG_DANGERZONE = 0x4000000,
 };
 
-enum TakeDamageFlags_t : uint32_t
+enum TakeDamageFlags_t : uint64_t
 {
 	DFLAG_NONE = 0x0,
 	DFLAG_SUPPRESS_HEALTH_CHANGES = 0x1,
@@ -63,8 +63,10 @@ enum TakeDamageFlags_t : uint32_t
 	DFLAG_SUPPRESS_DAMAGE_MODIFICATION = 0x100,
 	DFLAG_ALWAYS_FIRE_DAMAGE_EVENTS = 0x200,
 	DFLAG_RADIUS_DMG = 0x400,
-	DMG_LASTDFLAG = 0x400,
-	DFLAG_IGNORE_ARMOR = 0x800,
+	DFLAG_FORCEREDUCEARMOR_DMG = 0x800,
+	DMG_LASTDFLAG = 0x800,
+	DFLAG_IGNORE_ARMOR = 0x1000,
+	DFLAG_SUPPRESS_UTILREMOVE = 0x2000,
 };
 
 // No idea what this is meant to have, but OnTakeDamage_Alive expects this and we only care about pInfo
@@ -98,12 +100,13 @@ public:
 	CHandle<CBaseEntity> m_hAbility;
 	float m_flDamage;
 	float m_flTotalledDamage;
+	float m_flTotalledDamageAbsorbed;
 	DamageTypes_t m_bitsDamageType;
 	int32_t m_iDamageCustom;
 	uint8_t m_iAmmoType;
 
 private:
-	[[maybe_unused]] uint8_t __pad0051[0xf];
+	[[maybe_unused]] uint8_t __pad0059[0xf];
 
 public:
 	float m_flOriginalDamage;
@@ -111,19 +114,26 @@ public:
 	bool m_bShouldSpark;
 
 private:
-	[[maybe_unused]] uint8_t __pad0066[0xa];
+	[[maybe_unused]] uint8_t __pad006e[0x2];
+
+public:
+	float m_flDamageAbsorbed;
+
+private:
+	[[maybe_unused]] uint8_t __pad0074[0xc];
 
 public:
 	TakeDamageFlags_t m_nDamageFlags;
 	int32_t m_nNumObjectsPenetrated;
+	float m_flFriendlyFireDamageReductionRatio;
 	uint64_t m_hScriptInstance;
 
 private:
-	[[maybe_unused]] uint8_t __pad0080[0x14];
+	[[maybe_unused]] uint8_t __pad0098[0x14];
 
 public:
 	bool m_bInTakeDamageFlow;
 
 private:
-	[[maybe_unused]] uint8_t __pad009d[0x8];
+	[[maybe_unused]] uint8_t __pad00ad[0xb];
 };
