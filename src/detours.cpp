@@ -390,26 +390,11 @@ void FASTCALL Detour_UTIL_SayText2Filter(
 	UTIL_SayText2Filter(filter, pEntity, eMessageType, msg_name, param1, param2, param3, param4);
 }
 
-bool evEntWatchBan[64];
-
 bool FASTCALL Detour_CCSPlayer_WeaponServices_CanUse(CCSPlayer_WeaponServices* pWeaponServices, CBasePlayerWeapon* pPlayerWeapon)
 {
 	if (g_bEnableZR && !ZR_Detour_CCSPlayer_WeaponServices_CanUse(pWeaponServices, pPlayerWeapon))
 		return false;
 
-	auto hammerId = pPlayerWeapon->m_sUniqueHammerID().Get();
-	if (strlen(hammerId) > 0) {
-		CCSPlayerPawn* pPawn = pWeaponServices->__m_pChainEntity();
-		if (pPawn) {
-			auto ply = pPawn->GetOriginalController();
-			if (ply) {
-				int slot = ply->GetPlayerSlot();
-				if (evEntWatchBan[slot]) {
-					return false;
-				}
-			}
-		}
-	}
 	return CCSPlayer_WeaponServices_CanUse(pWeaponServices, pPlayerWeapon);
 }
 
