@@ -607,35 +607,6 @@ void split(const std::string& s, char delim, Out result)
 		*result++ = item;
 }
 
-GAME_EVENT_F2(choppers_incoming_warning, zr_call_zclass_set)
-{
-	auto customEventName = pEvent->GetString("custom_event", "");
-	if (strcmp(customEventName, "zr_call_zclass_set") != 0) {
-		return;
-	}
-	int pawnIndex = pEvent->GetInt("pawn_index", 0);
-	if (pawnIndex < 1) { return; }
-	auto ent = g_pEntitySystem->GetEntityInstance(CEntityIndex(pawnIndex));
-	if (!ent) { return; }
-	if (strcmp(ent->GetClassname(), "player") != 0) { return; }
-	auto pawn = (CCSPlayerPawn*)ent;
-	auto name = pEvent->GetString("zclass_name", "");
-	if (strlen(name) < 1) { return; }
-	int t = pawn->m_iTeamNum;
-	if (t == 3) {
-		auto cls = g_pZRPlayerClassManager->GetHumanClass(name);
-		if (cls) {
-			g_pZRPlayerClassManager->ApplyHumanClass(cls, pawn);
-		}
-	}
-	else if (t == 2) {
-		auto cls = g_pZRPlayerClassManager->GetZombieClass(name);
-		if (cls) {
-			g_pZRPlayerClassManager->ApplyZombieClass(cls, pawn);
-		}
-	}
-}
-
 void CZRPlayerClassManager::ApplyBaseClass(ZRClass* pClass, CCSPlayerPawn* pPawn)
 {
 	//ZRModelEntry *pModelEntry = pClass->GetRandomModelEntry();
@@ -662,15 +633,6 @@ void CZRPlayerClassManager::ApplyBaseClass(ZRClass* pClass, CCSPlayerPawn* pPawn
 	//// This has to be done a bit later
 	//UTIL_AddEntityIOEvent(pPawn, "SetScale", nullptr, nullptr, pClass->flScale);
 
-	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
-	if (pEvent)
-	{
-		pEvent->SetString("custom_event", "zr_on_zclass_set");
-		pEvent->SetInt("pawn_index", pPawn->GetEntityIndex().Get());
-		pEvent->SetString("zclass_name", pClass->szClassName.c_str());
-		pEvent->SetInt("zclass_health", pClass->iHealth);
-		g_gameEventManager->FireEvent(pEvent, true);
-	}
 }
 
 // only changes that should not (directly) affect gameplay
@@ -687,15 +649,6 @@ void CZRPlayerClassManager::ApplyBaseClassVisuals(ZRClass *pClass, CCSPlayerPawn
 	// This has to be done a bit later
 	UTIL_AddEntityIOEvent(pPawn, "SetScale", nullptr, nullptr, pClass->flScale);
 
-	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
-	if (pEvent)
-	{
-		pEvent->SetString("custom_event", "zr_on_zclass_set");
-		pEvent->SetInt("pawn_index", pPawn->GetEntityIndex().Get());
-		pEvent->SetString("zclass_name", pClass->szClassName.c_str());
-		pEvent->SetInt("zclass_health", pClass->iHealth);
-		g_gameEventManager->FireEvent(pEvent, true);
-	}
 }
 
 ZRHumanClass* CZRPlayerClassManager::GetHumanClass(const char* pszClassName)

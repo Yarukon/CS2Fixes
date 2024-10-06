@@ -84,13 +84,6 @@ static bool g_bBlockAllDamage = false;
 FAKE_BOOL_CVAR(cs2f_block_molotov_self_dmg, "Whether to block self-damage from molotovs", g_bBlockMolotovSelfDmg, false, false)
 FAKE_BOOL_CVAR(cs2f_block_all_dmg, "Whether to block all damage to players", g_bBlockAllDamage, false, false)
 
-int EvLastAttacker = -1;
-int EvLastVictim = -1;
-int EvLastInflictor = -1;
-int EvLastAbility = -1;
-float EvLastDamage = -1;
-int EvLastDamageType = -1;
-
 void FASTCALL Detour_CBaseEntity_TakeDamageOld(CBaseEntity* pThis, CTakeDamageInfo* inputInfo)
 {
 #ifdef _DEBUG
@@ -117,26 +110,6 @@ void FASTCALL Detour_CBaseEntity_TakeDamageOld(CBaseEntity* pThis, CTakeDamageIn
 	CBaseEntity* pInflictor = inputInfo->m_hInflictor.Get();
 	const char* pszInflictorClass = pInflictor ? pInflictor->GetClassname() : "";
 
-	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning");
-	if (pEvent) {
-		EvLastAttacker = inputInfo->m_hAttacker.Get() ? inputInfo->m_hAttacker.Get()->GetEntityIndex().Get() : -1;
-		EvLastVictim = pThis->GetEntityIndex().Get();
-		EvLastInflictor = inputInfo->m_hInflictor.Get() ? inputInfo->m_hInflictor.Get()->GetEntityIndex().Get() : -1;
-		EvLastAbility = inputInfo->m_hAbility.Get() ? inputInfo->m_hAbility.Get()->GetEntityIndex().Get() : -1;
-		EvLastDamage = inputInfo->m_flDamage;
-		EvLastDamageType = inputInfo->m_bitsDamageType;
-		pEvent->SetString("custom_event", "entity_take_damage");
-		pEvent->SetInt("attacker_index", EvLastAttacker);
-		pEvent->SetInt("victim_index", EvLastVictim);
-		pEvent->SetInt("inflictor_index", EvLastInflictor);
-		pEvent->SetInt("ability_index", EvLastAbility);
-		pEvent->SetFloat("damage", EvLastDamage);
-		pEvent->SetInt("damage_type", EvLastDamageType);
-		g_gameEventManager->FireEvent(pEvent, true);
-		if (EvLastDamage <= 0) { return; }
-		inputInfo->m_flDamage = EvLastDamage;
-	}
-
 	// Prevent everything but nades from inflicting blast damage
 	if (inputInfo->m_bitsDamageType == DamageTypes_t::DMG_BLAST && V_strncmp(pszInflictorClass, "hegrenade", 9))
 		inputInfo->m_bitsDamageType = DamageTypes_t::DMG_GENERIC;
@@ -146,54 +119,6 @@ void FASTCALL Detour_CBaseEntity_TakeDamageOld(CBaseEntity* pThis, CTakeDamageIn
 		return;
 
 	CBaseEntity_TakeDamageOld(pThis, inputInfo);
-}
-
-GAME_EVENT_F2(choppers_incoming_warning, entity_take_damage)
-{
-	auto customEventName = pEvent->GetString("custom_event", "");
-	if (strcmp(customEventName, "entity_take_damage") != 0) {
-		return;
-	}
-	float damage = pEvent->GetFloat("damage");
-	EvLastDamage = damage;
-}
-
-// 由其他插件自定义发起对实体的伤害
-GAME_EVENT_F2(choppers_incoming_warning, call_entity_take_damage)
-{
-	auto customEventName = pEvent->GetString("custom_event", "");
-	if (strcmp(customEventName, "call_entity_take_damage") != 0) {
-		return;
-	}
-	float damage = pEvent->GetFloat("damage");
-	if (damage < 1) {
-		return;
-	}
-	int victimIndex = pEvent->GetInt("victim_index");
-	if (victimIndex < 1) {
-		return;
-	}
-	int attackerIndex = pEvent->GetInt("attacker_index");
-	if (attackerIndex < 1) {
-		attackerIndex = 0;
-	}
-	int inflictorIndex = pEvent->GetInt("inflictor_index");
-	if (inflictorIndex < 1) {
-		inflictorIndex = 0;
-	}
-	DamageTypes_t damageType = (DamageTypes_t)pEvent->GetInt("damage_type");
-	auto victim = (CBaseEntity*) g_pEntitySystem->GetEntityInstance(CEntityIndex(victimIndex));
-	if (!victim) { return; }
-	auto attacker = (CBaseEntity*) g_pEntitySystem->GetEntityInstance(CEntityIndex(attackerIndex));
-	if (!attacker) { return; }
-	auto inflictor = (CBaseEntity*) g_pEntitySystem->GetEntityInstance(CEntityIndex(inflictorIndex));
-	if (!inflictor) { return; }
-	auto info = new CTakeDamageInfo();
-	info->m_flDamage = damage;
-	info->m_bitsDamageType = damageType;
-	info->m_hAttacker.Set(attacker);
-	info->m_hInflictor.Set(inflictor);
-	CBaseEntity_TakeDamageOld(victim, info);
 }
 
 static bool g_bUseOldPush = false;
@@ -488,22 +413,6 @@ bool FASTCALL Detour_CCSPlayer_WeaponServices_CanUse(CCSPlayer_WeaponServices* p
 	return CCSPlayer_WeaponServices_CanUse(pWeaponServices, pPlayerWeapon);
 }
 
-// 设置哪些玩家不能捡起有 hammer id 的武器
-GAME_EVENT_F2(choppers_incoming_warning, call_set_entwatch_ban)
-{
-	auto customEventName = pEvent->GetString("custom_event", "");
-	if (strcmp(customEventName, "call_set_entwatch_ban") != 0) {
-		return;
-	}
-	for (int i = 0; i < 64; i++)
-	{
-		char name[32];
-		V_snprintf(name, sizeof(name), "ban%d", i);
-		bool isBan = pEvent->GetBool(name, false);
-		evEntWatchBan[i] = isBan;
-	}
-}
-
 bool FASTCALL Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSymbolLarge* pInputName, CEntityInstance* pActivator, CEntityInstance* pCaller, variant_t* value, int nOutputID)
 {	
 	// Message("Input -> %s | Value -> %s\n", pInputName->String(), (value->m_type == FIELD_CSTRING || value->m_type == FIELD_STRING) && value->m_pszString ? value->m_pszString : "<other type>");
@@ -548,11 +457,6 @@ bool FASTCALL Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSym
 			else
 				flModifier = value->m_float;
 
-			IGameEvent* evt = g_gameEventManager->CreateEvent("choppers_incoming_warning");
-			evt->SetString("custom_event", "speedmod");
-			evt->SetInt("entity_index", entity->entindex());
-			evt->SetFloat("speed_mod", flModifier);
-			g_gameEventManager->FireEvent(evt, true);
 		}
 	}
 	else if (!V_strnicmp(pInputName->String(), "AddScore", 8))
