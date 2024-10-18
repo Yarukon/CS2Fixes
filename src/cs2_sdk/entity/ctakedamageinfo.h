@@ -69,6 +69,17 @@ enum TakeDamageFlags_t : uint64_t
 	DFLAG_SUPPRESS_UTILREMOVE = 0x2000,
 };
 
+struct AttackerInfo_t
+{
+	bool m_bNeedInit;
+	bool m_bIsPawn;
+	bool m_bIsWorld;
+	CHandle<CCSPlayerPawn> m_hAttackerPawn;
+	uint16_t m_nAttackerPlayerSlot;
+	int m_iTeamChecked;
+	int m_nTeam;
+};
+
 // No idea what this is meant to have, but OnTakeDamage_Alive expects this and we only care about pInfo
 struct CTakeDamageInfoContainer
 {
@@ -120,20 +131,21 @@ public:
 	float m_flDamageAbsorbed;
 
 private:
-	[[maybe_unused]] uint8_t __pad0074[0xc];
+	[[maybe_unused]] uint8_t __pad0074[0x8];
 
 public:
 	TakeDamageFlags_t m_nDamageFlags;
+
+private:
+	[[maybe_unused]] uint8_t __pad0084[0x4];
+
+public:
 	int32_t m_nNumObjectsPenetrated;
 	float m_flFriendlyFireDamageReductionRatio;
 	uint64_t m_hScriptInstance;
-
-private:
-	[[maybe_unused]] uint8_t __pad0098[0x14];
-
-public:
+	AttackerInfo_t m_AttackerInfo;
 	bool m_bInTakeDamageFlow;
 
 private:
-	[[maybe_unused]] uint8_t __pad00ad[0xb];
+	[[maybe_unused]] uint8_t __pad00ad[0x4];
 };

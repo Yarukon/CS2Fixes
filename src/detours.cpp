@@ -83,9 +83,11 @@ DECLARE_DETOUR(TraceShape, Detour_TraceShape);
 
 static bool g_bBlockMolotovSelfDmg = false;
 static bool g_bBlockAllDamage = false;
+static bool g_bFixBlockDamage = false;
 
 FAKE_BOOL_CVAR(cs2f_block_molotov_self_dmg, "Whether to block self-damage from molotovs", g_bBlockMolotovSelfDmg, false, false)
 FAKE_BOOL_CVAR(cs2f_block_all_dmg, "Whether to block all damage to players", g_bBlockAllDamage, false, false)
+FAKE_BOOL_CVAR(cs2f_fix_block_dmg, "Whether to fix block-damage on players", g_bFixBlockDamage, false, false)
 
 void FASTCALL Detour_CBaseEntity_TakeDamageOld(CBaseEntity* pThis, CTakeDamageInfo* inputInfo)
 {
@@ -112,6 +114,25 @@ void FASTCALL Detour_CBaseEntity_TakeDamageOld(CBaseEntity* pThis, CTakeDamageIn
 
 	CBaseEntity* pInflictor = inputInfo->m_hInflictor.Get();
 	const char* pszInflictorClass = pInflictor ? pInflictor->GetClassname() : "";
+
+	// After Armory update, activator became attacker on block damage, which broke it..
+	if (g_bFixBlockDamage && inputInfo->m_AttackerInfo.m_bIsPawn && inputInfo->m_bitsDamageType ^ DMG_BULLET && inputInfo->m_hAttacker != pThis->GetHandle())
+	{
+		if (V_strcasecmp(pszInflictorClass, "func_movelinear") == 0
+			|| V_strcasecmp(pszInflictorClass, "func_mover") == 0
+			|| V_strcasecmp(pszInflictorClass, "func_door") == 0
+			|| V_strcasecmp(pszInflictorClass, "func_door_rotating") == 0
+			|| V_strcasecmp(pszInflictorClass, "func_rotating") == 0
+			|| V_strcasecmp(pszInflictorClass, "point_hurt") == 0)
+		{
+			inputInfo->m_AttackerInfo.m_bIsPawn = false;
+			inputInfo->m_AttackerInfo.m_bIsWorld = true;
+			inputInfo->m_hAttacker = inputInfo->m_hInflictor;
+
+			inputInfo->m_AttackerInfo.m_hAttackerPawn = CHandle<CCSPlayerPawn>(~0u);
+			inputInfo->m_AttackerInfo.m_nAttackerPlayerSlot = ~0;
+		}
+	}
 
 	// Prevent everything but nades from inflicting blast damage
 	if (inputInfo->m_bitsDamageType == DamageTypes_t::DMG_BLAST && V_strncmp(pszInflictorClass, "hegrenade", 9))
@@ -632,7 +653,41 @@ bool FASTCALL Detour_TraceShape(int64* a1, int64 a2, int64 a3, int64 a4, CTraceF
 	return TraceShape(a1, a2, a3, a4, filter, a6);
 }
 
-bool InitDetours(CGameConfig* gameConfig)
+bool g_bPreventUsingPlayers = false;
+FAKE_BOOL_CVAR(cs2f_prevent_using_players, "Whether to prevent +use from hitting players (0=can use players, 1=cannot use players)", g_bPreventUsingPlayers, false, false);
+
+bool g_bFindingUseEntity = false;
+int64 FASTCALL Detour_FindUseEntity(CCSPlayer_UseServices* pThis, float a2)
+{
+	g_bFindingUseEntity = true;
+	int64 ent = FindUseEntity(pThis, a2);
+	g_bFindingUseEntity = false;
+	return ent;
+}
+
+bool FASTCALL Detour_TraceFunc(int64* a1, int* a2, float* a3, uint64 traceMask)
+{
+	if (g_bPreventUsingPlayers && g_bFindingUseEntity)
+	{
+		uint64 newMask = traceMask & ( ~(CONTENTS_PLAYER & CONTENTS_NPC) );
+		return TraceFunc(a1, a2, a3, newMask);
+	}
+
+	return TraceFunc(a1, a2, a3, traceMask);
+}
+
+bool FASTCALL Detour_TraceShape(int64* a1, int64 a2, int64 a3, int64 a4, CTraceFilter* filter, int64 a6)
+{
+	if (g_bPreventUsingPlayers && g_bFindingUseEntity)
+	{
+		filter->DisableInteractsWithLayer(LAYER_INDEX_CONTENTS_PLAYER);
+		filter->DisableInteractsWithLayer(LAYER_INDEX_CONTENTS_NPC);
+	}
+
+	return TraceShape(a1, a2, a3, a4, filter, a6);
+}
+
+bool InitDetours(CGameConfig *gameConfig)
 {
 	bool success = true;
 
