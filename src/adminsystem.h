@@ -51,8 +51,8 @@
 #define ADMFLAG_CUSTOM11	(1 << 24) // y
 #define ADMFLAG_ROOT		(1 << 25) // z
 
-#define ADMIN_PREFIX "Admin %s has "
-#define CONSOLE_NAME "\2CONSOLE\1" // color it to indicate that it isnt a regular player using the command
+#define ADMIN_PREFIX "管理员 %s "
+#define CONSOLE_NAME "\2控制台\1" // color it to indicate that it isnt a regular player using the command
 
 void PrintSingleAdminAction(const char* pszAdminName, const char* pszTargetName, const char* pszAction, const char* pszAction2, const char* prefix);
 void PrintMultiAdminAction(ETargetType nType, const char* pszAdminName, const char* pszAction, const char* pszAction2, const char* prefix);

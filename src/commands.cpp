@@ -400,7 +400,7 @@ CON_COMMAND_CHAT(noshake, "- toggle noshake")
 	bool bSet = !g_playerManager->IsPlayerUsingNoShake(iPlayer);
 
 	g_playerManager->SetPlayerNoShake(iPlayer, bSet);
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You have %s noshake.", bSet ? "enabled" : "disabled");
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你 %s 了无摇晃.", bSet ? "开启" : "关闭");
 }
 
 bool g_bEnableHide = false;
@@ -496,54 +496,6 @@ CON_COMMAND_CHAT(help, "- Display list of commands in console")
 
 	if (player)
 		ClientPrint(player, HUD_PRINTCONSOLE, "! 可替换为 / 来静默使用该指令, 或替换为 c_ 来在控制台中使用.");
-}
-
-	if (args.ArgC() < 2)
-	{
-		if (player->m_iTeamNum() == CS_TEAM_SPECTATOR)
-		{
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Already spectating.");
-		}
-		else
-		{
-			player->SwitchTeam(CS_TEAM_SPECTATOR);
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Moved to spectators.");
-		}
-		return;
-	}
-
-	int iCommandPlayer = player ? player->GetPlayerSlot() : -1;
-	int iNumClients = 0;
-	int pSlot[MAXPLAYERS];
-
-	if (!g_playerManager->CanTargetPlayers(player, args[1], iNumClients, pSlot, NO_MULTIPLE | NO_SELF | NO_DEAD | NO_SPECTATOR))
-		return;
-
-	CCSPlayerController* pTarget = CCSPlayerController::FromSlot(pSlot[0]);
-
-	if (!pTarget)
-		return;
-
-	if (player->m_iTeamNum() != CS_TEAM_SPECTATOR)
-		player->SwitchTeam(CS_TEAM_SPECTATOR);
-
-	// 1 frame delay as observer services will be null on same frame as spectator team switch
-	CHandle<CCSPlayerController> hPlayer = player->GetHandle();
-	CHandle<CCSPlayerController> hTarget = pTarget->GetHandle();
-	new CTimer(0.0f, false, false, [hPlayer, hTarget](){
-		CCSPlayerController* pPlayer = hPlayer.Get();
-		CCSPlayerController* pTargetPlayer = hTarget.Get();
-		if (!pPlayer || !pTargetPlayer)
-			return -1.0f;
-		CPlayer_ObserverServices* pObserverServices = pPlayer->GetPawn()->m_pObserverServices();
-		if (!pObserverServices)
-			return -1.0f;
-		pObserverServices->m_iObserverMode.Set(OBS_MODE_IN_EYE);
-		pObserverServices->m_iObserverLastMode.Set(OBS_MODE_ROAMING);
-		pObserverServices->m_hObserverTarget.Set(pTargetPlayer->GetPawn());
-		ClientPrint(pPlayer, HUD_PRINTTALK, CHAT_PREFIX "Spectating player %s.", pTargetPlayer->GetPlayerName());
-		return -1.0f;
-	});
 }
 
 CON_COMMAND_CHAT(getpos, "- Get your position and angles")

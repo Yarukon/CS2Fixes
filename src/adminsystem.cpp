@@ -1526,9 +1526,9 @@ const char* GetActionPhrase(CInfractionBase::EInfractionType infType, GrammarTen
 			case CInfractionBase::Ban:
 				return bAdding ? "ban" : "unban";
 			case CInfractionBase::Mute:
-				return bAdding ? "mute" : "unmute";
+				return bAdding ? "禁麦" : "取消禁麦";
 			case CInfractionBase::Gag:
-				return bAdding ? "gag" : "ungag";
+				return bAdding ? "禁言" : "取消禁言";
 		}
 	}
 	else if (iTense == GrammarTense::Past)
@@ -1538,9 +1538,9 @@ const char* GetActionPhrase(CInfractionBase::EInfractionType infType, GrammarTen
 			case CInfractionBase::Ban:
 				return bAdding ? "banned" : "unbanned";
 			case CInfractionBase::Mute:
-				return bAdding ? "muted" : "unmuted";
+				return bAdding ? "已经禁麦" : "已经取消禁麦";
 			case CInfractionBase::Gag:
-				return bAdding ? "gagged" : "ungagged";
+				return bAdding ? "已经禁言" : "已经取消禁言";
 		}
 	}
 	else if (iTense == GrammarTense::Continuous)
@@ -1550,9 +1550,9 @@ const char* GetActionPhrase(CInfractionBase::EInfractionType infType, GrammarTen
 			case CInfractionBase::Ban:
 				return bAdding ? "banning" : "unbanning";
 			case CInfractionBase::Mute:
-				return bAdding ? "muting" : "unmuting";
+				return bAdding ? "正在禁麦" : "正在取消禁麦";
 			case CInfractionBase::Gag:
-				return bAdding ? "gagging" : "ungagging";
+				return bAdding ? "正在禁言" : "正在取消禁言";
 		}
 	}
 	return "";

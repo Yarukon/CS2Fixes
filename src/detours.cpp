@@ -653,40 +653,6 @@ bool FASTCALL Detour_TraceShape(int64* a1, int64 a2, int64 a3, int64 a4, CTraceF
 	return TraceShape(a1, a2, a3, a4, filter, a6);
 }
 
-bool g_bPreventUsingPlayers = false;
-FAKE_BOOL_CVAR(cs2f_prevent_using_players, "Whether to prevent +use from hitting players (0=can use players, 1=cannot use players)", g_bPreventUsingPlayers, false, false);
-
-bool g_bFindingUseEntity = false;
-int64 FASTCALL Detour_FindUseEntity(CCSPlayer_UseServices* pThis, float a2)
-{
-	g_bFindingUseEntity = true;
-	int64 ent = FindUseEntity(pThis, a2);
-	g_bFindingUseEntity = false;
-	return ent;
-}
-
-bool FASTCALL Detour_TraceFunc(int64* a1, int* a2, float* a3, uint64 traceMask)
-{
-	if (g_bPreventUsingPlayers && g_bFindingUseEntity)
-	{
-		uint64 newMask = traceMask & ( ~(CONTENTS_PLAYER & CONTENTS_NPC) );
-		return TraceFunc(a1, a2, a3, newMask);
-	}
-
-	return TraceFunc(a1, a2, a3, traceMask);
-}
-
-bool FASTCALL Detour_TraceShape(int64* a1, int64 a2, int64 a3, int64 a4, CTraceFilter* filter, int64 a6)
-{
-	if (g_bPreventUsingPlayers && g_bFindingUseEntity)
-	{
-		filter->DisableInteractsWithLayer(LAYER_INDEX_CONTENTS_PLAYER);
-		filter->DisableInteractsWithLayer(LAYER_INDEX_CONTENTS_NPC);
-	}
-
-	return TraceShape(a1, a2, a3, a4, filter, a6);
-}
-
 bool InitDetours(CGameConfig *gameConfig)
 {
 	bool success = true;
