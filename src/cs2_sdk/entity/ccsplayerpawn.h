@@ -63,4 +63,9 @@ public:
 
 	SCHEMA_FIELD(float, m_flVelocityModifier)
 	SCHEMA_FIELD(CCSPlayer_ActionTrackingServices*, m_pActionTrackingServices)
+
+	[[nodiscard]] CCSPlayer_CameraServices* GetCameraService()
+	{
+		return reinterpret_cast<CCSPlayer_CameraServices*>(m_pCameraServices());
+	}
 };

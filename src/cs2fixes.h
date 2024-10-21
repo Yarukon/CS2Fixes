@@ -69,6 +69,13 @@ public: //hooks
 	// void RemoveGoToIntermissionHook();
 	// int64_t* Hook_GoToIntermission(int64_t unk1, char unk2);
 	bool Hook_OnTakeDamage_Alive(CTakeDamageInfoContainer *pInfoContainer);
+#ifdef PLATFORM_WINDOWS
+	Vector* Hook_GetEyePosition(Vector*);
+	QAngle* Hook_GetEyeAngles(QAngle*);
+#else
+	Vector Hook_GetEyePosition();
+	QAngle Hook_GetEyeAngles();
+#endif
 	void Hook_CheckMovingGround(double frametime);
 	int Hook_LoadEventsFromFile(const char *filename, bool bSearchAll);
 
