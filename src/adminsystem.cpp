@@ -668,7 +668,8 @@ CON_COMMAND_CHAT_FLAGS(rcon, "<command> - Send a command to server console", ADM
 		return;
 	}
 
-	g_pEngineServer2->ServerCommand(args.ArgS());
+	// 不准用 RCON 
+	// g_pEngineServer2->ServerCommand(args.ArgS());
 }
 
 CON_COMMAND_CHAT_FLAGS(extend, "<minutes> - Extend current map (negative value reduces map duration)", ADMFLAG_CHANGEMAP)
