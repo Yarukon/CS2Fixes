@@ -21,6 +21,7 @@
 #include "entity/ccsplayercontroller.h"
 #include "convar.h"
 #include "adminsystem.h"
+#include "igameevents.h"
 #include <vector>
 
 #define CMDFLAG_NONE	(0)
@@ -33,6 +34,7 @@ typedef void (*FnChatCommandCallback_t)(const CCommand &args, CCSPlayerControlle
 
 class CChatCommand;
 
+extern IGameEventManager2* g_gameEventManager;
 extern CUtlMap<uint32, CChatCommand*> g_CommandList;
 
 extern bool g_bEnableCommands;
@@ -63,8 +65,10 @@ public:
 		if (!g_bEnableCommands)
 			return;
 
+		bool isAdminCommand = m_nAdminFlags > ADMFLAG_NONE;
+
 		// Server disabled admin chat commands
-		if (!g_bEnableAdminCommands && m_nAdminFlags > ADMFLAG_NONE)
+		if (!g_bEnableAdminCommands && isAdminCommand)
 			return;
 
 		// Only allow connected players to run chat commands
@@ -74,6 +78,24 @@ public:
 		// If the command is run from server console, ignore admin flags
 		if (player && !CheckCommandAccess(player, m_nAdminFlags))
 			return;
+
+		if (isAdminCommand) {
+			int playerIndex = -1;
+			if (player) {
+				playerIndex = player->entindex();
+			}
+
+			IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning");
+
+			if (pEvent)
+			{
+				pEvent->SetString("custom_event", "cs2f_admin_command");
+				pEvent->SetInt("player_index", playerIndex);
+				pEvent->SetString("text", args.GetCommandString());
+
+				g_gameEventManager->FireEvent(pEvent, true);
+			}
+		}
 
 		m_pfnCallback(args, player);
 	}
