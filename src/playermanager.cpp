@@ -44,8 +44,10 @@ extern CGlobalVars *gpGlobals;
 extern int g_iMaxHideDistance;
 
 static int g_iAdminImmunityTargetting = 0;
+static bool g_bEnableMapSteamIds = false;
 
 FAKE_INT_CVAR(cs2f_admin_immunity, "Mode for which admin immunity system targetting allows: 0 - strictly lower, 1 - equal to or lower, 2 - ignore immunity levels", g_iAdminImmunityTargetting, 0, false)
+FAKE_BOOL_CVAR(cs2f_map_steamids_enable, "Whether to make Steam ID's available to maps", g_bEnableMapSteamIds, false, 0)
 
 ZEPlayerHandle::ZEPlayerHandle() : m_Index(INVALID_ZEPLAYERHANDLE_INDEX) {};
 
@@ -111,6 +113,8 @@ void ZEPlayer::OnAuthenticated()
 	CheckAdmin();
 	CheckInfractions();
 	g_pUserPreferencesSystem->PullPreferences(GetPlayerSlot().Get());
+
+	SetSteamIdAttribute();
 }
 
 void ZEPlayer::CheckInfractions()
@@ -500,6 +504,27 @@ void ZEPlayer::EndGlow()
 
 	if (pModelParent)
 		addresses::UTIL_Remove(pModelParent);
+}
+
+void ZEPlayer::SetSteamIdAttribute()
+{
+	if (!g_bEnableMapSteamIds)
+		return;
+
+	if (!IsAuthenticated())
+		return;
+
+	const auto pController = CCSPlayerController::FromSlot(GetPlayerSlot());
+	if (!pController || !pController->IsConnected() || pController->IsBot() || pController->m_bIsHLTV())
+		return;
+
+	const auto pPawn = pController->GetPlayerPawn();
+	if (!pPawn)
+		return;
+
+	const auto& steamId = std::to_string(GetSteamId64());
+	pPawn->AcceptInput("AddAttribute", steamId.c_str());
+	pController->AcceptInput("AddAttribute", steamId.c_str());
 }
 
 void ZEPlayer::ReplicateConVar(const char* pszName, const char* pszValue)
