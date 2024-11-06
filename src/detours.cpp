@@ -64,7 +64,6 @@ CUtlVector<CDetourBase *> g_vecDetours;
 DECLARE_DETOUR(UTIL_SayTextFilter, Detour_UTIL_SayTextFilter);
 DECLARE_DETOUR(UTIL_SayText2Filter, Detour_UTIL_SayText2Filter);
 DECLARE_DETOUR(IsHearingClient, Detour_IsHearingClient);
-DECLARE_DETOUR(CSoundEmitterSystem_EmitSound, Detour_CSoundEmitterSystem_EmitSound);
 DECLARE_DETOUR(TriggerPush_Touch, Detour_TriggerPush_Touch);
 DECLARE_DETOUR(CBaseEntity_TakeDamageOld, Detour_CBaseEntity_TakeDamageOld);
 DECLARE_DETOUR(CCSPlayer_WeaponServices_CanUse, Detour_CCSPlayer_WeaponServices_CanUse);
@@ -243,31 +242,6 @@ const char* snd11 = "Flesh.BulletImpact";
 const char* snd12 = "Player.DamageBodyArmor.Onlooker";
 const char* snd13 = "Player.DamageBodyArmor.Victim";
 const char* snd14 = "Weapon_Revolver.Prepare";
-
-#define STRCMP(str1, str2) strcmp(str1, str2) == 0
-void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase* pSoundEmitterSystem, SndOpEventGuid_t* guid, IRecipientFilter* filter, CEntityIndex index, EmitSound2_t* params)
-{
-	const char* sndName = params->m_pSoundName;
-	// ConMsg("Detour_CSoundEmitterSystem_EmitSound: index: %d recipientcnt: %d snd: %s chn: %d\n", index.Get(), filter->GetRecipientCount(), sndName, params->channel);
-	// ConMsg("vol: %f lvl: %d flags: %d pitch: %d\n", params->m_flVolume, params->m_SoundLevel, params->m_nFlags, params->m_nPitch);
-
-	// for (int i = 0; i < filter->GetRecipientCount(); ++i)
-	// {
-	// 	CPlayerSlot index = filter->GetRecipientIndex(i);
-	// 	ConMsg("recipient slot %d : %d\n", i, index);
-	// }
-
-	if (STRCMP(sndName, snd1) || STRCMP(sndName, snd2) || STRCMP(sndName, snd3) || STRCMP(sndName, snd4) || STRCMP(sndName, snd5) || STRCMP(sndName, snd6) || STRCMP(sndName, snd7) || STRCMP(sndName, snd8) || STRCMP(sndName, snd9) || STRCMP(sndName, snd10) || STRCMP(sndName, snd11) || STRCMP(sndName, snd12) || STRCMP(sndName, snd13) || STRCMP(sndName, snd14))
-	{
-		// ConMsg("block snd -> %s\n", sndName);
-
-		// CSingleRecipientFilter newFilter(index.Get());
-		// CSoundEmitterSystem_EmitSound(pSoundEmitterSystem, guid, newFilter, index, params);
-		return;
-	}
-
-	CSoundEmitterSystem_EmitSound(pSoundEmitterSystem, guid, filter, index, params);
-}
 
 bool FASTCALL Detour_IsHearingClient(void* serverClient, int index)
 {
@@ -452,7 +426,7 @@ bool FASTCALL Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSym
 		if (pPawn->IsPawn() && IgnitePawn(pPawn, flDuration, pPawn, pPawn))
 			return true;
 	}
-	else if (STRCMP(pInputName->String(), "ModifySpeed"))
+	else if (!V_strnicmp(pInputName->String(), "ModifySpeed", 11))
 	{
 		CBaseEntity* entity = reinterpret_cast<CBaseEntity*>(pActivator);
 		if (entity && entity->IsPawn()) {
