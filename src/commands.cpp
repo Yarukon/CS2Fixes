@@ -34,6 +34,7 @@
 #include "entity/lights.h"
 #include "playermanager.h"
 #include "adminsystem.h"
+#include "leader.h"
 #include "ctimer.h"
 #include "httpmanager.h"
 #include "discord.h"
@@ -346,8 +347,29 @@ bool CChatCommand::CheckCommandAccess(CCSPlayerController *pPlayer, uint64 flags
 	int slot = pPlayer->GetPlayerSlot();
 
 	ZEPlayer *pZEPlayer = g_playerManager->GetPlayer(slot);
+	
+	if (!pZEPlayer)
+		return false;
 
-	if (!pZEPlayer->IsAdminFlagSet(flags))
+	if ((flags & FLAG_LEADER) == FLAG_LEADER)
+	{
+		if (!g_bEnableLeader)
+			return false;
+		if (!pZEPlayer->IsAdminFlagSet(FLAG_LEADER))
+		{
+			if (!pZEPlayer->IsLeader())
+			{
+				ClientPrint(pPlayer, HUD_PRINTTALK, CHAT_PREFIX "You must be a leader to use this command.");
+				return false;
+			}
+			else if (g_bLeaderActionsHumanOnly && pPlayer->m_iTeamNum != CS_TEAM_CT)
+			{
+				ClientPrint(pPlayer, HUD_PRINTTALK, CHAT_PREFIX "You must be a human to use this command.");
+				return false;
+			}
+		}
+	}
+	else if (!pZEPlayer->IsAdminFlagSet(flags))
 	{
 		ClientPrint(pPlayer, HUD_PRINTTALK, CHAT_PREFIX "你没有权限访问该指令.");
 		return false;
@@ -567,7 +589,73 @@ CON_COMMAND_CHAT(help, "- Display list of commands in console")
 		ClientPrint(player, HUD_PRINTCONSOLE, strCommand.c_str());
 
 	if (player)
-		ClientPrint(player, HUD_PRINTCONSOLE, "! 可替换为 / 来静默使用该指令, 或替换为 c_ 来在控制台中使用.");
+		ClientPrint(player, HUD_PRINTCONSOLE, "! can be replaced with / for a silent chat command, or c_ for console usage");
+}
+
+CON_COMMAND_CHAT(spec, "[name] - Spectate another player or join spectators")
+{
+	CCSPlayerPawn* pPawn = (CCSPlayerPawn*)player->GetPawn();
+
+	if (!player)
+	{
+		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "You cannot use this command from the server console.");
+		return;
+	}
+
+	if (args.ArgC() < 2)
+	{
+		if (player->m_iTeamNum() == CS_TEAM_SPECTATOR)
+		{
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Already spectating.");
+		}
+		else
+		{
+			if (pPawn && pPawn->IsAlive())
+				pPawn->CommitSuicide(false, true);
+
+			player->SwitchTeam(CS_TEAM_SPECTATOR);
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Moved to spectators.");
+		}
+		return;
+	}
+
+	int iCommandPlayer = player ? player->GetPlayerSlot() : -1;
+	int iNumClients = 0;
+	int pSlot[MAXPLAYERS];
+
+	if (!g_playerManager->CanTargetPlayers(player, args[1], iNumClients, pSlot, NO_MULTIPLE | NO_SELF | NO_DEAD | NO_SPECTATOR | NO_IMMUNITY))
+		return;
+
+	CCSPlayerController* pTarget = CCSPlayerController::FromSlot(pSlot[0]);
+
+	if (!pTarget)
+		return;
+
+	if (player->m_iTeamNum() != CS_TEAM_SPECTATOR)
+	{
+		if (pPawn && pPawn->IsAlive())
+			pPawn->CommitSuicide(false, true);
+
+		player->SwitchTeam(CS_TEAM_SPECTATOR);
+	}
+
+	// 1 frame delay as observer services will be null on same frame as spectator team switch
+	CHandle<CCSPlayerController> hPlayer = player->GetHandle();
+	CHandle<CCSPlayerController> hTarget = pTarget->GetHandle();
+	new CTimer(0.0f, false, false, [hPlayer, hTarget](){
+		CCSPlayerController* pPlayer = hPlayer.Get();
+		CCSPlayerController* pTargetPlayer = hTarget.Get();
+		if (!pPlayer || !pTargetPlayer)
+			return -1.0f;
+		CPlayer_ObserverServices* pObserverServices = pPlayer->GetPawn()->m_pObserverServices();
+		if (!pObserverServices)
+			return -1.0f;
+		pObserverServices->m_iObserverMode.Set(OBS_MODE_IN_EYE);
+		pObserverServices->m_iObserverLastMode.Set(OBS_MODE_ROAMING);
+		pObserverServices->m_hObserverTarget.Set(pTargetPlayer->GetPawn());
+		ClientPrint(pPlayer, HUD_PRINTTALK, CHAT_PREFIX "Spectating player %s.", pTargetPlayer->GetPlayerName());
+		return -1.0f;
+	});
 }
 
 CON_COMMAND_CHAT(getpos, "- Get your position and angles")
@@ -717,53 +805,9 @@ CON_COMMAND_CHAT(fl, "- Flashlight")
 	pLight->AcceptInput("SetParentAttachmentMaintainOffset", &val2);
 }
 
-CON_COMMAND_CHAT(message, "<id> <message> - Message someone")
-{
-	if (!player)
-		return;
-
-	// Note that the engine will treat this as a player slot number, not an entity index
-	int uid = atoi(args[1]);
-
-	CCSPlayerController* pTarget = CCSPlayerController::FromSlot(uid);
-
-	if (!pTarget)
-		return;
-
-	// skipping the id and space, it's dumb but w/e
-	const char *pMessage = args.ArgS() + V_strlen(args[1]) + 1;
-
-	ClientPrint(pTarget, HUD_PRINTTALK, CHAT_PREFIX "Private message from %s to %s: \5%s", player->GetPlayerName(), pTarget->GetPlayerName(), pMessage);
-}
-
 CON_COMMAND_CHAT(say, "<message> - Say something using console")
 {
 	ClientPrintAll(HUD_PRINTTALK, "%s", args.ArgS());
-}
-
-CON_COMMAND_CHAT(takemoney, "<amount> - Take your money")
-{
-	if (!player)
-		return;
-
-	int amount = atoi(args[1]);
-	int money = player->m_pInGameMoneyServices->m_iAccount;
-
-	player->m_pInGameMoneyServices->m_iAccount = money - amount;
-}
-
-CON_COMMAND_CHAT(sethealth, "<health> - Set your health")
-{
-	if (!player)
-		return;
-
-	int health = atoi(args[1]);
-
-	CBaseEntity *pEnt = (CBaseEntity *)player->GetPawn();
-
-	pEnt->m_iHealth = health;
-
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你的血量设置为 %d", health);
 }
 
 CON_COMMAND_CHAT(test_target, "<name> [blocked flag] [...] - Test string targetting")
@@ -822,30 +866,6 @@ CON_COMMAND_CHAT(test_target, "<name> [blocked flag] [...] - Test string targett
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"正在瞄准 %s", pTarget->GetPlayerName());
 		Message("Targeting %s\n", pTarget->GetPlayerName());
 	}
-}
-
-CON_COMMAND_CHAT(setorigin, "<vector> - Set your origin")
-{
-	if (!player)
-		return;
-
-	Vector vecAbsOrigin = player->GetPawn()->GetAbsOrigin();
-
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你当前所在坐标为 %f %f %f", vecAbsOrigin.x, vecAbsOrigin.y, vecAbsOrigin.z);
-}
-
-CON_COMMAND_CHAT(setorigin, "<vector> - set your origin")
-{
-	if (!player)
-		return;
-
-	CBasePlayerPawn *pPawn = player->GetPawn();
-	Vector vecNewOrigin;
-	V_StringToVector(args.ArgS(), vecNewOrigin);
-
-	pPawn->Teleport(&vecNewOrigin, nullptr, nullptr);
-
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你的坐标已设置为 %f %f %f", vecNewOrigin.x, vecNewOrigin.y, vecNewOrigin.z);
 }
 
 CON_COMMAND_CHAT(particle, "- Spawn a particle")
