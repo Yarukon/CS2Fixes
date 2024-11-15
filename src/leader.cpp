@@ -519,91 +519,91 @@ CON_COMMAND_CHAT(glows, "- List all active player glows")
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%i active glows: %s", glows.first, glows.second.c_str());
 }
 
-CON_COMMAND_CHAT(vl, "<name> - Vote for a player to become a leader")
-{
-	if (!g_bEnableLeader)
-		return;
-
-	if (!player)
-	{
-		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "You cannot use this command from the server console.");
-		return;
-	}
-
-	if (args.ArgC() < 2)
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !vl <name>");
-		return;
-	}
-
-	if (gpGlobals->curtime < 60.0f)
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Leader voting is not open yet.");
-		return;
-	}
-	
-	if (GetLeaders().first > 0 && !g_bLeaderVoteMultiple)
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "There is already an active leader.");
-		return;
-	}
-
-	if (GetLeaders().first >= g_iMaxLeaders)
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "The max amount of leaders has already been reached.");
-		return;
-	}
-
-	ZEPlayer* pPlayer = player->GetZEPlayer();
-	if (!pPlayer)
-		return;
-
-	if (pPlayer->GetLeaderVoteTime() + 30.0f > gpGlobals->curtime)
-	{
-		int iRemainingTime = (int)(pPlayer->GetLeaderVoteTime() + 30.0f - gpGlobals->curtime);
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Wait %i seconds before you can !vl again.", iRemainingTime);
-		return;
-	}
-
-	int iNumClients = 0;
-	int pSlots[MAXPLAYERS];
-
-	if (!g_playerManager->CanTargetPlayers(player, args[1], iNumClients, pSlots, NO_MULTIPLE | NO_SELF | NO_BOT | NO_IMMUNITY))
-		return;
-
-	CCSPlayerController* pTarget = CCSPlayerController::FromSlot(pSlots[0]);
-	ZEPlayer* pPlayerTarget = pTarget->GetZEPlayer();
-
-	if (pPlayerTarget->IsLeader())
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s is already a leader.", pTarget->GetPlayerName());
-		return;
-	}
-
-	if (pPlayerTarget->HasPlayerVotedLeader(pPlayer))
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You have already voted for %s to become a leader.", pTarget->GetPlayerName());
-		return;
-	}
-
-	int iLeaderVoteCount = pPlayerTarget->GetLeaderVoteCount();
-	int iNeededLeaderVoteCount = Leader_GetNeededLeaderVoteCount();
-
-	pPlayer->SetLeaderVoteTime(gpGlobals->curtime);
-
-	if (iLeaderVoteCount + 1 >= iNeededLeaderVoteCount)
-	{
-		Leader_SetNewLeader(pPlayerTarget);
-		Message("%s was voted for Leader with %i vote(s).\n", pTarget->GetPlayerName(), iNeededLeaderVoteCount);
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s has been voted as a leader!", pTarget->GetPlayerName());
-		ClientPrint(pTarget, HUD_PRINTTALK, CHAT_PREFIX "You became a leader! Use !leaderhelp and !leadercolors commands to list available leader commands and colors.");
-		return;
-	}
-
-	pPlayerTarget->AddLeaderVote(pPlayer);
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s wants %s to become a Leader (%i/%i votes).",\
-				player->GetPlayerName(), pTarget->GetPlayerName(), iLeaderVoteCount+1, iNeededLeaderVoteCount);
-}
+//CON_COMMAND_CHAT(vl, "<name> - Vote for a player to become a leader")
+//{
+//	if (!g_bEnableLeader)
+//		return;
+//
+//	if (!player)
+//	{
+//		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "You cannot use this command from the server console.");
+//		return;
+//	}
+//
+//	if (args.ArgC() < 2)
+//	{
+//		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !vl <name>");
+//		return;
+//	}
+//
+//	if (gpGlobals->curtime < 60.0f)
+//	{
+//		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Leader voting is not open yet.");
+//		return;
+//	}
+//	
+//	if (GetLeaders().first > 0 && !g_bLeaderVoteMultiple)
+//	{
+//		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "There is already an active leader.");
+//		return;
+//	}
+//
+//	if (GetLeaders().first >= g_iMaxLeaders)
+//	{
+//		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "The max amount of leaders has already been reached.");
+//		return;
+//	}
+//
+//	ZEPlayer* pPlayer = player->GetZEPlayer();
+//	if (!pPlayer)
+//		return;
+//
+//	if (pPlayer->GetLeaderVoteTime() + 30.0f > gpGlobals->curtime)
+//	{
+//		int iRemainingTime = (int)(pPlayer->GetLeaderVoteTime() + 30.0f - gpGlobals->curtime);
+//		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Wait %i seconds before you can !vl again.", iRemainingTime);
+//		return;
+//	}
+//
+//	int iNumClients = 0;
+//	int pSlots[MAXPLAYERS];
+//
+//	if (!g_playerManager->CanTargetPlayers(player, args[1], iNumClients, pSlots, NO_MULTIPLE | NO_SELF | NO_BOT | NO_IMMUNITY))
+//		return;
+//
+//	CCSPlayerController* pTarget = CCSPlayerController::FromSlot(pSlots[0]);
+//	ZEPlayer* pPlayerTarget = pTarget->GetZEPlayer();
+//
+//	if (pPlayerTarget->IsLeader())
+//	{
+//		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s is already a leader.", pTarget->GetPlayerName());
+//		return;
+//	}
+//
+//	if (pPlayerTarget->HasPlayerVotedLeader(pPlayer))
+//	{
+//		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You have already voted for %s to become a leader.", pTarget->GetPlayerName());
+//		return;
+//	}
+//
+//	int iLeaderVoteCount = pPlayerTarget->GetLeaderVoteCount();
+//	int iNeededLeaderVoteCount = Leader_GetNeededLeaderVoteCount();
+//
+//	pPlayer->SetLeaderVoteTime(gpGlobals->curtime);
+//
+//	if (iLeaderVoteCount + 1 >= iNeededLeaderVoteCount)
+//	{
+//		Leader_SetNewLeader(pPlayerTarget);
+//		Message("%s was voted for Leader with %i vote(s).\n", pTarget->GetPlayerName(), iNeededLeaderVoteCount);
+//		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s has been voted as a leader!", pTarget->GetPlayerName());
+//		ClientPrint(pTarget, HUD_PRINTTALK, CHAT_PREFIX "You became a leader! Use !leaderhelp and !leadercolors commands to list available leader commands and colors.");
+//		return;
+//	}
+//
+//	pPlayerTarget->AddLeaderVote(pPlayer);
+//	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s wants %s to become a Leader (%i/%i votes).",\
+//				player->GetPlayerName(), pTarget->GetPlayerName(), iLeaderVoteCount+1, iNeededLeaderVoteCount);
+//}
 
 CON_COMMAND_CHAT_LEADER(defend, "[name|duration] [duration] - Place a defend marker on the target player")
 {

@@ -315,6 +315,7 @@ private:
 	int m_iTotalHits;
 	int m_iTotalKills;
 	bool m_bVotedRTV;
+	bool m_bHoldingRMB;
 	float m_flRTVVoteTime;
 	bool m_bVotedExtend;
 	bool m_bIsInfected;
@@ -329,7 +330,6 @@ private:
 	CHandle<CParticleSystem> m_hBeaconParticle;
 	uint32 m_iPlayerState;
 	ZEPlayerHandle m_Handle;
-	uint32 m_iPlayerState;
 	bool m_bIsLeader;
 	CHandle<CBaseEntity> m_handleMark;
 	Color m_colorLeader;

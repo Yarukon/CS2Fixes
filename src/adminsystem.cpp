@@ -444,12 +444,12 @@ CON_COMMAND_CHAT_FLAGS(noclip, "[name] - Toggle noclip on a player", ADMFLAG_CHE
 	if (pPawn->m_nActualMoveType() == MOVETYPE_NOCLIP)
 	{
 		pPawn->SetMoveType(MOVETYPE_WALK);
-		PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "disabled noclip on");
+		PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "退出了飞行");
 	}
 	else
 	{
 		pPawn->SetMoveType(MOVETYPE_NOCLIP);
-		PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "enabled noclip on");
+		PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "进入了飞行");
 	}
 }
 
