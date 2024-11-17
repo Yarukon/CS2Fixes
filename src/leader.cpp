@@ -841,12 +841,12 @@ CON_COMMAND_CHAT(leadercolor, "[color] - List leader colors in chat or change yo
 			if (pawnPlayer && pawnPlayer->m_iHealth() > 0 && player->m_iTeamNum == CS_TEAM_CT)
 				pawnPlayer->m_clrRender = color;
 
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Set your leader color to %s%s\x01.", colorPreset.strChatColor.c_str(), strColor.c_str());
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX " 指挥官颜色设置成了 %s%s\x01.", colorPreset.strChatColor.c_str(), strColor.c_str());
 			return;
 		}
 	}
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "List of leader colors:");
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "指挥官颜色有:");
 
 	std::string strColors = "";
 	for (auto const& [strColorName, colorPreset] : mapColorPresets)
