@@ -457,67 +457,67 @@ void Leader_Precache(IEntityResourceManifest* pResourceManifest)
 	pResourceManifest->AddResource(g_strMarkParticlePath.c_str());
 }
 
-CON_COMMAND_CHAT_LEADER(glow, "[name] [color] - Toggle glow highlight on a player")
-{
-	ZEPlayer* pPlayer = player ? player->GetZEPlayer() : nullptr;
-	bool bIsAdmin = pPlayer ? pPlayer->IsAdminFlagSet(FLAG_LEADER) : true;
-	const char* pszCommandPlayerName = player ? player->GetPlayerName() : CONSOLE_NAME;
+//CON_COMMAND_CHAT_LEADER(glow, "[name] [color] - Toggle glow highlight on a player")
+//{
+//	ZEPlayer* pPlayer = player ? player->GetZEPlayer() : nullptr;
+//	bool bIsAdmin = pPlayer ? pPlayer->IsAdminFlagSet(FLAG_LEADER) : true;
+//	const char* pszCommandPlayerName = player ? player->GetPlayerName() : CONSOLE_NAME;
+//
+//	int iNumClients = 0;
+//	int pSlots[MAXPLAYERS];
+//	ETargetType nType;
+//	uint64 iTargetFlags = NO_DEAD;
+//	if (!bIsAdmin)
+//		iTargetFlags |= NO_MULTIPLE | NO_TERRORIST;
+//	const char* pszTarget = "@me";
+//	if (args.ArgC() >= 2 && (bIsAdmin || g_bLeaderCanTargetPlayers))
+//		pszTarget = args[1];
+//
+//	if (!g_playerManager->CanTargetPlayers(player, pszTarget, iNumClients, pSlots, iTargetFlags, nType))
+//		return;
+//
+//	for (int i = 0; i < iNumClients; i++)
+//	{
+//		CCSPlayerController* pTarget = CCSPlayerController::FromSlot(pSlots[i]);
+//
+//		ZEPlayer* pPlayerTarget = pTarget->GetZEPlayer();
+//
+//		if (iNumClients == 1 && player == pTarget)
+//		{
+//			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s glow on yourself.",
+//						pPlayerTarget->GetGlowModel() ? "Disabled" : "Enabled");
+//		}
+//		else if (iNumClients == 1)
+//		{
+//			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s %s %s glow on %s.",
+//						   bIsAdmin ? "Admin" : "Leader",
+//						   pszCommandPlayerName,
+//						   pPlayerTarget->GetGlowModel() ? "disabled" : "enabled",
+//						   pTarget->GetPlayerName());
+//		}
+//
+//		if (!pPlayerTarget->GetGlowModel())
+//		{
+//			Color color = Leader_GetColor(args.ArgC() < 3 ? "" : args[2], pPlayer, pTarget);
+//			pPlayerTarget->StartGlow(color, 0);
+//		}
+//		else
+//			pPlayerTarget->EndGlow();
+//	}
+//
+//	if (iNumClients > 1) // Can only hit this if bIsAdmin due to target flags
+//		PrintMultiAdminAction(nType, pszCommandPlayerName, "toggled glow on", "", CHAT_PREFIX);
+//}
 
-	int iNumClients = 0;
-	int pSlots[MAXPLAYERS];
-	ETargetType nType;
-	uint64 iTargetFlags = NO_DEAD;
-	if (!bIsAdmin)
-		iTargetFlags |= NO_MULTIPLE | NO_TERRORIST;
-	const char* pszTarget = "@me";
-	if (args.ArgC() >= 2 && (bIsAdmin || g_bLeaderCanTargetPlayers))
-		pszTarget = args[1];
-
-	if (!g_playerManager->CanTargetPlayers(player, pszTarget, iNumClients, pSlots, iTargetFlags, nType))
-		return;
-
-	for (int i = 0; i < iNumClients; i++)
-	{
-		CCSPlayerController* pTarget = CCSPlayerController::FromSlot(pSlots[i]);
-
-		ZEPlayer* pPlayerTarget = pTarget->GetZEPlayer();
-
-		if (iNumClients == 1 && player == pTarget)
-		{
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s glow on yourself.",
-						pPlayerTarget->GetGlowModel() ? "Disabled" : "Enabled");
-		}
-		else if (iNumClients == 1)
-		{
-			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s %s %s glow on %s.",
-						   bIsAdmin ? "Admin" : "Leader",
-						   pszCommandPlayerName,
-						   pPlayerTarget->GetGlowModel() ? "disabled" : "enabled",
-						   pTarget->GetPlayerName());
-		}
-
-		if (!pPlayerTarget->GetGlowModel())
-		{
-			Color color = Leader_GetColor(args.ArgC() < 3 ? "" : args[2], pPlayer, pTarget);
-			pPlayerTarget->StartGlow(color, 0);
-		}
-		else
-			pPlayerTarget->EndGlow();
-	}
-
-	if (iNumClients > 1) // Can only hit this if bIsAdmin due to target flags
-		PrintMultiAdminAction(nType, pszCommandPlayerName, "toggled glow on", "", CHAT_PREFIX);
-}
-
-CON_COMMAND_CHAT(glows, "- List all active player glows")
-{
-	std::pair<int, std::string> glows = GetCount(1);
-
-	if (glows.first == 0)
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "There are no active glows.");
-	else
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%i active glows: %s", glows.first, glows.second.c_str());
-}
+//CON_COMMAND_CHAT(glows, "- List all active player glows")
+//{
+//	std::pair<int, std::string> glows = GetCount(1);
+//
+//	if (glows.first == 0)
+//		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "There are no active glows.");
+//	else
+//		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%i active glows: %s", glows.first, glows.second.c_str());
+//}
 
 //CON_COMMAND_CHAT(vl, "<name> - Vote for a player to become a leader")
 //{
@@ -629,10 +629,10 @@ CON_COMMAND_CHAT_LEADER(defend, "[name|duration] [duration] - Place a defend mar
 	if (Leader_CreateDefendMarker(pTargetPlayer, Leader_GetColor("", pPlayer), iDuration))
 	{
 		if (player == pTarget)
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Placed a defend marker on your position lasting %i seconds.", iDuration);
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "放置了 防守 标记在你的位置,时长 %i 秒.", iDuration);
 		else
 		{
-			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s %s placed a defend marker on %s's position lasting %i seconds.",
+			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s %s 放置了 防守 标记在 %s 的位置,时长 %i 秒.",
 						   bIsAdmin ? "Admin" : "Leader", pszCommandPlayerName,
 						   pTarget->GetPlayerName(), iDuration);
 		}
@@ -661,10 +661,10 @@ CON_COMMAND_CHAT_LEADER(tracer, "[name] [color] - Toggle projectile tracers on a
 	if (pPlayerTarget->GetTracerColor().a() == 255)
 	{
 		if (pTarget == player)
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Disabled tracers for yourself.", pTarget->GetPlayerName());
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "关闭了你自己的子弹轨迹.", pTarget->GetPlayerName());
 		else
 		{
-			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s %s disabled tracers for %s.",
+			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s %s 关闭了 %s 的子弹轨迹.",
 						   bIsAdmin ? "Admin" : "Leader", pszCommandPlayerName, pTarget->GetPlayerName());
 		}
 		pPlayerTarget->SetTracerColor(Color(0, 0, 0, 0));
@@ -675,10 +675,10 @@ CON_COMMAND_CHAT_LEADER(tracer, "[name] [color] - Toggle projectile tracers on a
 	pPlayerTarget->SetTracerColor(color);
 
 	if (pTarget == player)
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Enabled tracers for yourself.", pTarget->GetPlayerName());
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "开启了你自己的 子弹轨迹.", pTarget->GetPlayerName());
 	else
 	{
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s %s enabled tracers for %s.",
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s %s 开启了 %s 的子弹 轨迹.",
 					   bIsAdmin ? "Admin" : "Leader", pszCommandPlayerName, pTarget->GetPlayerName());
 	}
 }
@@ -688,9 +688,9 @@ CON_COMMAND_CHAT(tracers, "- List all active player tracers")
 	std::pair<int, std::string> tracers = GetCount(2);
 
 	if (tracers.first == 0)
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "There are no active tracers.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "没有玩家启用了轨迹显示.");
 	else
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%i active tracers: %s", tracers.first, tracers.second.c_str());
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%i 开启了子弹轨迹的玩家: %s", tracers.first, tracers.second.c_str());
 }
 
 CON_COMMAND_CHAT_LEADER(beacon, "[name] [color] - Toggle beacon on a player")
@@ -719,15 +719,15 @@ CON_COMMAND_CHAT_LEADER(beacon, "[name] [color] - Toggle beacon on a player")
 
 		if (iNumClients == 1 && player == pTarget)
 		{
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s beacon on yourself.",
-						pPlayerTarget->GetBeaconParticle() ? "Disabled" : "Enabled");
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s 自己的信标.",
+						pPlayerTarget->GetBeaconParticle() ? "关闭了" : "开启了");
 		}
 		else if (iNumClients == 1)
 		{
-			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s %s %s beacon on %s.",
+			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s %s %s  %s 的信标.",
 						   bIsAdmin ? "Admin" : "Leader",
 						   pszCommandPlayerName,
-						   pPlayerTarget->GetBeaconParticle() ? "disabled" : "enabled",
+						   pPlayerTarget->GetBeaconParticle() ? "关闭了" : "开启了",
 						   pTarget->GetPlayerName());
 		}
 
@@ -749,22 +749,22 @@ CON_COMMAND_CHAT(beacons, "- List all active player beacons")
 	std::pair<int, std::string> beacons = GetCount(3);
 
 	if (beacons.first == 0)
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "There are no active beacons.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "当前没有开启了信标的玩家.");
 	else
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%i active beacons: %s", beacons.first, beacons.second.c_str());
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%i 开启了信标的玩家: %s", beacons.first, beacons.second.c_str());
 }
 
-CON_COMMAND_CHAT_LEADER(enablepings, "- Enable non-leaders pings")
-{
-	g_bPingWithLeader = true;
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "\4Enabled\x01 pings for non-leaders.");
-}
+//CON_COMMAND_CHAT_LEADER(enablepings, "- Enable non-leaders pings")
+//{
+//	g_bPingWithLeader = true;
+//	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "\4Enabled\x01 pings for non-leaders.");
+//}
 
-CON_COMMAND_CHAT_LEADER(disablepings, "- Disable non-leaders pings")
-{
-	g_bPingWithLeader = false;
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "\2Disabled\x01 pings for non-leaders.");
-}
+//CON_COMMAND_CHAT_LEADER(disablepings, "- Disable non-leaders pings")
+//{
+//	g_bPingWithLeader = false;
+//	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "\2Disabled\x01 pings for non-leaders.");
+//}
 
 CON_COMMAND_CHAT(leaders, "- List all current leaders")
 {
@@ -862,6 +862,9 @@ CON_COMMAND_CHAT(leadercolor, "[color] - List leader colors in chat or change yo
 CON_COMMAND_CHAT_LEADER(leader, "[name] [color] - Force leader status on a player")
 {
 	ZEPlayer* pPlayer = player ? player->GetZEPlayer() : nullptr;
+	if (pPlayer) {
+		return; // 我们这只允许控制台指令设置指挥官
+	}
 	bool bIsAdmin = pPlayer ? pPlayer->IsAdminFlagSet(FLAG_LEADER) : true;
 
 	if (!bIsAdmin && GetLeaders().first >= g_iMaxLeaders)
@@ -889,7 +892,7 @@ CON_COMMAND_CHAT_LEADER(leader, "[name] [color] - Force leader status on a playe
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s is already a leader.", pTarget->GetPlayerName());
 	else
 	{
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s %s set %s as a leader.",
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "%s %s set %s as a leader.",
 					   bIsAdmin ? "Admin" : "Leader", pszCommandPlayerName, pTarget->GetPlayerName());
 	}
 }
@@ -906,6 +909,9 @@ CON_COMMAND_CHAT_FLAGS(removeleader, "[name] - Remove leader status from a playe
 	}
 
 	ZEPlayer* pPlayer = player ? player->GetZEPlayer() : nullptr;
+	if (pPlayer) {
+		return; // 我们这只允许控制台指令设置指挥官
+	}
 	const char* pszCommandPlayerName = player ? player->GetPlayerName() : CONSOLE_NAME;
 
 	int iNumClients = 0;
@@ -943,51 +949,51 @@ CON_COMMAND_CHAT_FLAGS(removeleader, "[name] - Remove leader status from a playe
 	if (pPawn)
 		Leader_RemoveLeaderVisuals(pPawn);
 
-	if (player == pTarget)
+	/*if (player == pTarget)
 		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s resigned from being a leader.", player->GetPlayerName());
 	else
-		PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "removed leader from ", "", CHAT_PREFIX);
+		PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "removed leader from ", "", CHAT_PREFIX);*/
 }
 
-CON_COMMAND_CHAT(resign, "- Remove leader status from yourself")
-{
-	if (!g_bEnableLeader)
-		return;
-
-	ZEPlayer* pPlayer = player ? player->GetZEPlayer() : nullptr;
-	// Only players can use this command at all
-	if (!player || !pPlayer)
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You cannot use this command from the server console.");
-		return;
-	}
-
-	// Check for this inside of command instead of using CON_COMMAND_CHAT_LEADER so that leaders can resign
-	// even when they are not CTs and cs2f_leader_actions_ct_only is set to true
-	if (!pPlayer->IsLeader())
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You must be a leader to use this command.");
-		return;
-	}
-
-	player->m_iScore() = player->m_iScore() - 20000;
-	pPlayer->SetLeader(false);
-	pPlayer->SetLeaderColor(Color(0, 0, 0, 0));
-	pPlayer->SetTracerColor(Color(0, 0, 0, 0));
-	pPlayer->SetBeaconColor(Color(0, 0, 0, 0));
-	pPlayer->SetGlowColor(Color(0, 0, 0, 0));
-	FOR_EACH_VEC_BACK(g_vecLeaders, i)
-	{
-		if (g_vecLeaders[i] == pPlayer)
-		{
-			g_vecLeaders.Remove(i);
-			break;
-		}
-	}
-
-	CCSPlayerPawn* pPawn = (player->m_iTeamNum != CS_TEAM_CT || !player->IsAlive()) ? nullptr : (CCSPlayerPawn*)player->GetPawn();
-	if (pPawn)
-		Leader_RemoveLeaderVisuals(pPawn);
-
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s resigned from being a leader.", player->GetPlayerName());
-}
+//CON_COMMAND_CHAT(resign, "- Remove leader status from yourself")
+//{
+//	if (!g_bEnableLeader)
+//		return;
+//
+//	ZEPlayer* pPlayer = player ? player->GetZEPlayer() : nullptr;
+//	// Only players can use this command at all
+//	if (!player || !pPlayer)
+//	{
+//		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You cannot use this command from the server console.");
+//		return;
+//	}
+//
+//	// Check for this inside of command instead of using CON_COMMAND_CHAT_LEADER so that leaders can resign
+//	// even when they are not CTs and cs2f_leader_actions_ct_only is set to true
+//	if (!pPlayer->IsLeader())
+//	{
+//		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You must be a leader to use this command.");
+//		return;
+//	}
+//
+//	player->m_iScore() = player->m_iScore() - 20000;
+//	pPlayer->SetLeader(false);
+//	pPlayer->SetLeaderColor(Color(0, 0, 0, 0));
+//	pPlayer->SetTracerColor(Color(0, 0, 0, 0));
+//	pPlayer->SetBeaconColor(Color(0, 0, 0, 0));
+//	pPlayer->SetGlowColor(Color(0, 0, 0, 0));
+//	FOR_EACH_VEC_BACK(g_vecLeaders, i)
+//	{
+//		if (g_vecLeaders[i] == pPlayer)
+//		{
+//			g_vecLeaders.Remove(i);
+//			break;
+//		}
+//	}
+//
+//	CCSPlayerPawn* pPawn = (player->m_iTeamNum != CS_TEAM_CT || !player->IsAlive()) ? nullptr : (CCSPlayerPawn*)player->GetPawn();
+//	if (pPawn)
+//		Leader_RemoveLeaderVisuals(pPawn);
+//
+//	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s resigned from being a leader.", player->GetPlayerName());
+//}

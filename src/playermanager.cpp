@@ -1420,31 +1420,31 @@ std::string CPlayerManager::GetErrorString(ETargetError eType, int iSlot)
 	switch (eType)
 	{
 		case ETargetError::INVALID:
-			return "No matching player was found.";
+			return "找不到对应的玩家.";
 		case ETargetError::CONNECTING:
-			return "This action cannot be performed on connecting players. Please wait a moment and try again.";
+			return "目标玩家正在进服中，请稍后再试";
 		case ETargetError::MULTIPLE_NAME_MATCHES:
-			return "More than one player matched the given pattern. Consider using & before the player's name for exact matching.";
+			return "有多个玩家名字相匹配. Consider using & before the player's name for exact matching.";
 		case ETargetError::RANDOM:
-			return "This action cannot be performed on random players.";
+			return "不能在随机玩家上应用.";
 		case ETargetError::MULTIPLE:
-			return "This action cannot be performed on multiple players.";
+			return "不能在多个玩家上应用.";
 		case ETargetError::SELF:
-			return "This action cannot be performed on yourself.";
+			return "不能应用在你自己身上.";
 		case ETargetError::BOT:
-			return "This action cannot be performed on bots.";
+			return "不能应用在 bot 身上.";
 		case ETargetError::HUMAN:
-			return "This action can only be performed on bots.";
+			return "只能应用在 BOT 身上.";
 		case ETargetError::DEAD:
-			return "This action can only be performed on alive players.";
+			return "只能应用给活着的玩家.";
 		case ETargetError::ALIVE:
-			return "This action cannot be performed on alive players.";
+			return "不能应用给活着的玩家.";
 		case ETargetError::TERRORIST:
-			return "This action cannot be performed on terrorists.";
+			return "不能应用在匪徒身上.";
 		case ETargetError::COUNTER_TERRORIST:
-			return "This action cannot be performed on counter-terrorists.";
+			return "不能应用在警察身上.";
 		case ETargetError::SPECTATOR:
-			return "This action cannot be performed on spectators.";
+			return "不能应用在观察者身上.";
 	}
 
 	CCSPlayerController* pPlayer = iSlot ? CCSPlayerController::FromSlot(iSlot) : nullptr;
@@ -1454,9 +1454,9 @@ std::string CPlayerManager::GetErrorString(ETargetError eType, int iSlot)
 		switch (eType)
 		{
 			case ETargetError::UNAUTHENTICATED:
-				return "This action cannot be performed on unauthenticated players. Please wait a moment and try again.";
+				return "对方的 steam 还没完成认证. 请稍后在试.";
 			case ETargetError::INSUFFICIENT_IMMUNITY_LEVEL:
-				return "You do not have permission to target this player.";
+				return "你没有权限针对他.";
 		}
 	}
 	else
@@ -1464,9 +1464,9 @@ std::string CPlayerManager::GetErrorString(ETargetError eType, int iSlot)
 		switch (eType)
 		{
 			case ETargetError::UNAUTHENTICATED:
-				return strName + " is not yet authenticated. Please wait a moment and try again.";
+				return strName + " 的 steam 还没完成认证. 请稍后在试.";
 			case ETargetError::INSUFFICIENT_IMMUNITY_LEVEL:
-				return "You do not have permission to target " + strName + ".";
+				return "你没有权限针对 " + strName + ".";
 		}
 	}
 
