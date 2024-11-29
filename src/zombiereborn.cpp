@@ -97,7 +97,7 @@ static float g_flZombieWinOverlaySize;
 FAKE_BOOL_CVAR(zr_enable, "Whether to enable ZR features", g_bEnableZR, false, false)
 FAKE_FLOAT_CVAR(zr_ztele_max_distance, "Maximum distance players are allowed to move after starting ztele", g_flMaxZteleDistance, 150.0f, false)
 FAKE_BOOL_CVAR(zr_ztele_allow_humans, "Whether to allow humans to use ztele", g_bZteleHuman, false, false)
-FAKE_FLOAT_CVAR(zr_knockback_scale, "Global knockback scale", g_flKnockbackScale, 5.0f, false)
+// FAKE_FLOAT_CVAR(zr_knockback_scale, "Global knockback scale", g_flKnockbackScale, 5.0f, false)
 FAKE_INT_CVAR(zr_infect_spawn_type, "Type of Mother Zombies Spawn [0 = MZ spawn where they stand, 1 = MZ get teleported back to spawn on being picked]", g_iInfectSpawnType, EZRSpawnType::RESPAWN, false)
 FAKE_INT_CVAR(zr_infect_spawn_time_min, "Minimum time in which Mother Zombies should be picked, after round start", g_iInfectSpawnTimeMin, 15, false)
 FAKE_INT_CVAR(zr_infect_spawn_time_max, "Maximum time in which Mother Zombies should be picked, after round start", g_iInfectSpawnTimeMax, 15, false)
@@ -995,35 +995,36 @@ void ZR_OnPlayerSpawn(CCSPlayerController* pController)
 
 void ZR_ApplyKnockback(CCSPlayerPawn* pHuman, CCSPlayerPawn* pVictim, int iDamage, const char* szWeapon)
 {
-	ZRWeapon* pWeapon = g_pZRWeaponConfig->FindWeapon(szWeapon);
-	// player shouldn't be able to pick up that weapon in the first place, but just in case
-	if (!pWeapon)
-		return;
-	float flWeaponKnockbackScale = pWeapon->flKnockback;
+	// 我们自己实现了击退
+	//ZRWeapon* pWeapon = g_pZRWeaponConfig->FindWeapon(szWeapon);
+	//// player shouldn't be able to pick up that weapon in the first place, but just in case
+	//if (!pWeapon)
+	//	return;
+	//float flWeaponKnockbackScale = pWeapon->flKnockback;
 
-	Vector vecKnockback;
-	AngleVectors(pHuman->m_angEyeAngles(), &vecKnockback);
-	vecKnockback *= (iDamage * g_flKnockbackScale * flWeaponKnockbackScale);
-	pVictim->m_vecAbsVelocity = pVictim->m_vecAbsVelocity() + vecKnockback;
+	//Vector vecKnockback;
+	//AngleVectors(pHuman->m_angEyeAngles(), &vecKnockback);
+	//vecKnockback *= (iDamage * g_flKnockbackScale * flWeaponKnockbackScale);
+	//pVictim->m_vecAbsVelocity = pVictim->m_vecAbsVelocity() + vecKnockback;
 }
 
 void ZR_ApplyKnockbackExplosion(CCSPlayerPawn* pHuman, CBaseEntity* pProjectile, CCSPlayerPawn* pVictim, int iDamage, bool bMolotov)
 {
-	ZRWeapon* pWeapon = g_pZRWeaponConfig->FindWeapon(pProjectile->GetClassname());
-	if (!pWeapon)
-		return;
-	float flWeaponKnockbackScale = pWeapon->flKnockback;
+	//ZRWeapon* pWeapon = g_pZRWeaponConfig->FindWeapon(pProjectile->GetClassname());
+	//if (!pWeapon)
+	//	return;
+	//float flWeaponKnockbackScale = pWeapon->flKnockback;
 
-	Vector vecDisplacement = pVictim->GetAbsOrigin() - pHuman->GetAbsOrigin();
-	vecDisplacement.z += 36;
-	VectorNormalize(vecDisplacement);
-	Vector vecKnockback = vecDisplacement;
+	//Vector vecDisplacement = pVictim->GetAbsOrigin() - pHuman->GetAbsOrigin();
+	//vecDisplacement.z += 36;
+	//VectorNormalize(vecDisplacement);
+	//Vector vecKnockback = vecDisplacement;
 
-	if (bMolotov)
-		vecKnockback.z = 0;
+	//if (bMolotov)
+	//	vecKnockback.z = 0;
 
-	vecKnockback *= (iDamage * g_flKnockbackScale * flWeaponKnockbackScale);
-	pVictim->m_vecAbsVelocity = pVictim->m_vecAbsVelocity() + vecKnockback;
+	//vecKnockback *= (iDamage * g_flKnockbackScale * flWeaponKnockbackScale);
+	//pVictim->m_vecAbsVelocity = pVictim->m_vecAbsVelocity() + vecKnockback;
 }
 
 void ZR_FakePlayerDeath(CCSPlayerController* pAttackerController, CCSPlayerController* pVictimController, const char* szWeapon)
