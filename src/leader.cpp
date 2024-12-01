@@ -117,8 +117,8 @@ bool Leader_SetNewLeader(ZEPlayer* zpLeader, std::string strColor = "")
 	zpLeader->SetLeader(true);
 	Color color = Color(0, 0, 0, 0);
 
-	if (pawnLeader && pawnLeader->m_iHealth() > 0 && pLeader->m_iTeamNum == CS_TEAM_CT && (Color)(pawnLeader->m_clrRender) != Color(255, 255, 255, 255))
-		color = pawnLeader->m_clrRender;
+	/*if (pawnLeader && pawnLeader->m_iHealth() > 0 && pLeader->m_iTeamNum == CS_TEAM_CT && (Color)(pawnLeader->m_clrRender) != Color(255, 255, 255, 255))
+		color = pawnLeader->m_clrRender;*/
 
 	if (strColor.length() > 0)
 	{
@@ -245,7 +245,7 @@ void Leader_ApplyLeaderVisuals(CCSPlayerPawn* pPawn)
 		pPawn->AcceptInput("Skin", 0);
 	}
 
-	pPawn->m_clrRender = zpLeader->GetLeaderColor();
+	// pPawn->m_clrRender = zpLeader->GetLeaderColor(); // 不用给玩家改颜色了
 	if (zpLeader->GetBeaconColor().a() == 255)
 	{
 		Color colorBeacon = zpLeader->GetBeaconColor();
@@ -838,8 +838,8 @@ CON_COMMAND_CHAT(leadercolor, "[color] - List leader colors in chat or change yo
 			}
 
 			CCSPlayerPawn* pawnPlayer = (CCSPlayerPawn*)player->GetPawn();
-			if (pawnPlayer && pawnPlayer->m_iHealth() > 0 && player->m_iTeamNum == CS_TEAM_CT)
-				pawnPlayer->m_clrRender = color;
+			/*if (pawnPlayer && pawnPlayer->m_iHealth() > 0 && player->m_iTeamNum == CS_TEAM_CT)
+				pawnPlayer->m_clrRender = color;*/
 
 			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX " 指挥官颜色设置成了 %s%s\x01.", colorPreset.strChatColor.c_str(), strColor.c_str());
 			return;

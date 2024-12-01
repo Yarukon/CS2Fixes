@@ -928,8 +928,16 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 				if (evAddTransmit[iPlayerSlot][j]) {
 					shouldHide = false;  // 白名单里要求的进行传输
 				}
-				else if ((pSelfZEPlayer->ShouldBlockTransmit(j) && (pOtherZEPlayer && !pOtherZEPlayer->IsLeader()))) {
+				else if ((pSelfZEPlayer->ShouldBlockTransmit(j))) {
 					shouldHide = true;  // 没有要求的玩家按距离控制管理
+					if (pOtherZEPlayer) {
+						if (pOtherZEPlayer->IsLeader()) {
+							shouldHide = false; // 指挥官不隐藏
+						}
+						else if (pOtherZEPlayer->GetBeaconParticle()) {
+							shouldHide = false; // 有beacon的不隐藏
+						}
+					}
 				}
 			}
 			if (shouldHide)
