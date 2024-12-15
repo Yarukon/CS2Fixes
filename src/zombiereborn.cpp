@@ -1189,7 +1189,7 @@ void ZR_InfectMotherZombie(CCSPlayerController* pVictimController, std::vector<S
 	}
 }
 
-static bool motherZombiesSelection[64];
+static bool motherZombiesBlackList[64];
 
 GAME_EVENT_F2(choppers_incoming_warning, zr_choose_mother_zombie)
 {
@@ -1200,9 +1200,9 @@ GAME_EVENT_F2(choppers_incoming_warning, zr_choose_mother_zombie)
 	for (int i = 0; i < 64; i++)
 	{
 		char name[32];
-		V_snprintf(name, sizeof(name), "set%d", i);
+		V_snprintf(name, sizeof(name), "block%d", i);
 		bool a = pEvent->GetBool(name);
-		motherZombiesSelection[i] = a;
+		motherZombiesBlackList[i] = a;
 	}
 }
 
@@ -1214,116 +1214,11 @@ GAME_EVENT_F2(choppers_incoming_warning, zr_choose_mother_zombie)
 void ZR_InitialInfection()
 {
 	// mz infection candidates
-	//CUtlVector<CCSPlayerController*> pCandidateControllers;
-	//for (int i = 0; i < gpGlobals->maxClients; i++)
-	//{
-	//	CCSPlayerController* pController = CCSPlayerController::FromSlot(i);
-	//	if (!pController || !pController->IsConnected() || pController->m_iTeamNum() != CS_TEAM_CT)
-	//		continue;
-
-	//	CCSPlayerPawn* pPawn = (CCSPlayerPawn*)pController->GetPawn();
-	//	if (!pPawn || !pPawn->IsAlive())
-	//		continue;
-
-	//	ev_lastMZShouldInfect = true;
-	//	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
-	//	if (pEvent)
-	//	{
-	//		pEvent->SetString("custom_event", "zr_pre_infect_mother_zombie");
-	//		pEvent->SetInt("infected_index", pController->GetEntityIndex().Get());
-	//		pEvent->SetBool("should_infect", true);
-	//		g_gameEventManager->FireEvent(pEvent, true);
-	//	}
-	//	if (!ev_lastMZShouldInfect) {
-	//		continue;
-	//	}
-	//	pCandidateControllers.AddToTail(pController);
-	//}
-
-	//if (g_iInfectSpawnMZRatio <= 0)
-	//{
-	//	Warning("Invalid Mother Zombie Ratio!!!");
-	//	return;
-	//}
-
-	//// the num of mz to infect
-	//int iMZToInfect = pCandidateControllers.Count() / g_iInfectSpawnMZRatio;
-	//iMZToInfect = g_iInfectSpawnMinCount > iMZToInfect ? g_iInfectSpawnMinCount : iMZToInfect;
-	//bool vecIsMZ[MAXPLAYERS] = { false };
-
-	// get spawn points
-	std::vector<SpawnPoint*> spawns = ZR_GetSpawns();
-	if (g_iInfectSpawnType == EZRSpawnType::RESPAWN && !spawns.size())
+	CUtlVector<CCSPlayerController*> pCandidateControllers;
+	for (int i = 0; i < gpGlobals->maxClients; i++)
 	{
-		ClientPrintAll(HUD_PRINTTALK, ZR_PREFIX"找不到出生点!");
-		return;
-	}
+		if (motherZombiesBlackList[i]) { continue; } // 黑名单
 
-	//// infect
-	//int iFailSafeCounter = 0;
-	//while (iMZToInfect > 0)
-	//{
-	//	//If we somehow don't have enough mother zombies after going through the players 5 times,
-	//	if (iFailSafeCounter >= 5)
-	//	{
-	//		FOR_EACH_VEC(pCandidateControllers, i)
-	//		{
-	//			// at 5, reset everyone's immunity but mother zombies from this and last round
-	//			// at 6, reset everyone's immunity but mother zombies from this round
-	//			ZEPlayer* pPlayer = pCandidateControllers[i]->GetZEPlayer();
-	//			if (pPlayer->GetImmunity() < 100 || (iFailSafeCounter >= 6 && !vecIsMZ[i]))
-	//				pPlayer->SetImmunity(0);
-	//		}
-	//	}
-
-	//	// a list of player who survived the previous mz roll of this round
-	//	CUtlVector<CCSPlayerController*> pSurvivorControllers;
-	//	FOR_EACH_VEC(pCandidateControllers, i)
-	//	{
-	//		// don't even bother with picked mz or player with 100 immunity
-	//		ZEPlayer* pPlayer = pCandidateControllers[i]->GetZEPlayer();
-	//		if (pPlayer && pPlayer->GetImmunity() < 100)
-	//			pSurvivorControllers.AddToTail(pCandidateControllers[i]);
-	//	}
-
-	//	// no enough human even after triggering fail safe
-	//	if (iFailSafeCounter >= 6 && pSurvivorControllers.Count() == 0)
-	//		break;
-
-	//	while (pSurvivorControllers.Count() > 0 && iMZToInfect > 0)
-	//	{
-	//		int randomindex = rand() % pSurvivorControllers.Count();
-
-	//		CCSPlayerController* pController = (CCSPlayerController*)pSurvivorControllers[randomindex];
-	//		CCSPlayerPawn* pPawn = (CCSPlayerPawn*)pController->GetPawn();
-	//		ZEPlayer* pPlayer = pSurvivorControllers[randomindex]->GetZEPlayer();
-	//		//roll for immunity
-	//		if (rand() % 100 < pPlayer->GetImmunity())
-	//		{
-	//			pSurvivorControllers.FastRemove(randomindex);
-	//			continue;
-	//		}
-
-	//		ZR_InfectMotherZombie(pController, spawns);
-	//		pPlayer->SetImmunity(100);
-	//		vecIsMZ[pPlayer->GetPlayerSlot().Get()] = true;
-
-	//		iMZToInfect--;
-	//	}
-	//	iFailSafeCounter++;
-	//}
-
-	//// reduce everyone's immunity except mz
-	//for (int i = 0; i < gpGlobals->maxClients; i++)
-	//{
-	//	ZEPlayer* pPlayer = g_playerManager->GetPlayer(i);
-	//	if (!pPlayer || vecIsMZ[i])
-	//		continue;
-
-	//	pPlayer->SetImmunity(pPlayer->GetImmunity() - g_iMZImmunityReduction);
-	//}
-	for (int i = 0; i < 64; i++) {
-		if (!motherZombiesSelection[i]) { continue; }
 		CCSPlayerController* pController = CCSPlayerController::FromSlot(i);
 		if (!pController || !pController->IsConnected() || pController->m_iTeamNum() != CS_TEAM_CT)
 			continue;
@@ -1331,19 +1226,104 @@ void ZR_InitialInfection()
 		CCSPlayerPawn* pPawn = (CCSPlayerPawn*)pController->GetPawn();
 		if (!pPawn || !pPawn->IsAlive())
 			continue;
-		ZR_InfectMotherZombie(pController, spawns);
+		
+		pCandidateControllers.AddToTail(pController);
+	}
+
+	if (g_iInfectSpawnMZRatio <= 0)
+	{
+		Warning("Invalid Mother Zombie Ratio!!!");
+		return;
+	}
+
+	for (int i = 0; i < 64; i++) {
+		motherZombiesBlackList[i] = false;
+	}
+	// the num of mz to infect
+	int iMZToInfect = pCandidateControllers.Count() / g_iInfectSpawnMZRatio;
+	iMZToInfect = g_iInfectSpawnMinCount > iMZToInfect ? g_iInfectSpawnMinCount : iMZToInfect;
+	bool vecIsMZ[MAXPLAYERS] = { false };
+
+	// get spawn points
+	std::vector<SpawnPoint*> spawns = ZR_GetSpawns();
+	if (g_iInfectSpawnType == EZRSpawnType::RESPAWN && !spawns.size())
+	{
+		ClientPrintAll(HUD_PRINTTALK, ZR_PREFIX"There are no spawns!");
+		return;
+	}
+
+	// infect
+	int iFailSafeCounter = 0;
+	while (iMZToInfect > 0)
+	{
+		//If we somehow don't have enough mother zombies after going through the players 5 times,
+		if (iFailSafeCounter >= 5)
+		{
+			FOR_EACH_VEC(pCandidateControllers, i)
+			{
+				// at 5, reset everyone's immunity but mother zombies from this and last round
+				// at 6, reset everyone's immunity but mother zombies from this round
+				ZEPlayer* pPlayer = pCandidateControllers[i]->GetZEPlayer();
+				if (pPlayer->GetImmunity() < 100 || (iFailSafeCounter >= 6 && !vecIsMZ[i]))
+					pPlayer->SetImmunity(0);
+			}
+		}
+
+		// a list of player who survived the previous mz roll of this round
+		CUtlVector<CCSPlayerController*> pSurvivorControllers;
+		FOR_EACH_VEC(pCandidateControllers, i)
+		{
+			// don't even bother with picked mz or player with 100 immunity
+			ZEPlayer* pPlayer = pCandidateControllers[i]->GetZEPlayer();
+			if (pPlayer && pPlayer->GetImmunity() < 100)
+				pSurvivorControllers.AddToTail(pCandidateControllers[i]);
+		}
+
+		// no enough human even after triggering fail safe
+		if (iFailSafeCounter >= 6 && pSurvivorControllers.Count() == 0)
+			break;
+
+		while (pSurvivorControllers.Count() > 0 && iMZToInfect > 0)
+		{
+			int randomindex = rand() % pSurvivorControllers.Count();
+
+			CCSPlayerController* pController = (CCSPlayerController*)pSurvivorControllers[randomindex];
+			CCSPlayerPawn* pPawn = (CCSPlayerPawn*)pController->GetPawn();
+			ZEPlayer* pPlayer = pSurvivorControllers[randomindex]->GetZEPlayer();
+			//roll for immunity
+			if (rand() % 100 < pPlayer->GetImmunity())
+			{
+				pSurvivorControllers.FastRemove(randomindex);
+				continue;
+			}
+
+			ZR_InfectMotherZombie(pController, spawns);
+			pPlayer->SetImmunity(100);
+			vecIsMZ[pPlayer->GetPlayerSlot().Get()] = true;
+
+			iMZToInfect--;
+		}
+		iFailSafeCounter++;
+	}
+
+	// reduce everyone's immunity except mz
+	for (int i = 0; i < gpGlobals->maxClients; i++)
+	{
+		ZEPlayer* pPlayer = g_playerManager->GetPlayer(i);
+		if (!pPlayer || vecIsMZ[i])
+			continue;
+
+		pPlayer->SetImmunity(pPlayer->GetImmunity() - g_iMZImmunityReduction);
 	}
 
 	if (g_flRespawnDelay < 0.0f)
 		g_bRespawnEnabled = false;
 
-	for (int i = 0; i < 64; i++) {
-		motherZombiesSelection[i] = false;
-	}
 	ClientPrintAll(HUD_PRINTCENTER, "我们是他们的奴隶!");
 	ClientPrintAll(HUD_PRINTTALK, ZR_PREFIX "我们是他们的奴隶!");
 	g_ZRRoundState = EZRRoundState::POST_INFECTION;
 }
+
 
 static int g_InfectionCountDownLength = 0;
 
