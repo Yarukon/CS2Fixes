@@ -207,10 +207,10 @@ void ZEPlayer::SpawnFlashLight()
 	pLight->Teleport(&origin, &pPawn->m_angEyeAngles(), nullptr);
 
 	// Have to use keyvalues for this since the schema prop is a resource handle
-	CEntityKeyValues *pKeyValues = new CEntityKeyValues();
-	pKeyValues->SetString("lightcookie", "materials/effects/lightcookies/flashlight.vtex");
+	// CEntityKeyValues *pKeyValues = new CEntityKeyValues();
+	// pKeyValues->SetString("lightcookie", "materials/effects/lightcookies/flashlight.vtex");
 
-	pLight->DispatchSpawn(pKeyValues);
+	pLight->DispatchSpawn();
 
 	pLight->SetParent(pPawn);
 	pLight->AcceptInput("SetParentAttachmentMaintainOffset", g_sFlashLightAttachment.c_str());
@@ -292,16 +292,22 @@ void ZEPlayer::StartBeacon(Color color, ZEPlayerHandle hGiver/* = 0*/)
 
 	CParticleSystem* particle = CreateEntityByName<CParticleSystem>("info_particle_system");
 
-	CEntityKeyValues* pKeyValues = new CEntityKeyValues();
 
+	/*
+	CEntityKeyValues* pKeyValues = new CEntityKeyValues();
 	pKeyValues->SetString("effect_name", g_sBeaconParticle.c_str());
 	pKeyValues->SetInt("tint_cp", 1);
 	pKeyValues->SetVector("origin", vecAbsOrigin);
 	pKeyValues->SetBool("start_active", true);
+	*/
 
+	particle->m_iszEffectName = g_sBeaconParticle.c_str();
+	particle->m_nTintCP = 1;
+	particle->Teleport(&vecAbsOrigin, nullptr, nullptr);
+	particle->m_bStartActive = true;
 	particle->m_clrTint->SetRawColor(color.GetRawColor());
 
-	particle->DispatchSpawn(pKeyValues);
+	particle->DispatchSpawn();
 	particle->SetParent(pPlayer->GetPawn());
 
 	m_hBeaconParticle.Set(particle);
@@ -374,15 +380,21 @@ void ZEPlayer::CreateMark(float fDuration, Vector vecOrigin)
 		return;
 
 	CParticleSystem* pMarker = CreateEntityByName<CParticleSystem>("info_particle_system");
-	CEntityKeyValues* pKeyValues = new CEntityKeyValues();
-
+	
+	/*CEntityKeyValues* pKeyValues = new CEntityKeyValues();
 	pKeyValues->SetString("effect_name", g_strMarkParticlePath.c_str());
 	pKeyValues->SetInt("tint_cp", 1);
 	pKeyValues->SetColor("tint_cp_color", GetLeaderColor());
 	pKeyValues->SetVector("origin", vecOrigin);
-	pKeyValues->SetBool("start_active", true);
+	pKeyValues->SetBool("start_active", true);*/
 
-	pMarker->DispatchSpawn(pKeyValues);
+	pMarker->m_iszEffectName = g_strMarkParticlePath.c_str();
+	pMarker->m_nTintCP = 1;
+	pMarker->m_clrTint.Get()->SetRawColor(GetLeaderColor().GetRawColor());
+	pMarker->Teleport(&vecOrigin, nullptr, nullptr);
+	pMarker->m_bStartActive = true;
+
+	pMarker->DispatchSpawn();
 
 	UTIL_AddEntityIOEvent(pMarker, "DestroyImmediately", nullptr, nullptr, "", fDuration);
 	UTIL_AddEntityIOEvent(pMarker, "Kill", nullptr, nullptr, "", fDuration + 0.02f);

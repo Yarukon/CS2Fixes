@@ -305,15 +305,22 @@ bool Leader_CreateDefendMarker(ZEPlayer* pPlayer, Color clrTint, int iDuration)
 	Vector vecOrigin = pPawn->GetAbsOrigin();
 	vecOrigin.z += 10;
 
+	pMarker->m_iszEffectName = g_strDefendParticlePath.c_str();
+	pMarker->m_nTintCP = 1;
+	pMarker->m_clrTint.Get()->SetRawColor(clrTint.GetRawColor());
+	pMarker->Teleport(&vecOrigin, nullptr, nullptr);
+	pMarker->m_bStartActive = true;
+	
+	/*
 	CEntityKeyValues* pKeyValues = new CEntityKeyValues();
-
 	pKeyValues->SetString("effect_name", g_strDefendParticlePath.c_str());
 	pKeyValues->SetInt("tint_cp", 1);
 	pKeyValues->SetColor("tint_cp_color", clrTint);
 	pKeyValues->SetVector("origin", vecOrigin);
 	pKeyValues->SetBool("start_active", true);
+	*/
 
-	pMarker->DispatchSpawn(pKeyValues);
+	pMarker->DispatchSpawn();
 
 	UTIL_AddEntityIOEvent(pMarker, "DestroyImmediately", nullptr, nullptr, "", iDuration);
 	UTIL_AddEntityIOEvent(pMarker, "Kill", nullptr, nullptr, "", iDuration + 0.02f);
@@ -430,19 +437,27 @@ void Leader_BulletImpact(IGameEvent* pEvent)
 	particle->AcceptInput("SetParent", "!activator", pWeapon, nullptr);
 	particle->AcceptInput("SetParentAttachment", "muzzle_flash");
 
-	CEntityKeyValues* pKeyValues = new CEntityKeyValues();
-
 	// Event contains other end of the particle
 	Vector vecData = Vector(pEvent->GetFloat("x"), pEvent->GetFloat("y"), pEvent->GetFloat("z"));
 
+	particle->m_iszEffectName = "particles/cs2fixes/leader_tracer.vpcf";
+	particle->m_nDataCP = 1;
+	particle->m_vecDataCPValue = vecData;
+	particle->m_nTintCP = 2;
+	particle->m_clrTint.Get()->SetRawColor(pPlayer->GetTracerColor().GetRawColor());
+	particle->m_bStartActive = true;
+	
+	/*
+	CEntityKeyValues* pKeyValues = new CEntityKeyValues();
 	pKeyValues->SetString("effect_name", "particles/cs2fixes/leader_tracer.vpcf");
 	pKeyValues->SetInt("data_cp", 1);
 	pKeyValues->SetVector("data_cp_value", vecData);
 	pKeyValues->SetInt("tint_cp", 2);
 	pKeyValues->SetColor("tint_cp_color", pPlayer->GetTracerColor());
 	pKeyValues->SetBool("start_active", true);
+	*/
 
-	particle->DispatchSpawn(pKeyValues);
+	particle->DispatchSpawn();
 
 	UTIL_AddEntityIOEvent(particle, "DestroyImmediately", nullptr, nullptr, "", 0.1f);
 	UTIL_AddEntityIOEvent(particle, "Kill", nullptr, nullptr, "", 0.12f);
