@@ -1052,9 +1052,9 @@ void ZR_StripAndGiveKnife(CCSPlayerPawn* pPawn)
 	if (!pItemServices)
 		return;
 
-	pPawn->DropMapWeapons();
-	pItemServices->StripPlayerWeapons(true);
-	pItemServices->GiveNamedItem("weapon_knife");
+	//pPawn->DropMapWeapons();
+	//pItemServices->StripPlayerWeapons(true);
+	//pItemServices->GiveNamedItem("weapon_knife");
 }
 
 void ZR_Cure(CCSPlayerController* pTargetController)

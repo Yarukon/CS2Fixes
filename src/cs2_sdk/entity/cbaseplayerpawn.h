@@ -42,22 +42,22 @@ public:
 	// NOTE: Currently very broken with map items (entities parented to weapons?) due to a game bug..? Needs further investigation/work
 	void DropMapWeapons()
 	{
-		if (!m_pWeaponServices())
-			return;
+		//if (!m_pWeaponServices())
+		//	return;
 
-		CUtlVector<CHandle<CBasePlayerWeapon>>* weapons = m_pWeaponServices()->m_hMyWeapons();
+		//CUtlVector<CHandle<CBasePlayerWeapon>>* weapons = m_pWeaponServices()->m_hMyWeapons();
 
-		FOR_EACH_VEC(*weapons, i)
-		{
-			CBasePlayerWeapon* pWeapon = (*weapons)[i].Get();
+		//FOR_EACH_VEC(*weapons, i)
+		//{
+		//	CBasePlayerWeapon* pWeapon = (*weapons)[i].Get();
 
-			if (!pWeapon)
-				continue;
+		//	if (!pWeapon)
+		//		continue;
 
-			// If this is a map-spawned weapon (items), drop it
-			if (V_strcmp(pWeapon->m_sUniqueHammerID().Get(), "") && pWeapon->GetWeaponVData()->m_GearSlot() != GEAR_SLOT_KNIFE)
-				m_pWeaponServices()->DropWeapon(pWeapon);
-		}
+		//	// If this is a map-spawned weapon (items), drop it
+		//	if (V_strcmp(pWeapon->m_sUniqueHammerID().Get(), "") && pWeapon->GetWeaponVData()->m_GearSlot() != GEAR_SLOT_KNIFE)
+		//		m_pWeaponServices()->DropWeapon(pWeapon);
+		//}
 	}
 
 	void CommitSuicide(bool bExplode, bool bForce)

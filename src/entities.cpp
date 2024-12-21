@@ -49,7 +49,7 @@ inline bool StripPlayer(CCSPlayerPawn* pPawn)
     if (!pItemServices)
         return false;
 
-    pItemServices->StripPlayerWeapons(true);
+    //pItemServices->StripPlayerWeapons(true);
 
     return true;
 }
