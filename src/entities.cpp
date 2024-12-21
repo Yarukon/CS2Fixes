@@ -21,6 +21,7 @@
 
 #include "ctimer.h"
 #include "entity.h"
+#include "eventlistener.h"
 #include "entity/cbaseplayercontroller.h"
 #include "entity/ccsplayercontroller.h"
 #include "entity/ccsplayerpawn.h"
@@ -32,6 +33,7 @@
 // #define ENTITY_HANDLER_ASSERTION
 
 extern CCSGameRules* g_pGameRules;
+extern IGameEventManager2* g_gameEventManager;
 
 class InputData_t
 {
@@ -48,7 +50,14 @@ inline bool StripPlayer(CCSPlayerPawn* pPawn)
 
     if (!pItemServices)
         return false;
-
+    
+	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
+	if (pEvent)
+	{
+		pEvent->SetString("custom_event", "call_strip_player");
+		pEvent->SetInt("player_index", pPawn->entindex());
+		g_gameEventManager->FireEvent(pEvent, true);
+	}
     //pItemServices->StripPlayerWeapons(true);
 
     return true;
