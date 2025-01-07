@@ -883,6 +883,14 @@ void ToggleRespawn(bool force = false, bool value = false)
 		g_bRespawnEnabled = false;
 		ZR_CheckTeamWinConditions(CS_TEAM_CT);
 	}
+
+	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
+	if (pEvent)
+	{
+		pEvent->SetString("custom_event", "zr_respawn_enable_change");
+		pEvent->SetBool("enable", g_bRespawnEnabled);
+		g_gameEventManager->FireEvent(pEvent, true);
+	}
 }
 
 void ZR_OnRoundPrestart(IGameEvent* pEvent)
