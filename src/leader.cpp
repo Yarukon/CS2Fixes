@@ -719,7 +719,7 @@ CON_COMMAND_CHAT_LEADER(beacon, "[name] [color] - Toggle beacon on a player")
 	ETargetType nType;
 	uint64 iTargetFlags = NO_DEAD;
 	if (!bIsAdmin)
-		iTargetFlags |= NO_TERRORIST | NO_MULTIPLE;
+		iTargetFlags |= NO_MULTIPLE;
 	const char* pszTarget = "@me";
 	if (args.ArgC() >= 2 && (bIsAdmin || g_bLeaderCanTargetPlayers))
 		pszTarget = args[1];
