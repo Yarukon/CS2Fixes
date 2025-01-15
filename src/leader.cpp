@@ -654,49 +654,49 @@ CON_COMMAND_CHAT_LEADER(defend, "[name|duration] [duration] - Place a defend mar
 	}
 }
 
-CON_COMMAND_CHAT_LEADER(tracer, "[name] [color] - Toggle projectile tracers on a player")
-{
-	ZEPlayer* pPlayer = player ? player->GetZEPlayer() : nullptr;
-	bool bIsAdmin = pPlayer ? pPlayer->IsAdminFlagSet(FLAG_LEADER) : true;
-	const char* pszCommandPlayerName = player ? player->GetPlayerName() : CONSOLE_NAME;
-
-	int iNumClients = 0;
-	int pSlots[MAXPLAYERS];
-	ETargetType nType;
-	const char* pszTarget = "@me";
-	if (args.ArgC() >= 2 && (bIsAdmin || g_bLeaderCanTargetPlayers))
-		pszTarget = args[1];
-
-	if (!g_playerManager->CanTargetPlayers(player, pszTarget, iNumClients, pSlots, NO_DEAD | NO_TERRORIST | NO_MULTIPLE, nType))
-		return;
-
-	CCSPlayerController* pTarget = CCSPlayerController::FromSlot(pSlots[0]);
-	ZEPlayer* pPlayerTarget = pTarget->GetZEPlayer();
-
-	if (pPlayerTarget->GetTracerColor().a() == 255)
-	{
-		if (pTarget == player)
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "关闭了你自己的子弹轨迹.", pTarget->GetPlayerName());
-		else
-		{
-			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s %s 关闭了 %s 的子弹轨迹.",
-						   bIsAdmin ? "Admin" : "Leader", pszCommandPlayerName, pTarget->GetPlayerName());
-		}
-		pPlayerTarget->SetTracerColor(Color(0, 0, 0, 0));
-		return;
-	}
-
-	Color color = Leader_GetColor(args.ArgC() < 3 ? "" : args[2], pPlayer);
-	pPlayerTarget->SetTracerColor(color);
-
-	if (pTarget == player)
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "开启了你自己的 子弹轨迹.", pTarget->GetPlayerName());
-	else
-	{
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s %s 开启了 %s 的子弹 轨迹.",
-					   bIsAdmin ? "Admin" : "Leader", pszCommandPlayerName, pTarget->GetPlayerName());
-	}
-}
+//CON_COMMAND_CHAT_LEADER(tracer, "[name] [color] - Toggle projectile tracers on a player")
+//{
+//	ZEPlayer* pPlayer = player ? player->GetZEPlayer() : nullptr;
+//	bool bIsAdmin = pPlayer ? pPlayer->IsAdminFlagSet(FLAG_LEADER) : true;
+//	const char* pszCommandPlayerName = player ? player->GetPlayerName() : CONSOLE_NAME;
+//
+//	int iNumClients = 0;
+//	int pSlots[MAXPLAYERS];
+//	ETargetType nType;
+//	const char* pszTarget = "@me";
+//	if (args.ArgC() >= 2 && (bIsAdmin || g_bLeaderCanTargetPlayers))
+//		pszTarget = args[1];
+//
+//	if (!g_playerManager->CanTargetPlayers(player, pszTarget, iNumClients, pSlots, NO_DEAD | NO_TERRORIST | NO_MULTIPLE, nType))
+//		return;
+//
+//	CCSPlayerController* pTarget = CCSPlayerController::FromSlot(pSlots[0]);
+//	ZEPlayer* pPlayerTarget = pTarget->GetZEPlayer();
+//
+//	if (pPlayerTarget->GetTracerColor().a() == 255)
+//	{
+//		if (pTarget == player)
+//			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "关闭了你自己的子弹轨迹.", pTarget->GetPlayerName());
+//		else
+//		{
+//			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s %s 关闭了 %s 的子弹轨迹.",
+//						   bIsAdmin ? "Admin" : "Leader", pszCommandPlayerName, pTarget->GetPlayerName());
+//		}
+//		pPlayerTarget->SetTracerColor(Color(0, 0, 0, 0));
+//		return;
+//	}
+//
+//	Color color = Leader_GetColor(args.ArgC() < 3 ? "" : args[2], pPlayer);
+//	pPlayerTarget->SetTracerColor(color);
+//
+//	if (pTarget == player)
+//		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "开启了你自己的 子弹轨迹.", pTarget->GetPlayerName());
+//	else
+//	{
+//		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "%s %s 开启了 %s 的子弹 轨迹.",
+//					   bIsAdmin ? "Admin" : "Leader", pszCommandPlayerName, pTarget->GetPlayerName());
+//	}
+//}
 
 CON_COMMAND_CHAT(tracers, "- List all active player tracers")
 {
