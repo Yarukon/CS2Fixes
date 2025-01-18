@@ -1109,6 +1109,7 @@ std::vector<SpawnPoint*> ZR_GetSpawns()
 }
 
 const char* playerInfectedEvent = "zr_on_player_infected";
+const char* playerInfectedPreEvent = "zr_on_player_infected_pre";
 void ZR_Infect(CCSPlayerController* pAttackerController, CCSPlayerController* pVictimController, bool bDontBroadcast)
 {
 	// This can be null if the victim disconnected right before getting hit AND someone joined in their place immediately, thus replacing the controller
@@ -1117,6 +1118,16 @@ void ZR_Infect(CCSPlayerController* pAttackerController, CCSPlayerController* pV
 
 	if (g_pGameRules->m_bWarmupPeriod || g_pGameRules->m_bFreezePeriod) {
 		return;
+	}
+
+	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
+	if (pEvent)
+	{
+		pEvent->SetString("custom_event", playerInfectedPreEvent);
+		pEvent->SetBool("is_mother_zombie", false);
+		pEvent->SetInt("infected_index", pVictimController->GetEntityIndex().Get());
+		pEvent->SetInt("attacker_index", pAttackerController->GetEntityIndex().Get());
+		g_gameEventManager->FireEvent(pEvent, true);
 	}
 
 	if (pVictimController->m_iTeamNum() == CS_TEAM_CT)
@@ -1134,7 +1145,7 @@ void ZR_Infect(CCSPlayerController* pAttackerController, CCSPlayerController* pV
 	// We disabled damage due to the delayed infection, restore
 	pVictimPawn->m_bTakesDamage(true);
 
-	ZR_StripAndGiveKnife(pVictimPawn);
+	//ZR_StripAndGiveKnife(pVictimPawn);
 
 	g_pZRPlayerClassManager->ApplyPreferredOrDefaultZombieClass(pVictimPawn);
 
@@ -1142,7 +1153,7 @@ void ZR_Infect(CCSPlayerController* pAttackerController, CCSPlayerController* pV
 	if (pZEPlayer && !pZEPlayer->IsInfected())
 		pZEPlayer->SetInfectState(true);
 
-	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
+	pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
 	if (pEvent)
 	{
 		pEvent->SetString("custom_event", playerInfectedEvent);
@@ -1163,7 +1174,16 @@ void ZR_InfectMotherZombie(CCSPlayerController* pVictimController, std::vector<S
 		return;
 	}
 
-	ZR_StripAndGiveKnife(pVictimPawn);
+	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
+	if (pEvent)
+	{
+		pEvent->SetString("custom_event", playerInfectedPreEvent);
+		pEvent->SetBool("is_mother_zombie", true);
+		pEvent->SetInt("infected_index", pVictimController->GetEntityIndex().Get());
+		g_gameEventManager->FireEvent(pEvent, true);
+	}
+
+	//ZR_StripAndGiveKnife(pVictimPawn);
 
 	// pick random spawn point
 	if (g_iInfectSpawnType == EZRSpawnType::RESPAWN)
@@ -1187,7 +1207,7 @@ void ZR_InfectMotherZombie(CCSPlayerController* pVictimController, std::vector<S
 	ZEPlayer *pZEPlayer = pVictimController->GetZEPlayer();
 	pZEPlayer->SetInfectState(true);
 	
-	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
+	pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
 	if (pEvent)
 	{
 		pEvent->SetString("custom_event", playerInfectedEvent);
