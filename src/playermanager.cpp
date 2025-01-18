@@ -768,8 +768,15 @@ void CPlayerManager::FlashLightThink()
 
 		if (!pPlayer || !pPlayer->m_bPawnIsAlive())
 			continue;
-
-		uint64 *pButtons = pPlayer->GetPawn()->m_pMovementServices->m_nButtons().m_pButtonStates();
+		auto pawn = pPlayer->GetPawn();
+		if (!pawn || pawn->m_iHealth < 1) {
+			continue;
+		}
+		const auto pMovement = pawn->m_pMovementServices();
+		if (!pMovement) {
+			continue;
+		}
+		uint64 *pButtons = pMovement->m_nButtons().m_pButtonStates();
 
 		// Check both to make sure flashlight is only toggled when the player presses the key
 		if ((pButtons[0] & IN_LOOK_AT_WEAPON) && (pButtons[1] & IN_LOOK_AT_WEAPON))
