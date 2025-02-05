@@ -551,46 +551,46 @@ CON_COMMAND_CHAT(hide, "<distance> - Hide nearby players")
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "玩家隐藏已启用 范围 %i 个单位 (按住鼠标右键可以暂时取消隐藏).", distance);
 }
 
-CON_COMMAND_CHAT(help, "- Display list of commands in console")
-{
-	std::vector<std::string> rgstrCommands;
-	if (!player)
-	{
-		ClientPrint(player, HUD_PRINTCONSOLE, "所有指令一览:");
-
-		FOR_EACH_VEC(g_CommandList, i)
-		{
-			CChatCommand* cmd = g_CommandList[i];
-
-			if (!cmd->IsCommandFlagSet(CMDFLAG_NOHELP))
-				rgstrCommands.push_back(std::string("c_") + cmd->GetName() + " " + cmd->GetDescription());
-		}
-	}
-	else
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "所有可用指令将会打印到控制台.");
-		ClientPrint(player, HUD_PRINTCONSOLE, "你可以使用的指令一览:");
-
-		ZEPlayer* pZEPlayer = player->GetZEPlayer();
-
-		FOR_EACH_VEC(g_CommandList, i)
-		{
-			CChatCommand* cmd = g_CommandList[i];
-			uint64 flags = cmd->GetAdminFlags();
-
-			if (pZEPlayer->IsAdminFlagSet(flags) && !cmd->IsCommandFlagSet(CMDFLAG_NOHELP))
-				rgstrCommands.push_back(std::string("!") + cmd->GetName() + " " + cmd->GetDescription());
-		}
-	}
-
-	std::sort(rgstrCommands.begin(), rgstrCommands.end());
-
-	for (const auto& strCommand : rgstrCommands)
-		ClientPrint(player, HUD_PRINTCONSOLE, strCommand.c_str());
-
-	if (player)
-		ClientPrint(player, HUD_PRINTCONSOLE, "! can be replaced with / for a silent chat command, or c_ for console usage");
-}
+//CON_COMMAND_CHAT(help, "- Display list of commands in console")
+//{
+//	std::vector<std::string> rgstrCommands;
+//	if (!player)
+//	{
+//		ClientPrint(player, HUD_PRINTCONSOLE, "所有指令一览:");
+//
+//		FOR_EACH_VEC(g_CommandList, i)
+//		{
+//			CChatCommand* cmd = g_CommandList[i];
+//
+//			if (!cmd->IsCommandFlagSet(CMDFLAG_NOHELP))
+//				rgstrCommands.push_back(std::string("c_") + cmd->GetName() + " " + cmd->GetDescription());
+//		}
+//	}
+//	else
+//	{
+//		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "所有可用指令将会打印到控制台.");
+//		ClientPrint(player, HUD_PRINTCONSOLE, "你可以使用的指令一览:");
+//
+//		ZEPlayer* pZEPlayer = player->GetZEPlayer();
+//
+//		FOR_EACH_VEC(g_CommandList, i)
+//		{
+//			CChatCommand* cmd = g_CommandList[i];
+//			uint64 flags = cmd->GetAdminFlags();
+//
+//			if (pZEPlayer->IsAdminFlagSet(flags) && !cmd->IsCommandFlagSet(CMDFLAG_NOHELP))
+//				rgstrCommands.push_back(std::string("!") + cmd->GetName() + " " + cmd->GetDescription());
+//		}
+//	}
+//
+//	std::sort(rgstrCommands.begin(), rgstrCommands.end());
+//
+//	for (const auto& strCommand : rgstrCommands)
+//		ClientPrint(player, HUD_PRINTCONSOLE, strCommand.c_str());
+//
+//	if (player)
+//		ClientPrint(player, HUD_PRINTCONSOLE, "! can be replaced with / for a silent chat command, or c_ for console usage");
+//}
 
 CON_COMMAND_CHAT(getpos, "- Get your position and angles")
 {
