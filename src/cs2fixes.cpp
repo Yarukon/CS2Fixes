@@ -445,7 +445,7 @@ void CS2Fixes::Hook_DispatchConCommand(ConCommandHandle cmdHandle, const CComman
 		bool bFlooding = pController && pController->GetZEPlayer()->IsFlooding();
 		bool bAdminChat = bTeamSay && *args[1] == '@';
 		bool bSilent = *args[1] == '/' || bAdminChat;
-		bool bCommand = *args[1] == '!' || *args[1] == '/';
+		bool bCommand = *args[1] == '!' || *args[1] == '/' || *args[1] == '.';
 
 		// Chat messages should generate events regardless
 		//if (pController)
@@ -497,7 +497,7 @@ void CS2Fixes::Hook_DispatchConCommand(ConCommandHandle cmdHandle, const CComman
 		{
 			char *pszMessage = (char *)(args.ArgS() + 1);
 
-			if (pszMessage[0] == '"' || pszMessage[0] == '!' || pszMessage[0] == '/'){
+			if (pszMessage[0] == '"' || pszMessage[0] == '!' || pszMessage[0] == '.' || pszMessage[0] == '/'){
 				pszMessage += 1;
 			}
 
