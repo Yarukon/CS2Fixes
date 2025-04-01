@@ -70,7 +70,7 @@ DECLARE_DETOUR(TriggerPush_Touch, Detour_TriggerPush_Touch);
 DECLARE_DETOUR(CBaseEntity_TakeDamageOld, Detour_CBaseEntity_TakeDamageOld);
 DECLARE_DETOUR(CCSPlayer_WeaponServices_CanUse, Detour_CCSPlayer_WeaponServices_CanUse);
 DECLARE_DETOUR(CCSPlayer_WeaponServices_EquipWeapon, Detour_CCSPlayer_WeaponServices_EquipWeapon);
-// DECLARE_DETOUR(CEntityIdentity_AcceptInput, Detour_CEntityIdentity_AcceptInput);
+// DECLARE_DETOUR(CEntityIdentity_AcceptInput, Detour_CEntityIdentity_AcceptInput);  // 和 css 的重复
 DECLARE_DETOUR(CNavMesh_GetNearestNavArea, Detour_CNavMesh_GetNearestNavArea);
 DECLARE_DETOUR(ProcessMovement, Detour_ProcessMovement);
 DECLARE_DETOUR(ProcessUsercmds, Detour_ProcessUsercmds);
@@ -381,9 +381,27 @@ void FASTCALL Detour_CCSPlayer_WeaponServices_EquipWeapon(CCSPlayer_WeaponServic
 	return CCSPlayer_WeaponServices_EquipWeapon(pWeaponServices, pPlayerWeapon);
 }
 
+// 大绕弯术，让 css 通知过来
+GAME_EVENT_F2(choppers_incoming_warning, call_entityidentity_acceptinput)
+{
+	auto customEventName = pEvent->GetString("custom_event", "");
+	if (strcmp(customEventName, "call_entityidentity_acceptinput") != 0)
+		return;
+	auto inputName = pEvent->GetString("inputname");
+	if (!inputName || strlen(inputName) < 1) return;
+	auto self = g_pEntitySystem->GetEntityIdentity(CEntityIndex(pEvent->GetInt("self")));
+	auto activator = g_pEntitySystem->GetEntityInstance(CEntityIndex(pEvent->GetInt("activator")));
+	auto caller = g_pEntitySystem->GetEntityInstance(CEntityIndex(pEvent->GetInt("caller")));
+	int outputId = pEvent->GetInt("outputid");
+	auto pValue = pEvent->GetString("cvalue");
+	auto theValue = reinterpret_cast<variant_t*>(V_atoi64(pValue));  // 直接传指针过来恢复实例
+	auto pInputName = new CUtlSymbolLarge(inputName);
+	// Message("input: %s %s\n", inputName, self->GetClassname());
+	Detour_CEntityIdentity_AcceptInput(self, pInputName, activator, caller, theValue, outputId);
+}
+
 bool FASTCALL Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSymbolLarge* pInputName, CEntityInstance* pActivator, CEntityInstance* pCaller, variant_t* value, int nOutputID)
-{	
-	// Message("Input -> %s | Value -> %s\n", pInputName->String(), (value->m_type == FIELD_CSTRING || value->m_type == FIELD_STRING) && value->m_pszString ? value->m_pszString : "<other type>");
+{
 	VPROF_SCOPE_BEGIN("Detour_CEntityIdentity_AcceptInput");
 
 	if (g_cvarEnableZR.Get())
@@ -414,19 +432,6 @@ bool FASTCALL Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSym
 
 		if (pPawn->IsPawn() && IgnitePawn(pPawn, flDuration, pPawn, pPawn))
 			return true;
-	}
-	else if (!V_strnicmp(pInputName->String(), "ModifySpeed", 11))
-	{
-		CBaseEntity* entity = reinterpret_cast<CBaseEntity*>(pActivator);
-		if (entity && entity->IsPawn()) {
-			float flModifier = 1.f;
-
-			if ((value->m_type == FIELD_CSTRING || value->m_type == FIELD_STRING) && value->m_pszString)
-				flModifier = V_StringToFloat32(value->m_pszString, 1.f);
-			else
-				flModifier = value->m_float;
-
-		}
 	}
 	else if (!V_strnicmp(pInputName->String(), "AddScore", 8))
 	{
