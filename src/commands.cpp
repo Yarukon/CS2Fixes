@@ -446,18 +446,22 @@ CON_COMMAND_CHAT(hide, "<distance> - Hide nearby players")
 
 	int distance;
 
+	ZEPlayer* pZEPlayer = player->GetZEPlayer();
+
 	if (args.ArgC() < 2)
-		distance = g_cvarDefaultHideDistance.Get();
+	{
+		int old = pZEPlayer->LastHideDistance;  // 优先使用上次的距离
+		if (old < 1) old = g_cvarDefaultHideDistance.Get();
+		distance = old;
+	}
 	else
 		distance = V_StringToInt32(args[1], -1);
 
 	if (distance > g_cvarMaxHideDistance.Get() || distance < 0)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You can only hide players between 0 and %i units away.", g_cvarMaxHideDistance.Get());
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "隐藏玩家的距离只能是 0 and %i 之间. 你输入了 %i", g_cvarMaxHideDistance.Get(), distance);
 		return;
 	}
-
-	ZEPlayer* pZEPlayer = player->GetZEPlayer();
 
 	// Something has to really go wrong for this to happen
 	if (!pZEPlayer)
@@ -467,10 +471,13 @@ CON_COMMAND_CHAT(hide, "<distance> - Hide nearby players")
 	}
 
 	// allows for toggling hide by turning off when hide distance matches.
-	if (pZEPlayer->GetHideDistance() == distance)
+	if (pZEPlayer->GetHideDistance() > 0 && args.ArgC() < 2)
 		distance = 0;
 
 	pZEPlayer->SetHideDistance(distance);
+	if (distance > 0) {
+		pZEPlayer->LastHideDistance = distance;
+	}
 
 	if (distance == 0)
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "玩家隐藏已禁用.");

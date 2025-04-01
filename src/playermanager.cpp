@@ -974,6 +974,9 @@ void CPlayerManager::CheckHideDistances()
 		if (!pPawn || !pPawn->IsAlive())
 			continue;
 
+		uint64* pButtons = pPawn->m_pMovementServices->m_nButtons().m_pButtonStates();
+		player->HoldingRMB = pButtons[0] & IN_ATTACK2;
+
 		auto vecPosition = pPawn->GetAbsOrigin();
 		int team = pController->m_iTeamNum;
 

@@ -120,7 +120,7 @@ SH_DECL_MANUALHOOK2_void(CreateWorkshopMapGroup, 0, 0, 0, const char*, const CUt
 SH_DECL_MANUALHOOK1(OnTakeDamage_Alive, 0, 0, 0, bool, CTakeDamageInfoContainer*);
 SH_DECL_MANUALHOOK1_void(CheckMovingGround, 0, 0, 0, double);
 SH_DECL_HOOK2(IGameEventManager2, LoadEventsFromFile, SH_NOATTRIB, 0, int, const char*, bool);
-SH_DECL_MANUALHOOK1_void(GoToIntermission, 0, 0, 0, bool);
+// SH_DECL_MANUALHOOK1_void(GoToIntermission, 0, 0, 0, bool);
 SH_DECL_MANUALHOOK2_void(PhysicsTouchShuffle, 0, 0, 0, CUtlVector<TouchLinked_t>*, bool);
 SH_DECL_MANUALHOOK3_void(DropWeapon, 0, 0, 0, CBasePlayerWeapon*, Vector*, Vector*);
 
@@ -972,6 +972,9 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo** ppInfoList, int infoCount
 			CCSPlayerPawn* pPawn = pController->GetPlayerPawn();
 
 			if (!pPawn)
+				continue;
+
+			if (pSelfZEPlayer->HoldingRMB)  // 如果按着鼠标右键就不 hide 队友
 				continue;
 
 			// Hide players marked as hidden or ANY dead player, it seems that a ragdoll of a previously hidden player can crash?

@@ -328,6 +328,9 @@ public:
 	void SetSteamIdAttribute();
 	void CreateEntwatchHud();
 
+	int LastHideDistance = 0; // 上次 hide 的距离
+	bool HoldingRMB = false;  // 按着鼠标右键
+
 private:
 	bool m_bAuthenticated;
 	bool m_bConnected;
