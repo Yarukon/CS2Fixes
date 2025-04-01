@@ -471,7 +471,7 @@ CON_COMMAND_CHAT(hide, "<distance> - Hide nearby players")
 	}
 
 	// allows for toggling hide by turning off when hide distance matches.
-	if (pZEPlayer->GetHideDistance() > 0 && args.ArgC() < 2)
+	if (pZEPlayer->GetHideDistance() == distance)
 		distance = 0;
 
 	pZEPlayer->SetHideDistance(distance);
