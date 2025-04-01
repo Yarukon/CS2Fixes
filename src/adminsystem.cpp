@@ -594,67 +594,6 @@ CON_COMMAND_CHAT_FLAGS(entfirecontroller, "<name> <input> [parameter] - Fire out
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "成功在 %i 个玩家上执行了controller输入.", iFoundEnts);
 }
 
-CON_COMMAND_CHAT_FLAGS(map, "<mapname> - Change map", ADMFLAG_CHANGEMAP)
-{
-	if (args.ArgC() < 2)
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !map <mapname>");
-		return;
-	}
-
-	std::string sMapName = args[1];
-
-	for (int i = 0; sMapName[i]; i++)
-	{
-		// Injection prevention, because we may pass user input to ServerCommand
-		if (sMapName[i] == ';')
-			return;
-
-		sMapName[i] = tolower(sMapName[i]);
-	}
-
-	const char* pszMapName = sMapName.c_str();
-
-	if (!g_pEngineServer2->IsMapValid(pszMapName))
-	{
-		std::string sCommand;
-
-		// Check if input is numeric (workshop ID)
-		// Not safe to expose until crashing on failed workshop addon downloads is fixed
-		/*if (V_StringToUint64(pszMapName, 0) != 0)
-		{
-			sCommand = "host_workshop_map " + sMapName;
-		}*/
-		if (g_bVoteManagerEnable && g_pMapVoteSystem->GetMapIndexFromSubstring(pszMapName) != -1)
-		{
-			sCommand = "host_workshop_map " + std::to_string(g_pMapVoteSystem->GetMapWorkshopId(g_pMapVoteSystem->GetMapIndexFromSubstring(pszMapName)));
-		}
-		else
-		{
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Failed to find a map matching %s.", pszMapName);
-			return;
-		}
-
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "Changing map to %s...", pszMapName);
-
-		new CTimer(5.0f, false, true, [sCommand]()
-		{
-			g_pEngineServer2->ServerCommand(sCommand.c_str());
-			return -1.0f;
-		});
-
-		return;
-	}
-
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "Changing map to %s...", pszMapName);
-
-	new CTimer(5.0f, false, true, [sMapName]()
-	{
-		g_pEngineServer2->ChangeLevel(sMapName.c_str(), nullptr);
-		return -1.0f;
-	});
-}
-
 CON_COMMAND_CHAT_FLAGS(hsay, "<message> - Say something as a hud hint", ADMFLAG_CHAT)
 {
 	if (args.ArgC() < 2)

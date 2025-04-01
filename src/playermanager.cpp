@@ -932,8 +932,6 @@ void CPlayerManager::FlashLightThink()
 		if (!pMovement) {
 			continue;
 		}
-		uint64 *pButtons = pMovement->m_nButtons().m_pButtonStates();
-
 		uint64* pButtons = pPlayer->GetPawn()->m_pMovementServices->m_nButtons().m_pButtonStates();
 
 		// Check both to make sure flashlight is only toggled when the player presses the key

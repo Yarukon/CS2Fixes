@@ -124,10 +124,10 @@ public:
 				Matches++;
 				if (Matches == iSigLength)
 				{
-					if (return_addr != 0)
+					if (return_addr)
 					{
 						error = SIG_FOUND_MULTIPLE;
-						return (void*) return_addr;
+						return return_addr;
 					}
 
 					return_addr = (void*)(pMemory + i);
@@ -136,22 +136,10 @@ public:
 			}
 		}
 
-		if (return_addr == 0)
-		{
+		if (!return_addr)
 			error = SIG_NOT_FOUND;
-			return (void*) return_addr;
-		}
 
-		unsigned char insnByte = *(unsigned char*) return_addr;
-
-		// JMP/CALL sub_xxxxxxxx
-		if (insnByte == 0xE8 || insnByte == 0xE9)
-		{
-			int jumpOffset = *(int*)(return_addr + 1);
-			return_addr = return_addr + 5 + jumpOffset;
-		}
-
-		return (void*) return_addr;
+		return return_addr;
 	}
 
 	void* FindInterface(const char* name)
