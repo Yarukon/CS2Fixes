@@ -916,6 +916,33 @@ void CS2Fixes::Hook_GameFramePost(bool simulating, bool bFirstTick, bool bLastTi
 
 extern CConVar<bool> g_cvarFlashLightTransmitOthers;
 
+int evClearTransmit[64][1024]; // 和 c# 搭配的 transmit 互通接口
+bool evAddTransmit[64][64];
+
+GAME_EVENT_F2(choppers_incoming_warning, pre_transmit_entity_clear)
+{
+	auto customEventName = pEvent->GetString("custom_event", "");
+	if (strcmp(customEventName, "pre_transmit_entity_clear") != 0)
+		return;
+	int slot = pEvent->GetInt("player_index", -1);
+	if (slot < 1 || slot > 64) return;
+	slot = slot - 1;
+	for (int i = 0; i < 1024; i++)
+	{
+		char name[32];
+		V_snprintf(name, sizeof(name), "clear%d", i);
+		int index = pEvent->GetInt(name);
+		evClearTransmit[slot][i] = index;
+	}
+	for (int i = 0; i < 64; i++)
+	{
+		char name[32];
+		V_snprintf(name, sizeof(name), "add%d", i);
+		bool forceAdd = pEvent->GetBool(name, false);
+		evAddTransmit[slot][i] = forceAdd;
+	}
+}
+
 void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo** ppInfoList, int infoCount, CBitVec<16384>& unionTransmitEdicts,
 								  const Entity2Networkable_t** pNetworkables, const uint16* pEntityIndicies, int nEntities, bool bEnablePVSBits)
 {
@@ -943,6 +970,12 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo** ppInfoList, int infoCount
 		if (!pSelfZEPlayer)
 			continue;
 
+		for (int j = 0; j < 1024; j++)
+		{
+			int entIndex = evClearTransmit[iPlayerSlot][j];
+			if (entIndex > 0)
+				pInfo->m_pTransmitEntity->Clear(entIndex);
+		}
 		for (int j = 0; j < GetGlobals()->maxClients; j++)
 		{
 			CCSPlayerController* pController = CCSPlayerController::FromSlot(j);
@@ -981,7 +1014,27 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo** ppInfoList, int infoCount
 			// TODO: Revert this if/when valve fixes the issue?
 			// Also do not hide leaders to other players
 			ZEPlayer *pOtherZEPlayer = g_playerManager->GetPlayer(j);
-			if ((pSelfZEPlayer->ShouldBlockTransmit(j) && (pOtherZEPlayer && !pOtherZEPlayer->IsLeader())) || !pPawn->IsAlive())
+			bool shouldHide = false;
+			if (!pPawn->IsAlive())
+			{
+				shouldHide = true; // 死亡的玩家一定不传输
+			}
+			else if (evAddTransmit[iPlayerSlot][j])
+			{
+				shouldHide = false; // 白名单里要求的进行传输
+			}
+			else if ((pSelfZEPlayer->ShouldBlockTransmit(j)))
+			{
+				shouldHide = true; // 没有要求的玩家按距离控制管理
+				if (pOtherZEPlayer)
+				{
+					if (pOtherZEPlayer->IsLeader())
+						shouldHide = false; // 指挥官不隐藏
+					else if (pOtherZEPlayer->GetBeaconParticle())
+						shouldHide = false; // 有beacon的不隐藏
+				}
+			}
+			if (shouldHide)
 				pInfo->m_pTransmitEntity->Clear(pPawn->entindex());
 		}
 
