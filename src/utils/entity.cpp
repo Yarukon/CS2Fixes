@@ -1,7 +1,7 @@
 /**
  * =============================================================================
  * CS2Fixes
- * Copyright (C) 2023-2024 Source2ZE
+ * Copyright (C) 2023-2025 Source2ZE
  * =============================================================================
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -23,18 +23,21 @@
 #include "../common.h"
 #include "../gameconfig.h"
 #include "../utils/virtual.h"
+#include "entity/cgamerules.h"
 #include "entitysystem.h"
 #include "platform.h"
-#include "entity/cgamerules.h"
 
 #include "tier0/memdbgon.h"
 
-extern CGameEntitySystem *g_pEntitySystem;
-extern CGameConfig *g_GameConfig;
-extern CCSGameRules *g_pGameRules;
+extern CGameEntitySystem* g_pEntitySystem;
+extern CGameConfig* g_GameConfig;
+extern CCSGameRules* g_pGameRules;
 
-CBaseEntity *UTIL_FindPickerEntity(CBasePlayerController *pPlayer)
+CBaseEntity* UTIL_FindPickerEntity(CBasePlayerController* pPlayer)
 {
+	if (!g_pGameRules)
+		return nullptr;
+
 	static int offset = g_GameConfig->GetOffset("CGameRules_FindPickerEntity");
 
 	if (offset < 0)
@@ -43,22 +46,22 @@ CBaseEntity *UTIL_FindPickerEntity(CBasePlayerController *pPlayer)
 		return nullptr;
 	}
 
-	return CALL_VIRTUAL(CBaseEntity *, offset, g_pGameRules, pPlayer);
+	return CALL_VIRTUAL(CBaseEntity*, offset, g_pGameRules, pPlayer);
 }
 
-CBaseEntity *UTIL_FindEntityByClassname(CEntityInstance *pStartEntity, const char *szName)
+CBaseEntity* UTIL_FindEntityByClassname(CEntityInstance* pStartEntity, const char* szName)
 {
 	return addresses::CGameEntitySystem_FindEntityByClassName(g_pEntitySystem, pStartEntity, szName);
 }
 
-CBaseEntity *UTIL_FindEntityByName(CEntityInstance *pStartEntity, const char *szName,
-									   CEntityInstance *pSearchingEntity, CEntityInstance *pActivator, CEntityInstance *pCaller, IEntityFindFilter *pFilter)
+CBaseEntity* UTIL_FindEntityByName(CEntityInstance* pStartEntity, const char* szName,
+								   CEntityInstance* pSearchingEntity, CEntityInstance* pActivator, CEntityInstance* pCaller, IEntityFindFilter* pFilter)
 {
 	return addresses::CGameEntitySystem_FindEntityByName(g_pEntitySystem, pStartEntity, szName, pSearchingEntity, pActivator, pCaller, pFilter);
 }
 
-void UTIL_AddEntityIOEvent(CEntityInstance *pTarget, const char *pszInput,
-						   CEntityInstance *pActivator, CEntityInstance *pCaller, variant_t value, float flDelay)
+void UTIL_AddEntityIOEvent(CEntityInstance* pTarget, const char* pszInput,
+						   CEntityInstance* pActivator, CEntityInstance* pCaller, variant_t value, float flDelay)
 {
 	addresses::CEntitySystem_AddEntityIOEvent(g_pEntitySystem, pTarget, pszInput, pActivator, pCaller, &value, flDelay, 0);
 }

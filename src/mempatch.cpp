@@ -1,7 +1,7 @@
 /**
  * =============================================================================
  * CS2Fixes
- * Copyright (C) 2023-2024 Source2ZE
+ * Copyright (C) 2023-2025 Source2ZE
  * =============================================================================
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -19,14 +19,18 @@
 
 #include "mempatch.h"
 #include "common.h"
-#include "utils/module.h"
 #include "tier0/dbg.h"
 #include "tier1/strtools.h"
+#include "utils/module.h"
 
 #include "tier0/memdbgon.h"
 
-bool CMemPatch::PerformPatch(CGameConfig *gameConfig)
+bool CMemPatch::PerformPatch(CGameConfig* gameConfig)
 {
+	// We're patched already
+	if (m_pOriginalBytes)
+		return true;
+
 	// If we already have an address, no need to look for it again
 	if (!m_pPatchAddress)
 	{
@@ -36,7 +40,7 @@ bool CMemPatch::PerformPatch(CGameConfig *gameConfig)
 			return false;
 	}
 
-	const char *patch = gameConfig->GetPatch(m_pszName);
+	const char* patch = gameConfig->GetPatch(m_pszName);
 	if (!patch)
 	{
 		Panic("Failed to find patch for %s\n", m_pszName);
@@ -77,4 +81,5 @@ void CMemPatch::UndoPatch()
 	Plat_WriteMemory((void*)m_pPatchAddress, m_pOriginalBytes, m_iPatchLength);
 
 	delete[] m_pOriginalBytes;
+	m_pOriginalBytes = nullptr;
 }

@@ -1,7 +1,7 @@
 /**
  * =============================================================================
  * CS2Fixes
- * Copyright (C) 2023-2024 Source2ZE
+ * Copyright (C) 2023-2025 Source2ZE
  * =============================================================================
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -18,40 +18,44 @@
  */
 
 #pragma once
+#include "bitvec.h"
 #include "common.h"
-#include "utlvector.h"
+#include "entity/cparticlesystem.h"
+#include "entity/cpointworldtext.h"
+#include "entity/lights.h"
+#include "entity/viewmodels.h"
+#include "gamesystem.h"
+#include "steam/isteamuser.h"
 #include "steam/steam_api_common.h"
 #include "steam/steamclientpublic.h"
-#include "steam/isteamuser.h"
+#include "utlvector.h"
 #include <playerslot.h>
-#include "bitvec.h"
-#include "entity/lights.h"
-#include "entity/cparticlesystem.h"
-#include "gamesystem.h"
 
-#define NO_TARGET_BLOCKS		(0)
-#define NO_RANDOM				(1 << 1)
-#define NO_MULTIPLE 			(1 << 2)
-#define NO_SELF					(1 << 3)
-#define NO_BOT					(1 << 4)
-#define NO_HUMAN				(1 << 5)
-#define NO_UNAUTHENTICATED		(1 << 6)
-#define NO_DEAD					(1 << 7)
-#define NO_ALIVE				(1 << 8)
-#define NO_TERRORIST			(1 << 9)
-#define NO_COUNTER_TERRORIST	(1 << 10)
-#define NO_SPECTATOR			(1 << 11)
-#define NO_IMMUNITY				(1 << 12)
+#define NO_TARGET_BLOCKS (0)
+#define NO_RANDOM (1 << 1)
+#define NO_MULTIPLE (1 << 2)
+#define NO_SELF (1 << 3)
+#define NO_BOT (1 << 4)
+#define NO_HUMAN (1 << 5)
+#define NO_UNAUTHENTICATED (1 << 6)
+#define NO_DEAD (1 << 7)
+#define NO_ALIVE (1 << 8)
+#define NO_TERRORIST (1 << 9)
+#define NO_COUNTER_TERRORIST (1 << 10)
+#define NO_SPECTATOR (1 << 11)
+#define NO_IMMUNITY (1 << 12)
 
 #define DECAL_PREF_KEY_NAME "hide_decals"
 #define HIDE_DISTANCE_PREF_KEY_NAME "hide_distance"
 #define SOUND_STATUS_PREF_KEY_NAME "sound_status"
 #define NO_SHAKE_PREF_KEY_NAME "no_shake"
+#define BUTTON_WATCH_PREF_KEY_NAME "button_watch"
 #define INVALID_ZEPLAYERHANDLE_INDEX 0u
 
 static uint32 iZEPlayerHandleSerial = 0u; // this should actually be 3 bytes large, but no way enough players join in servers lifespan for this to be an issue
 
-enum class ETargetType {
+enum class ETargetType
+{
 	NONE,
 	PLAYER,
 	SELF,
@@ -109,7 +113,7 @@ public:
 	ZEPlayerHandle();
 	ZEPlayerHandle(CPlayerSlot slot); // used for initialization inside ZEPlayer constructor
 	ZEPlayerHandle(const ZEPlayerHandle& other);
-	ZEPlayerHandle(ZEPlayer *pZEPlayer);
+	ZEPlayerHandle(ZEPlayer* pZEPlayer);
 
 	bool IsValid() const { return static_cast<bool>(Get()); }
 
@@ -117,16 +121,16 @@ public:
 	uint32 GetPlayerSlot() const { return m_Parts.m_PlayerSlot; }
 	uint32 GetSerial() const { return m_Parts.m_Serial; }
 
-	bool operator==(const ZEPlayerHandle &other) const { return other.m_Index == m_Index; }
-	bool operator!=(const ZEPlayerHandle &other) const { return other.m_Index != m_Index; }
-	bool operator==(ZEPlayer *pZEPlayer) const;
-	bool operator!=(ZEPlayer *pZEPlayer) const;
+	bool operator==(const ZEPlayerHandle& other) const { return other.m_Index == m_Index; }
+	bool operator!=(const ZEPlayerHandle& other) const { return other.m_Index != m_Index; }
+	bool operator==(ZEPlayer* pZEPlayer) const;
+	bool operator!=(ZEPlayer* pZEPlayer) const;
 
-	void operator=(const ZEPlayerHandle &other) { m_Index = other.m_Index; }
-	void operator=(ZEPlayer *pZEPlayer) { Set(pZEPlayer); }
-	void Set(ZEPlayer *pZEPlayer);
-	
-	ZEPlayer *Get() const;
+	void operator=(const ZEPlayerHandle& other) { m_Index = other.m_Index; }
+	void operator=(ZEPlayer* pZEPlayer) { Set(pZEPlayer); }
+	void Set(ZEPlayer* pZEPlayer);
+
+	ZEPlayer* Get() const;
 
 private:
 	union
@@ -143,14 +147,16 @@ private:
 class ZEPlayer
 {
 public:
-	ZEPlayer(CPlayerSlot slot, bool m_bFakeClient = false): m_slot(slot), m_bFakeClient(m_bFakeClient), m_Handle(slot)
-	{ 
+	ZEPlayer(CPlayerSlot slot, bool m_bFakeClient = false) :
+		m_slot(slot), m_bFakeClient(m_bFakeClient), m_Handle(slot)
+	{
 		m_bAuthenticated = false;
 		m_iAdminFlags = 0;
 		m_iAdminImmunity = 0;
 		m_SteamID = nullptr;
 		m_bGagged = false;
 		m_bMuted = false;
+		m_bEbanned = false;
 		m_iHideDistance = 0;
 		m_bConnected = false;
 		m_iTotalDamage = 0;
@@ -159,7 +165,7 @@ public:
 		m_bVotedRTV = false;
 		m_bVotedExtend = false;
 		m_bIsInfected = false;
-		m_flRTVVoteTime = 0;
+		m_flRTVVoteTime = -60.0f;
 		m_flExtendVoteTime = 0;
 		m_iFloodTokens = 0;
 		m_flLastTalkTime = 0;
@@ -181,11 +187,18 @@ public:
 		m_iLastInputTime = std::time(0);
 		m_pActiveZRClass = nullptr;
 		m_pActiveZRModel = nullptr;
+		m_iButtonWatchMode = 0;
+		m_iEntwatchHudMode = 0;
+		m_bEntwatchClantags = true;
+		m_colorEntwatchHud = Color(255, 255, 255, 255);
+		m_flEntwatchHudX = -7.5f;
+		m_flEntwatchHudY = -2.0f;
+		m_flEntwatchHudSize = 60.0f;
 	}
 
 	~ZEPlayer()
 	{
-		CBarnLight *pFlashLight = m_hFlashLight.Get();
+		CBarnLight* pFlashLight = m_hFlashLight.Get();
 
 		if (pFlashLight)
 			pFlashLight->Remove();
@@ -200,7 +213,7 @@ public:
 	const CSteamID* GetSteamId() { return m_SteamID; }
 	bool IsAdminFlagSet(uint64 iFlag);
 	bool IsFlooding();
-	
+
 	void SetConnected() { m_bConnected = true; }
 	void SetUnauthenticatedSteamId(const CSteamID* steamID) { m_UnauthenticatedSteamID = steamID; }
 	void SetSteamId(const CSteamID* steamID) { m_SteamID = steamID; }
@@ -209,6 +222,7 @@ public:
 	void SetPlayerSlot(CPlayerSlot slot) { m_slot = slot; }
 	void SetMuted(bool muted) { m_bMuted = muted; }
 	void SetGagged(bool gagged) { m_bGagged = gagged; }
+	void SetEbanned(bool ebanned) { m_bEbanned = ebanned; }
 	void SetTransmit(int index, bool shouldTransmit) { shouldTransmit ? m_shouldTransmit.Set(index) : m_shouldTransmit.Clear(index); }
 	void ClearTransmit() { m_shouldTransmit.ClearAll(); }
 	void SetHideDistance(int distance);
@@ -224,30 +238,37 @@ public:
 	void SetInGame(bool bInGame) { m_bInGame = bInGame; }
 	void SetImmunity(int iMZImmunity) { m_iMZImmunity = iMZImmunity; }
 	void SetNominateTime(float flCurtime) { m_flNominateTime = flCurtime; }
-	void SetFlashLight(CBarnLight *pLight) { m_hFlashLight.Set(pLight); }
-	void SetBeaconParticle(CParticleSystem *pParticle) { m_hBeaconParticle.Set(pParticle); }
+	void SetFlashLight(CBarnLight* pLight) { m_hFlashLight.Set(pLight); }
+	void SetBeaconParticle(CParticleSystem* pParticle) { m_hBeaconParticle.Set(pParticle); }
 	void SetPlayerState(uint32 iPlayerState) { m_iPlayerState = iPlayerState; }
 	void SetLeader(bool bIsLeader) { m_bIsLeader = bIsLeader; }
 	void CreateMark(float fDuration, Vector vecOrigin);
-	void SetLeaderColor(Color colorLeader) {m_colorLeader = colorLeader;}
+	void SetLeaderColor(Color colorLeader) { m_colorLeader = colorLeader; }
 	void SetTracerColor(Color colorTracer) { m_colorTracer = colorTracer; }
 	void SetGlowColor(Color colorGlow) { m_colorGlow = colorGlow; }
 	void SetBeaconColor(Color colorBeacon) { m_colorBeacon = colorBeacon; }
 	void SetLeaderVoteTime(float flCurtime) { m_flLeaderVoteTime = flCurtime; }
-	void SetGlowModel(CBaseModelEntity *pModel) { m_hGlowModel.Set(pModel); }
-	void SetHoldingRMB(bool holdingRMB) { m_bHoldingRMB = holdingRMB; }
+	void SetGlowModel(CBaseModelEntity* pModel) { m_hGlowModel.Set(pModel); }
 	void SetSpeedMod(float flSpeedMod) { m_flSpeedMod = flSpeedMod; }
 	void SetLastInputs(uint64 iLastInputs) { m_iLastInputs = iLastInputs; }
 	void UpdateLastInputTime() { m_iLastInputTime = std::time(0); }
 	void SetMaxSpeed(float flMaxSpeed) { m_flMaxSpeed = flMaxSpeed; }
+	void CycleButtonWatch();
 	void ReplicateConVar(const char* pszName, const char* pszValue);
 	void SetActiveZRClass(std::shared_ptr<ZRClass> pZRModel) { m_pActiveZRClass = pZRModel; }
 	void SetActiveZRModel(std::shared_ptr<ZRModelEntry> pZRClass) { m_pActiveZRModel = pZRClass; }
+	void SetEntwatchHudMode(int iMode);
+	void SetEntwatchClangtags(bool bStatus);
+	void SetEntwatchHud(CPointWorldText* pWorldText) { m_hEntwatchHud.Set(pWorldText); }
+	void SetEntwatchHudColor(Color colorHud);
+	void SetEntwatchHudPos(float x, float y);
+	void SetEntwatchHudSize(float flSize);
 
 	uint64 GetAdminFlags() { return m_iAdminFlags; }
 	int GetAdminImmunity() { return m_iAdminImmunity; }
 	bool IsMuted() { return m_bMuted; }
 	bool IsGagged() { return m_bGagged; }
+	bool IsEbanned() { return m_bEbanned; }
 	bool ShouldBlockTransmit(int index) { return m_shouldTransmit.Get(index); }
 	int GetHideDistance();
 	CPlayerSlot GetPlayerSlot() { return m_slot; }
@@ -263,8 +284,8 @@ public:
 	bool IsInGame() { return m_bInGame; }
 	int GetImmunity() { return m_iMZImmunity; }
 	float GetNominateTime() { return m_flNominateTime; }
-	CBarnLight *GetFlashLight() { return m_hFlashLight.Get(); }
-	CParticleSystem *GetBeaconParticle() { return m_hBeaconParticle.Get(); }
+	CBarnLight* GetFlashLight() { return m_hFlashLight.Get(); }
+	CParticleSystem* GetBeaconParticle() { return m_hBeaconParticle.Get(); }
 	ZEPlayerHandle GetHandle() { return m_Handle; }
 	uint32 GetPlayerState() { return m_iPlayerState; }
 	bool IsLeader() { return m_bIsLeader; }
@@ -275,15 +296,23 @@ public:
 	int GetLeaderVoteCount();
 	bool HasPlayerVotedLeader(ZEPlayer* pPlayer);
 	float GetLeaderVoteTime() { return m_flLeaderVoteTime; }
-	CBaseModelEntity *GetGlowModel() { return m_hGlowModel.Get(); }
-	bool IsHoldingRMB() { return m_bHoldingRMB; }
+	CBaseModelEntity* GetGlowModel() { return m_hGlowModel.Get(); }
 	float GetSpeedMod() { return m_flSpeedMod; }
 	float GetMaxSpeed() { return m_flMaxSpeed; }
 	uint64 GetLastInputs() { return m_iLastInputs; }
 	std::time_t GetLastInputTime() { return m_iLastInputTime; }
 	std::shared_ptr<ZRClass> GetActiveZRClass() { return m_pActiveZRClass; }
 	std::shared_ptr<ZRModelEntry> GetActiveZRModel() { return m_pActiveZRModel; }
-	
+	int GetButtonWatchMode();
+	CBaseViewModel* GetOrCreateCustomViewModel(CCSPlayerPawn* pPawn);
+	int GetEntwatchHudMode();
+	bool GetEntwatchClangtags() { return m_bEntwatchClantags; }
+	CPointWorldText* GetEntwatchHud() { return m_hEntwatchHud.Get(); }
+	Color GetEntwatchHudColor() { return m_colorEntwatchHud; }
+	float GetEntwatchHudX() { return m_flEntwatchHudX; }
+	float GetEntwatchHudY() { return m_flEntwatchHudY; }
+	float GetEntwatchHudSize() { return m_flEntwatchHudSize; }
+
 	void OnSpawn();
 	void OnAuthenticated();
 	void CheckAdmin();
@@ -297,6 +326,7 @@ public:
 	void StartGlow(Color color, int duration);
 	void EndGlow();
 	void SetSteamIdAttribute();
+	void CreateEntwatchHud();
 
 private:
 	bool m_bAuthenticated;
@@ -307,6 +337,7 @@ private:
 	bool m_bFakeClient;
 	bool m_bMuted;
 	bool m_bGagged;
+	bool m_bEbanned;
 	uint64 m_iAdminFlags;
 	int m_iAdminImmunity;
 	int m_iHideDistance;
@@ -345,21 +376,26 @@ private:
 	std::time_t m_iLastInputTime;
 	std::shared_ptr<ZRClass> m_pActiveZRClass;
 	std::shared_ptr<ZRModelEntry> m_pActiveZRModel;
+	int m_iButtonWatchMode;
+	CHandle<CPointWorldText> m_hEntwatchHud;
+	int m_iEntwatchHudMode;
+	bool m_bEntwatchClantags;
+	Color m_colorEntwatchHud;
+	float m_flEntwatchHudX;
+	float m_flEntwatchHudY;
+	float m_flEntwatchHudSize;
 };
 
 class CPlayerManager
 {
 public:
-	CPlayerManager(bool late = false)
+	CPlayerManager()
 	{
 		V_memset(m_vecPlayers, 0, sizeof(m_vecPlayers));
 		m_nUsingStopSound = -1; // On by default
 		m_nUsingSilenceSound = 0;
 		m_nUsingStopDecals = -1; // On by default
 		m_nUsingNoShake = 0;
-
-		if (late)
-			OnLateLoad();
 	}
 
 	bool OnClientConnected(CPlayerSlot slot, uint64 xuid, const char* pszNetworkID);
@@ -373,21 +409,21 @@ public:
 	void CheckHideDistances();
 	void SetupInfiniteAmmo();
 	CPlayerSlot GetSlotFromUserId(uint16 userid);
-	ZEPlayer *GetPlayerFromUserId(uint16 userid);
-	ZEPlayer *GetPlayerFromSteamId(uint64 steamid);
-	ETargetError GetPlayersFromString(CCSPlayerController* pPlayer, const char* pszTarget, int &iNumClients, int *clients, uint64 iBlockedFlags = NO_TARGET_BLOCKS);
-	ETargetError GetPlayersFromString(CCSPlayerController* pPlayer, const char* pszTarget, int &iNumClients, int *clients, uint64 iBlockedFlags, ETargetType& nType);
+	ZEPlayer* GetPlayerFromUserId(uint16 userid);
+	ZEPlayer* GetPlayerFromSteamId(uint64 steamid);
+	ETargetError GetPlayersFromString(CCSPlayerController* pPlayer, const char* pszTarget, int& iNumClients, int* clients, uint64 iBlockedFlags = NO_TARGET_BLOCKS);
+	ETargetError GetPlayersFromString(CCSPlayerController* pPlayer, const char* pszTarget, int& iNumClients, int* clients, uint64 iBlockedFlags, ETargetType& nType);
 	static std::string GetErrorString(ETargetError eType, int iSlot = 0);
 	bool CanTargetPlayers(CCSPlayerController* pPlayer, const char* pszTarget, int& iNumClients, int* clients, uint64 iBlockedFlags = NO_TARGET_BLOCKS);
 	bool CanTargetPlayers(CCSPlayerController* pPlayer, const char* pszTarget, int& iNumClients, int* clients, uint64 iBlockedFlags, ETargetType& nType);
 
-	ZEPlayer *GetPlayer(CPlayerSlot slot);
+	ZEPlayer* GetPlayer(CPlayerSlot slot);
 
 	uint64 GetStopSoundMask() { return m_nUsingStopSound; }
 	uint64 GetSilenceSoundMask() { return m_nUsingSilenceSound; }
 	uint64 GetStopDecalsMask() { return m_nUsingStopDecals; }
 	uint64 GetNoShakeMask() { return m_nUsingNoShake; }
-	
+
 	void SetPlayerStopSound(int slot, bool set);
 	void SetPlayerSilenceSound(int slot, bool set);
 	void SetPlayerStopDecals(int slot, bool set);
@@ -401,11 +437,12 @@ public:
 	bool IsPlayerUsingNoShake(int slot) { return m_nUsingNoShake & ((uint64)1 << slot); }
 
 	void UpdatePlayerStates();
+	int GetOnlinePlayerCount(bool bCountBots);
 
 	STEAM_GAMESERVER_CALLBACK_MANUAL(CPlayerManager, OnValidateAuthTicket, ValidateAuthTicketResponse_t, m_CallbackValidateAuthTicketResponse);
 
 private:
-	ZEPlayer *m_vecPlayers[MAXPLAYERS];
+	ZEPlayer* m_vecPlayers[MAXPLAYERS];
 
 	uint64 m_nUsingStopSound;
 	uint64 m_nUsingSilenceSound;
@@ -413,6 +450,6 @@ private:
 	uint64 m_nUsingNoShake;
 };
 
-extern CPlayerManager *g_playerManager;
+extern CPlayerManager* g_playerManager;
 
 void PrecacheBeaconParticle(IEntityResourceManifest* pResourceManifest);

@@ -1,7 +1,7 @@
 /**
  * =============================================================================
  * CS2Fixes
- * Copyright (C) 2023-2024 Source2ZE
+ * Copyright (C) 2023-2025 Source2ZE
  * =============================================================================
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -18,58 +18,57 @@
  */
 
 #pragma once
-#include "entity/ccsplayercontroller.h"
-#include "convar.h"
 #include "adminsystem.h"
+#include "convar.h"
+#include "entity/ccsplayercontroller.h"
 #include "leader.h"
 #include "igameevents.h"
 #include <vector>
 
-#define CMDFLAG_NONE	(0)
-#define CMDFLAG_NOHELP	(1 << 0) // Don't show in !help menu
+#define CMDFLAG_NONE (0)
+#define CMDFLAG_NOHELP (1 << 0) // Don't show in !help menu
 
 #define COMMAND_PREFIX "c_"
 #define CHAT_PREFIX	" \7[EXG 社区]\1 "
 
-typedef void (*FnChatCommandCallback_t)(const CCommand &args, CCSPlayerController *player);
+typedef void (*FnChatCommandCallback_t)(const CCommand& args, CCSPlayerController* player);
 
 class CChatCommand;
 
 extern IGameEventManager2* g_gameEventManager;
 extern CUtlMap<uint32, CChatCommand*> g_CommandList;
 
-extern bool g_bEnableCommands;
-extern bool g_bEnableAdminCommands;
+extern CConVar<bool> g_cvarEnableCommands;
+extern CConVar<bool> g_cvarEnableAdminCommands;
 
-extern bool g_bEnableHide;
-extern bool g_bEnableStopSound;
-extern bool g_bEnableNoShake;
-extern float g_flMaxShakeAmp;
+extern CConVar<bool> g_cvarEnableHide;
+extern CConVar<bool> g_cvarEnableStopSound;
+extern CConVar<bool> g_cvarEnableNoShake;
+extern CConVar<float> g_cvarMaxShakeAmp;
 
-
-void ClientPrintAll(int destination, const char *msg, ...);
-void ClientPrint(CCSPlayerController *player, int destination, const char *msg, ...);
+void ClientPrintAll(int destination, const char* msg, ...);
+void ClientPrint(CCSPlayerController* player, int destination, const char* msg, ...);
 
 // Just a wrapper class so we're able to insert the callback
 class CChatCommand
 {
 public:
-	CChatCommand(const char *cmd, FnChatCommandCallback_t callback, const char *description, uint64 adminFlags = ADMFLAG_NONE, uint64 cmdFlags = CMDFLAG_NONE) :
+	CChatCommand(const char* cmd, FnChatCommandCallback_t callback, const char* description, uint64 adminFlags = ADMFLAG_NONE, uint64 cmdFlags = CMDFLAG_NONE) :
 		m_pfnCallback(callback), m_sName(cmd), m_sDescription(description), m_nAdminFlags(adminFlags), m_nCmdFlags(cmdFlags)
 	{
 		g_CommandList.Insert(hash_32_fnv1a_const(cmd), this);
 	}
 
-	void operator()(const CCommand &args, CCSPlayerController *player)
+	void operator()(const CCommand& args, CCSPlayerController* player)
 	{
 		// Server disabled ALL chat commands
-		if (!g_bEnableCommands)
+		if (!g_cvarEnableCommands.Get())
 			return;
 
 		bool isAdminCommand = m_nAdminFlags > ADMFLAG_NONE;
 
 		// Server disabled admin chat commands
-		if (!g_bEnableAdminCommands && isAdminCommand)
+		if (!g_cvarEnableAdminCommands.Get() && m_nAdminFlags > ADMFLAG_NONE)
 			return;
 
 		// Only allow connected players to run chat commands
@@ -101,7 +100,7 @@ public:
 		m_pfnCallback(args, player);
 	}
 
-	static bool CheckCommandAccess(CCSPlayerController *pPlayer, uint64 flags);
+	static bool CheckCommandAccess(CCSPlayerController* pPlayer, uint64 flags);
 
 	const char* GetName() { return m_sName.c_str(); }
 	const char* GetDescription() { return m_sDescription.c_str(); }
@@ -119,35 +118,23 @@ private:
 	uint64 m_nCmdFlags;
 };
 
-struct WeaponMapEntry_t
-{
-	std::vector<std::string> aliases;
-	const char* szClassName;
-	const char* szWeaponName;
-	int iPrice;
-	uint16 iItemDefIndex;
-	gear_slot_t iGearSlot;
-	int maxAmount = 0;
-};
-
 void RegisterWeaponCommands();
-void ParseChatCommand(const char *, CCSPlayerController *);
+void ParseChatCommand(const char*, CCSPlayerController*);
 
-#define CON_COMMAND_CHAT_FLAGS(name, description, flags)																						\
-	void name##_callback(const CCommand &args, CCSPlayerController *player);																			\
-	static CChatCommand name##_chat_command(#name, name##_callback, description, flags);														\
-	static void name##_con_callback(const CCommandContext &context, const CCommand &args)																\
-	{																																					\
-		CCSPlayerController *pController = nullptr;																										\
-		if (context.GetPlayerSlot().Get() != -1)																										\
-			pController = (CCSPlayerController *)g_pEntitySystem->GetEntityInstance((CEntityIndex)(context.GetPlayerSlot().Get() + 1));					\
-																																						\
-		name##_chat_command(args, pController);																											\
-	}																																					\
-	static ConCommandRefAbstract name##_ref;																											\
-	static ConCommand name##_command(&name##_ref, COMMAND_PREFIX #name, name##_con_callback,															\
-									description, FCVAR_CLIENT_CAN_EXECUTE | FCVAR_LINKED_CONCOMMAND);													\
-	void name##_callback(const CCommand &args, CCSPlayerController *player)
+#define CON_COMMAND_CHAT_FLAGS(name, description, flags)                                                                               \
+	void name##_callback(const CCommand& args, CCSPlayerController* player);                                                           \
+	static CChatCommand name##_chat_command(#name, name##_callback, description, flags);                                               \
+	static void name##_con_callback(const CCommandContext& context, const CCommand& args)                                              \
+	{                                                                                                                                  \
+		CCSPlayerController* pController = nullptr;                                                                                    \
+		if (context.GetPlayerSlot().Get() != -1)                                                                                       \
+			pController = (CCSPlayerController*)g_pEntitySystem->GetEntityInstance((CEntityIndex)(context.GetPlayerSlot().Get() + 1)); \
+                                                                                                                                       \
+		name##_chat_command(args, pController);                                                                                        \
+	}                                                                                                                                  \
+	static ConCommand name##_command(COMMAND_PREFIX #name, name##_con_callback,                                                        \
+									 description, FCVAR_CLIENT_CAN_EXECUTE | FCVAR_LINKED_CONCOMMAND);                                 \
+	void name##_callback(const CCommand& args, CCSPlayerController* player)
 
 #define CON_COMMAND_CHAT(name, description) CON_COMMAND_CHAT_FLAGS(name, description, ADMFLAG_NONE)
 #define CON_COMMAND_CHAT_LEADER(name, description) CON_COMMAND_CHAT_FLAGS(name, description, FLAG_LEADER)

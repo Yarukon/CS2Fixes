@@ -107,6 +107,16 @@
 				"windows"		"\xE8\x2A\x2A\x2A\x2A\x84\x2A\x0F\x84\x2A\x2A\x2A\x2A\x48\x2A\x2A\x2A\x2A\x2A\x2A\xC6\x85"
 				"linux"			"\x55\x48\x89\xE5\x41\x57\x41\x56\x4C\x8D\xBD\xD0\xFE\xFF\xFF\x49\x89\xD6\x41\x55\x49\x89\xF5\x41\x54\x49\x89\xCC"
 			}
+            // func_pushable inside CTriggerBrush::Use calls CEntityIOOutput::FireOutputInternal
+            // Windows - https://imgur.com/a/A3zcxQm
+            // Linux doesn't inline it so you need to find any of the xrefs and the proper function is right after it.
+            // You can tell it apart by the arguments: (a1 + 2616, v4, a1, &v6, 0.0);
+            "CEntityIOOutput_FireOutputInternal"
+			{
+				"library"		"server"
+				"windows"		"\x4C\x89\x4C\x24\x20\x53\x55\x57\x41\x54\x41\x56\x48\x81\xEC"
+				"linux"			"\x55\x48\x89\xE5\x41\x57\x41\x56\x41\x55\x41\x54\x49\x89\xD4\x53\x48\x89\xF3\x48\x83\xEC\x58"
+			}
 			// "multi_manager" is passed to this
 			"CGameEntitySystem_FindEntityByClassName"
 			{
@@ -135,6 +145,23 @@
 				"library"		"server"
 				"windows"		"\x48\x8B\x3D\x2A\x2A\x2A\x2A\x48\x85\xFF\x0F\x84\x2A\x2A\x2A\x2A\xBE"
 				"linux"			"\x4C\x8B\x35\x2A\x2A\x2A\x2A\x4D\x85\xF6\x75\x2A\xE9"
+			}
+			// Windows "%s:  IGameSystem::LoopPostInitAllSystems(start)\n"
+			// Linux "%s:  IGameSystem::LoopInitAllSystems(start)"
+			// In windows it's the only qword that gets nullchecked, while in linux it gets set to another qword's address
+			"IGameSystem_LoopPostInitAllSystems_pEventDispatcher"
+			{
+				"library"		"server"
+				"windows"		"\x48\x39\x1D\x2A\x2A\x2A\x2A\x74\x2A\x39\x05"
+				"linux"			"\x48\x89\x35\x2A\x2A\x2A\x2A\x45\x85\xF6"
+			}
+			// "--CLoopModeGame::SetWorldSession"
+			// In the above, a number is checked if > 0 then the function is called
+			"IGameSystem_LoopDestroyAllSystems_s_GameSystems"
+			{
+				"library"		"server"
+				"windows"		"\x8B\x05\x2A\x2A\x2A\x2A\x83\xE8\x2A\x48\x63\xF8\x0F\x88"
+				"linux"			"\x8B\x05\x2A\x2A\x2A\x2A\x55\x48\x89\xE5\x41\x54\x53\x89\xC2"
 			}
 			"CBasePlayerController_SetPawn"
 			{
@@ -168,6 +195,12 @@
 				"library"		"server"
 				"windows"		"\x48\x89\x5C\x24\x2A\x48\x89\x6C\x24\x2A\x56\x57\x41\x56\x48\x83\xEC\x2A\x48\x8B\x01\x48\x8B\xFA"
 				"linux"			"\x55\x48\x8D\x15\x2A\x2A\x2A\x2A\x48\x89\xE5\x41\x55\x49\x89\xFD\x41\x54\x49\x89\xF4"
+			}
+			"CCSPlayer_WeaponServices_EquipWeapon"
+			{
+				"library"		"server"
+				"windows"		"\x48\x89\x5C\x24\x10\x48\x89\x6C\x24\x18\x48\x89\x74\x24\x20\x57\x48\x83\xEC\x2A\x48\x8B\xDA\x48\x8B\xF9\x48\x8B\x51\x30"
+				"linux"			"\x55\x48\x89\xE5\x41\x56\x41\x55\x41\x54\x49\x89\xF4\x53\x48\x8B\x77\x30"
 			}
 			"CreateEntityByName"
 			{
@@ -357,6 +390,27 @@
 				"windows"	"\x48\x89\x5C\x24\x2A\x57\x48\x81\xEC\x2A\x2A\x2A\x2A\x48\x8B\xF9\x48\x8B\xDA\x48\x8B\x89"
 				"linux"		"\x55\x48\x89\xE5\x41\x55\x41\x54\x49\x89\xFC\x48\x83\xEC\x2A\x48\x8B\xBF\x2A\x2A\x2A\x2A\x48\x85\xFF\x0F\x84\x2A\x2A\x2A\x2A\x48\x8B\x07\x48\x8D\x15"
 			}
+			// Only ever referenced right next to string "TestActivator"
+			"CBaseFilter_InputTestActivator"
+			{
+				"library"	"server"
+				"windows"	"\x48\x89\x5C\x24\x2A\x57\x48\x83\xEC\x2A\x4C\x8B\x02"
+				"linux"		"\x55\x48\x89\xE5\x41\x54\x49\x89\xFC\x53\x48\x89\xF3\x48\x83\xEC\x2A\x48\x8B\x07\x48\x8B\x76"
+			}
+			// "Kicking user %s (sv_kick_players_with_cooldown=%d)\n"
+			"GameSystem_Think_CheckSteamBan"
+			{
+				"library"	"server"
+				"windows"	"\x41\x54\x48\x83\xEC\x2A\xBA\x2A\x2A\x2A\x2A\x48\x8D\x0D\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x48\x85\xC0"
+				"linux"		"\x55\x48\x8D\x3D\x2A\x2A\x2A\x2A\xBE\x2A\x2A\x2A\x2A\x48\x89\xE5\x41\x57\x41\x56\x41\x55\x41\x54\x53\x48\x83\xEC"
+			}
+			// Location to CUtlMap unk that is referenced by function with "Notification about user penalty: %u/%u (%u sec)\n" string
+			"CCSGameRules__sm_mapGcBanInformation"
+			{
+				"library"	"server"
+				"windows"	"\x48\x8D\x0D\x2A\x2A\x2A\x2A\xF2\x0F\x58\xC1"
+				"linux"		"\x48\x8D\x3D\x2A\x2A\x2A\x2A\x44\x89\x6D"
+			}
 		}
 		"Offsets"
 		{
@@ -365,10 +419,30 @@
 				"windows"		"88"
 				"linux"			"80"
 			}
+			"CBaseEntity::Precache"
+			{
+				"windows"		"4"
+				"linux"			"5"
+			}
 			"CBaseEntity::Use"
 			{
 				"windows"		"140"
 				"linux"			"139"
+			}
+			"CBaseEntity::StartTouch"
+			{
+				"windows"		"143"
+				"linux"			"142"
+			}
+			"CBaseEntity::Touch"
+			{
+				"windows"		"144"
+				"linux"			"143"
+			}
+			"CBaseEntity::EndTouch"
+			{
+				"windows"		"145"
+				"linux"			"144"
 			}
 			"Teleport"
 			{
@@ -462,10 +536,27 @@
 				"windows"		"22"
 				"linux"			"23"
 			}
+			"CCSPlayer_WeaponServices::SelectItem"
+			{
+				"windows"		"24"
+				"linux"			"25"
+			}
 			"CCSGameRules_GoToIntermission"
 			{
 				"windows"		"128"
 				"linux"			"129"
+			}
+
+			// server.dll -> xref 'sv_phys_stop_at_collision' first __fastcall
+			"CVPhys2World::GetTouchingList"
+			{
+				"windows"    "23"
+				"linux"      "24"
+			}
+			"CBaseEntity::SetOwner"
+			{
+				"windows"    "46" // 48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 4C 8B 05 ? ? ? ? 48 8B D9
+				"linux"      "45"
 			}
 		}
 		"Patches"

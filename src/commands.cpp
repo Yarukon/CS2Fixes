@@ -1,7 +1,7 @@
 /**
  * =============================================================================
  * CS2Fixes
- * Copyright (C) 2023-2024 Source2ZE
+ * Copyright (C) 2023-2025 Source2ZE
  * =============================================================================
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -17,31 +17,30 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "usermessages.pb.h"
-#include "detours.h"
-#include "common.h"
-#include "utlstring.h"
-#include "recipientfilters.h"
 #include "commands.h"
-#include "utils/entity.h"
+#include "adminsystem.h"
+#include "common.h"
+#include "ctimer.h"
+#include "detours.h"
+#include "discord.h"
+#include "engine/igameeventsystem.h"
 #include "entity/cbaseentity.h"
-#include "entity/ccsweaponbase.h"
+#include "entity/cbasemodelentity.h"
 #include "entity/ccsplayercontroller.h"
 #include "entity/ccsplayerpawn.h"
-#include "entity/cbasemodelentity.h"
 #include "entity/ccsweaponbase.h"
 #include "entity/cparticlesystem.h"
 #include "entity/lights.h"
-#include "playermanager.h"
-#include "adminsystem.h"
-#include "leader.h"
-#include "ctimer.h"
 #include "httpmanager.h"
-#include "discord.h"
-#include "zombiereborn.h"
+#include "leader.h"
 #include "networksystem/inetworkmessages.h"
-#include "engine/igameeventsystem.h"
+#include "playermanager.h"
+#include "recipientfilters.h"
 #include "tier0/vprof.h"
+#include "usermessages.pb.h"
+#include "utils/entity.h"
+#include "utlstring.h"
+#include "zombiereborn.h"
 #undef snprintf
 #include "vendor/nlohmann/json.hpp"
 
@@ -50,86 +49,39 @@
 
 using json = nlohmann::json;
 
-extern IGameEventSystem *g_gameEventSystem;
-extern CGameEntitySystem *g_pEntitySystem;
+extern IGameEventSystem* g_gameEventSystem;
+extern CGameEntitySystem* g_pEntitySystem;
 extern IVEngineServer2* g_pEngineServer2;
 extern ISteamHTTP* g_http;
 
-bool g_bEnableCommands;
-bool g_bEnableAdminCommands;
+CConVar<bool> g_cvarEnableCommands("cs2f_commands_enable", FCVAR_NONE, "Whether to enable chat commands", false);
+CConVar<bool> g_cvarEnableAdminCommands("cs2f_admin_commands_enable", FCVAR_NONE, "Whether to enable admin chat commands", false);
+CConVar<bool> g_cvarEnableWeapons("cs2f_weapons_enable", FCVAR_NONE, "Whether to enable weapon commands", false);
 
-FAKE_BOOL_CVAR(cs2f_commands_enable, "Whether to enable chat commands", g_bEnableCommands, false, 0)
-FAKE_BOOL_CVAR(cs2f_admin_commands_enable, "Whether to enable admin chat commands", g_bEnableAdminCommands, false, 0)
-
-WeaponMapEntry_t WeaponMap[] = {
-	{{"bizon"},							"weapon_bizon",			"PP-Bizon",			1400, 26, GEAR_SLOT_RIFLE},
-	{{"mac10", "mac"},					"weapon_mac10",			"MAC-10",			1050, 27, GEAR_SLOT_RIFLE},
-	{{"mp5sd", "mp5"},					"weapon_mp5sd",			"MP5-SD",			1500, 23, GEAR_SLOT_RIFLE},
-	{{"mp7"},							"weapon_mp7",			"MP7",				1500, 23, GEAR_SLOT_RIFLE},
-	{{"mp9"},							"weapon_mp9",			"MP9",				1250, 34, GEAR_SLOT_RIFLE},
-	{{"p90"},							"weapon_p90",			"P90",				2350, 19, GEAR_SLOT_RIFLE},
-	{{"ump45", "ump"},					"weapon_ump45",			"UMP-45",			1200, 24, GEAR_SLOT_RIFLE},
-	{{"ak47", "ak"},					"weapon_ak47",			"AK-47",			2700, 7, GEAR_SLOT_RIFLE},
-	{{"aug"},							"weapon_aug",			"AUG",				3300, 8, GEAR_SLOT_RIFLE},
-	{{"famas"},							"weapon_famas",			"FAMAS",			2050, 10, GEAR_SLOT_RIFLE},
-	{{"galilar", "galil"},				"weapon_galilar",		"Galil AR",			1800, 13, GEAR_SLOT_RIFLE},
-	{{"m4a4"},							"weapon_m4a1",			"M4A4",				3100, 16, GEAR_SLOT_RIFLE},
-	{{"m4a1-s", "m4a1"},				"weapon_m4a1_silencer",	"M4A1-S",			2900, 60, GEAR_SLOT_RIFLE},
-	{{"sg553"},							"weapon_sg556",			"SG 553",			3000, 39, GEAR_SLOT_RIFLE},
-	{{"awp"},							"weapon_awp",			"AWP",				10000, 9, GEAR_SLOT_RIFLE},
-	{{"g3sg1"},							"weapon_g3sg1",			"G3SG1",			5000, 11, GEAR_SLOT_RIFLE},
-	{{"scar20", "scar"},				"weapon_scar20",		"SCAR-20",			5000, 38, GEAR_SLOT_RIFLE},
-	{{"ssg08", "ssg"},					"weapon_ssg08",			"SSG 08",			1700, 40, GEAR_SLOT_RIFLE},
-	{{"mag7", "mag"},					"weapon_mag7",			"MAG-7",			1300, 29, GEAR_SLOT_RIFLE},
-	{{"nova"},							"weapon_nova",			"Nova",				1050, 35, GEAR_SLOT_RIFLE},
-	{{"sawedoff"},						"weapon_sawedoff",		"Sawed-Off",		1100, 29, GEAR_SLOT_RIFLE},
-	{{"xm1014", "xm"},					"weapon_xm1014",		"XM1014",			2000, 25, GEAR_SLOT_RIFLE},
-	{{"m249"},							"weapon_m249",			"M249",				10000, 14, GEAR_SLOT_RIFLE},
-	{{"negev"},							"weapon_negev",			"Negev",			18000, 28, GEAR_SLOT_RIFLE},
-	{{"deagle"},						"weapon_deagle",		"Desert Eagle",		700, 1, GEAR_SLOT_PISTOL},
-	{{"dualberettas", "elite"},			"weapon_elite",			"Dual Berettas",	300, 2, GEAR_SLOT_PISTOL},
-	{{"fiveseven"},						"weapon_fiveseven",		"Five-SeveN",		500, 3, GEAR_SLOT_PISTOL},
-	{{"glock18", "glock"},				"weapon_glock",			"Glock-18",			200, 4, GEAR_SLOT_PISTOL},
-	{{"p2000"},							"weapon_hkp2000",		"P2000",			200, 32, GEAR_SLOT_PISTOL},
-	{{"p250"},							"weapon_p250",			"P250",				300, 36, GEAR_SLOT_PISTOL},
-	{{"tec9"},							"weapon_tec9",			"Tec-9",			500, 30, GEAR_SLOT_PISTOL},
-	{{"usp-s", "usp"},					"weapon_usp_silencer",	"USP-S",			200, 61, GEAR_SLOT_PISTOL},
-	{{"cz75-auto", "cs75a", "cz"},		"weapon_cz75a",			"CZ75-Auto",		500, 63, GEAR_SLOT_PISTOL},
-	{{"r8revolver", "revolver", "r8"},	"weapon_revolver",		"R8 Revolver",		199000, 64, GEAR_SLOT_PISTOL},
-	{{"hegrenade", "he"},				"weapon_hegrenade",		"HE Grenade",		2000, 44, GEAR_SLOT_GRENADES, 10},
-	{{"molotov", "fire"},				"weapon_molotov",		"Molotov",			3000, 46, GEAR_SLOT_GRENADES, 10},
-	{{"kevlar"},						"item_kevlar",			"Kevlar Vest",		650, 50, GEAR_SLOT_UTILITY},
-};
-
-bool g_bEnableWeapons = false;
-
-FAKE_BOOL_CVAR(cs2f_weapons_enable, "Whether to enable weapon commands", g_bEnableWeapons, false, false)
-
-int GetGrenadeAmmo(CCSPlayer_WeaponServices* pWeaponServices, WeaponMapEntry_t weaponEntry)
+int GetGrenadeAmmo(CCSPlayer_WeaponServices* pWeaponServices, const WeaponInfo_t* pWeaponInfo)
 {
-	if (!pWeaponServices || weaponEntry.iGearSlot != GEAR_SLOT_GRENADES)
+	if (!pWeaponServices || pWeaponInfo->m_eSlot != GEAR_SLOT_GRENADES)
 		return -1;
 
 	// TODO: look into molotov vs inc interaction
-	if (strcmp(weaponEntry.szClassName, "weapon_hegrenade") == 0)
+	if (strcmp(pWeaponInfo->m_pClass, "weapon_hegrenade") == 0)
 		return pWeaponServices->m_iAmmo[AMMO_OFFSET_HEGRENADE];
-	else if (strcmp(weaponEntry.szClassName, "weapon_molotov") == 0 || strcmp(weaponEntry.szClassName, "weapon_incgrenade") == 0)
+	if (strcmp(pWeaponInfo->m_pClass, "weapon_molotov") == 0 || strcmp(pWeaponInfo->m_pClass, "weapon_incgrenade") == 0)
 		return pWeaponServices->m_iAmmo[AMMO_OFFSET_MOLOTOV];
-	else if (strcmp(weaponEntry.szClassName, "weapon_decoy") == 0)
+	if (strcmp(pWeaponInfo->m_pClass, "weapon_decoy") == 0)
 		return pWeaponServices->m_iAmmo[AMMO_OFFSET_DECOY];
-	else if (strcmp(weaponEntry.szClassName, "weapon_flashbang") == 0)
+	if (strcmp(pWeaponInfo->m_pClass, "weapon_flashbang") == 0)
 		return pWeaponServices->m_iAmmo[AMMO_OFFSET_FLASHBANG];
-	else if (strcmp(weaponEntry.szClassName, "weapon_smokegrenade") == 0)
+	if (strcmp(pWeaponInfo->m_pClass, "weapon_smokegrenade") == 0)
 		return pWeaponServices->m_iAmmo[AMMO_OFFSET_SMOKEGRENADE];
-	else
-		return -1;
+	return -1;
 }
 
 int GetGrenadeAmmoTotal(CCSPlayer_WeaponServices* pWeaponServices)
 {
-	if(!pWeaponServices)
+	if (!pWeaponServices)
 		return -1;
-	
+
 	int grenadeAmmoOffsets[] = {
 		AMMO_OFFSET_HEGRENADE,
 		AMMO_OFFSET_FLASHBANG,
@@ -140,46 +92,27 @@ int GetGrenadeAmmoTotal(CCSPlayer_WeaponServices* pWeaponServices)
 
 	int totalGrenades = 0;
 	for (int i = 0; i < (sizeof(grenadeAmmoOffsets) / sizeof(int)); i++)
-	{
 		totalGrenades += pWeaponServices->m_iAmmo[grenadeAmmoOffsets[i]];
-	}
-	
+
 	return totalGrenades;
 }
 
 void ParseWeaponCommand(const CCommand& args, CCSPlayerController* player)
 {
-	if (!g_bEnableWeapons || !player || !player->m_hPawn())
+	if (!g_cvarEnableWeapons.Get() || !player || !player->m_hPawn())
 		return;
 
 	VPROF("ParseWeaponCommand");
 
-	CCSPlayerPawn* pPawn = (CCSPlayerPawn*)player->GetPawn();
-	WeaponMapEntry_t weaponEntry;
-	bool foundWeapon = false;
+	const auto pPawn = reinterpret_cast<CCSPlayerPawn*>(player->GetPawn());
 
-	for (int i = 0; i < sizeof(WeaponMap) / sizeof(*WeaponMap); i++)
-	{
-		if (foundWeapon)
-			break;
+	const char* command = args[0];
+	if (!V_strncmp("c_", command, 2))
+		command = command + 2;
 
-		weaponEntry = WeaponMap[i];
-		const char* command = args[0];
+	const auto pWeaponInfo = FindWeaponInfoByAlias(command);
 
-		if (!V_strncmp("c_", command, 2))
-			command = command + 2;
-
-		for (std::string alias : weaponEntry.aliases)
-		{
-			if (!V_stricmp(command, alias.c_str()))
-			{
-				foundWeapon = true;
-				break;
-			}
-		}
-	}
-
-	if (!foundWeapon)
+	if (!pWeaponInfo || pWeaponInfo->m_nPrice == 0)
 		return;
 
 	if (pPawn->m_iHealth() <= 0 || pPawn->m_iTeamNum != CS_TEAM_CT)
@@ -197,51 +130,47 @@ void ParseWeaponCommand(const CCommand& args, CCSPlayerController* player)
 
 	int money = player->m_pInGameMoneyServices->m_iAccount;
 
-	if (money < weaponEntry.iPrice)
+	if (money < pWeaponInfo->m_nPrice)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你无法购买 %s! 该物品需花费 $%i, 你只有 $%i", weaponEntry.szWeaponName, weaponEntry.iPrice, money);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You can't afford %s! It costs $%i, you only have $%i", pWeaponInfo->m_pName, pWeaponInfo->m_nPrice, money);
 		return;
 	}
 
-	if (weaponEntry.iGearSlot == GEAR_SLOT_GRENADES)
+	if (pWeaponInfo->m_eSlot == GEAR_SLOT_GRENADES)
 	{
-		CUtlVector<CHandle<CBasePlayerWeapon>>* weapons = pWeaponServices->m_hMyWeapons();
+		static ConVarRefAbstract ammo_grenade_limit_default("ammo_grenade_limit_default"), ammo_grenade_limit_total("ammo_grenade_limit_total");
 
-		// CONVAR_TODO
-		ConVar* cvar = g_pCVar->GetConVar(g_pCVar->FindConVar("ammo_grenade_limit_default"));
-		// HACK: values is actually the cvar value itself, hence this ugly cast.
-		int iGrenadeLimitDefault = *(int*)&cvar->values;
-		cvar = g_pCVar->GetConVar(g_pCVar->FindConVar("ammo_grenade_limit_total"));
-		int iGrenadeLimitTotal = *(int*)&cvar->values;
+		int iGrenadeLimitDefault = ammo_grenade_limit_default.GetInt();
+		int iGrenadeLimitTotal = ammo_grenade_limit_total.GetInt();
 
-		int iMatchingGrenades = GetGrenadeAmmo(pWeaponServices, weaponEntry);
+		int iMatchingGrenades = GetGrenadeAmmo(pWeaponServices, pWeaponInfo);
 		int iTotalGrenades = GetGrenadeAmmoTotal(pWeaponServices);
 
 		if (iMatchingGrenades >= iGrenadeLimitDefault)
 		{
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You cannot carry any more %ss (Max %i)", weaponEntry.szWeaponName, iGrenadeLimitDefault);
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You cannot carry any more %ss (Max %i)", pWeaponInfo->m_pName, iGrenadeLimitDefault);
 			return;
 		}
 
 		if (iTotalGrenades >= iGrenadeLimitTotal)
 		{
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You cannot carry any more grenades (Max %i)", iGrenadeLimitTotal);
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You cannot carry any more grenades (Max %i)", iGrenadeLimitTotal);
 			return;
 		}
 	}
 
-	if (weaponEntry.maxAmount)
+	if (pWeaponInfo->m_nMaxAmount)
 	{
 		CUtlVector<WeaponPurchaseCount_t>* weaponPurchases = pPawn->m_pActionTrackingServices->m_weaponPurchasesThisRound().m_weaponPurchases;
 		bool found = false;
 		FOR_EACH_VEC(*weaponPurchases, i)
 		{
 			WeaponPurchaseCount_t& purchase = (*weaponPurchases)[i];
-			if (purchase.m_nItemDefIndex == weaponEntry.iItemDefIndex)
+			if (purchase.m_nItemDefIndex == pWeaponInfo->m_iItemDefinitionIndex)
 			{
-				if (purchase.m_nCount >= weaponEntry.maxAmount)
+				if (purchase.m_nCount >= pWeaponInfo->m_nMaxAmount)
 				{
-					ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你不能再购买更多的 %s 了(最多 %i 个)", weaponEntry.szWeaponName, weaponEntry.maxAmount);
+					ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You cannot buy any more %s (Max %i)", pWeaponInfo->m_pName, pWeaponInfo->m_nMaxAmount);
 					return;
 				}
 				purchase.m_nCount += 1;
@@ -255,13 +184,13 @@ void ParseWeaponCommand(const CCommand& args, CCSPlayerController* player)
 			WeaponPurchaseCount_t purchase = {};
 
 			purchase.m_nCount = 1;
-			purchase.m_nItemDefIndex = weaponEntry.iItemDefIndex;
+			purchase.m_nItemDefIndex = pWeaponInfo->m_iItemDefinitionIndex;
 
 			weaponPurchases->AddToTail(purchase);
 		}
 	}
 
-	if (weaponEntry.iGearSlot == GEAR_SLOT_RIFLE || weaponEntry.iGearSlot == GEAR_SLOT_PISTOL)
+	if (pWeaponInfo->m_eSlot == GEAR_SLOT_RIFLE || pWeaponInfo->m_eSlot == GEAR_SLOT_PISTOL)
 	{
 		CUtlVector<CHandle<CBasePlayerWeapon>>* weapons = pWeaponServices->m_hMyWeapons();
 
@@ -272,7 +201,7 @@ void ParseWeaponCommand(const CCommand& args, CCSPlayerController* player)
 			if (!weapon)
 				continue;
 
-			if (weapon->GetWeaponVData()->m_GearSlot() == weaponEntry.iGearSlot)
+			if (weapon->GetWeaponVData()->m_GearSlot() == pWeaponInfo->m_eSlot)
 			{
 				pWeaponServices->DropWeapon(weapon);
 				break;
@@ -280,9 +209,19 @@ void ParseWeaponCommand(const CCommand& args, CCSPlayerController* player)
 		}
 	}
 
-	player->m_pInGameMoneyServices->m_iAccount = money - weaponEntry.iPrice;
-	pItemServices->GiveNamedItem(weaponEntry.szClassName);
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"你购买了 %s 花费 $%i", weaponEntry.szWeaponName, weaponEntry.iPrice);
+	CBasePlayerWeapon* pWeapon = pItemServices->GiveNamedItemAws(pWeaponInfo->m_pClass);
+
+	// Normally shouldn't be possible, but avoid crashes in some edge cases
+	if (!pWeapon)
+		return;
+
+	player->m_pInGameMoneyServices->m_iAccount = money - pWeaponInfo->m_nPrice;
+
+	// If the weapon spawn goes through AWS, it needs to be manually selected because it spawns dropped in-world due to ZR enforcing mp_weapons_allow_* cvars against T's
+	if (pWeaponInfo->m_eSlot == GEAR_SLOT_RIFLE || pWeaponInfo->m_eSlot == GEAR_SLOT_PISTOL)
+		pWeaponServices->SelectItem(pWeapon);
+
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You have purchased %s for $%i", pWeaponInfo->m_pName, pWeaponInfo->m_nPrice);
 }
 
 void WeaponCommandCallback(const CCommandContext& context, const CCommand& args)
@@ -300,24 +239,23 @@ void WeaponCommandCallback(const CCommandContext& context, const CCommand& args)
 
 void RegisterWeaponCommands()
 {
-	for (int i = 0; i < sizeof(WeaponMap) / sizeof(*WeaponMap); i++)
-	{
-		WeaponMapEntry_t weaponEntry = WeaponMap[i];
+	const auto& weapons = GenerateWeaponCommands();
 
-		for (std::string alias : weaponEntry.aliases)
+	for (const auto& aliases : weapons | std::views::values)
+	{
+		for (const auto& alias : aliases)
 		{
 			new CChatCommand(alias.c_str(), ParseWeaponCommand, "- Buys this weapon", ADMFLAG_NONE, CMDFLAG_NOHELP);
-			ConCommandRefAbstract ref;
 
 			char cmdName[64];
 			V_snprintf(cmdName, sizeof(cmdName), "%s%s", COMMAND_PREFIX, alias.c_str());
 
-			new ConCommand(&ref, cmdName, WeaponCommandCallback, "Buys this weapon", FCVAR_RELEASE | FCVAR_CLIENT_CAN_EXECUTE | FCVAR_LINKED_CONCOMMAND);
+			new ConCommand(cmdName, WeaponCommandCallback, "Buys this weapon", FCVAR_RELEASE | FCVAR_CLIENT_CAN_EXECUTE | FCVAR_LINKED_CONCOMMAND);
 		}
 	}
 }
 
-void ParseChatCommand(const char *pMessage, CCSPlayerController *pController)
+void ParseChatCommand(const char* pMessage, CCSPlayerController* pController)
 {
 	if (!pController || !pController->IsConnected())
 		return;
@@ -334,26 +272,24 @@ void ParseChatCommand(const char *pMessage, CCSPlayerController *pController)
 	uint16 index = g_CommandList.Find(hash_32_fnv1a_const(name.c_str()));
 
 	if (g_CommandList.IsValidIndex(index))
-	{
 		(*g_CommandList[index])(args, pController);
-	}
 }
 
-bool CChatCommand::CheckCommandAccess(CCSPlayerController *pPlayer, uint64 flags)
+bool CChatCommand::CheckCommandAccess(CCSPlayerController* pPlayer, uint64 flags)
 {
 	if (!pPlayer)
 		return false;
 
 	int slot = pPlayer->GetPlayerSlot();
 
-	ZEPlayer *pZEPlayer = g_playerManager->GetPlayer(slot);
-	
+	ZEPlayer* pZEPlayer = g_playerManager->GetPlayer(slot);
+
 	if (!pZEPlayer)
 		return false;
 
 	if ((flags & FLAG_LEADER) == FLAG_LEADER)
 	{
-		if (!g_bEnableLeader)
+		if (!g_cvarEnableLeader.Get())
 			return false;
 		if (!pZEPlayer->IsAdminFlagSet(FLAG_LEADER))
 		{
@@ -362,7 +298,7 @@ bool CChatCommand::CheckCommandAccess(CCSPlayerController *pPlayer, uint64 flags
 				ClientPrint(pPlayer, HUD_PRINTTALK, CHAT_PREFIX "You must be a leader to use this command.");
 				return false;
 			}
-			else if (g_bLeaderActionsHumanOnly && pPlayer->m_iTeamNum != CS_TEAM_CT)
+			else if (g_cvarLeaderActionsHumanOnly.Get() && pPlayer->m_iTeamNum != CS_TEAM_CT)
 			{
 				ClientPrint(pPlayer, HUD_PRINTTALK, CHAT_PREFIX "You must be a human to use this command.");
 				return false;
@@ -378,7 +314,7 @@ bool CChatCommand::CheckCommandAccess(CCSPlayerController *pPlayer, uint64 flags
 	return true;
 }
 
-void ClientPrintAll(int hud_dest, const char *msg, ...)
+void ClientPrintAll(int hud_dest, const char* msg, ...)
 {
 	va_list args;
 	va_start(args, msg);
@@ -388,7 +324,7 @@ void ClientPrintAll(int hud_dest, const char *msg, ...)
 
 	va_end(args);
 
-	INetworkMessageInternal *pNetMsg = g_pNetworkMessages->FindNetworkMessagePartial("TextMsg");
+	INetworkMessageInternal* pNetMsg = g_pNetworkMessages->FindNetworkMessagePartial("TextMsg");
 	auto data = pNetMsg->AllocateMessage()->ToPB<CUserMessageTextMsg>();
 
 	data->set_dest(hud_dest);
@@ -404,7 +340,7 @@ void ClientPrintAll(int hud_dest, const char *msg, ...)
 	ConMsg("%s\n", buf);
 }
 
-void ClientPrint(CCSPlayerController *player, int hud_dest, const char *msg, ...)
+void ClientPrint(CCSPlayerController* player, int hud_dest, const char* msg, ...)
 {
 	va_list args;
 	va_start(args, msg);
@@ -420,7 +356,7 @@ void ClientPrint(CCSPlayerController *player, int hud_dest, const char *msg, ...
 		return;
 	}
 
-	INetworkMessageInternal *pNetMsg = g_pNetworkMessages->FindNetworkMessagePartial("TextMsg");
+	INetworkMessageInternal* pNetMsg = g_pNetworkMessages->FindNetworkMessagePartial("TextMsg");
 	auto data = pNetMsg->AllocateMessage()->ToPB<CUserMessageTextMsg>();
 
 	data->set_dest(hud_dest);
@@ -433,14 +369,11 @@ void ClientPrint(CCSPlayerController *player, int hud_dest, const char *msg, ...
 	delete data;
 }
 
-bool g_bEnableStopSound = false;
-
-FAKE_BOOL_CVAR(cs2f_stopsound_enable, "Whether to enable stopsound", g_bEnableStopSound, false, false)
-
+CConVar<bool> g_cvarEnableStopSound("cs2f_stopsound_enable", FCVAR_NONE, "Whether to enable stopsound", false);
 
 CON_COMMAND_CHAT(stopsound, "- Toggle weapon sounds")
 {
-	if (!g_bEnableStopSound)
+	if (!g_cvarEnableStopSound.Get())
 		return;
 
 	if (!player)
@@ -475,13 +408,11 @@ CON_COMMAND_CHAT(toggledecals, "- Toggle world decals, if you're into having 10 
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你 %s 了世界贴图.", bSet ? "禁用" : "启用");
 }
 
-bool g_bEnableNoShake = false;
-FAKE_BOOL_CVAR(cs2f_noshake_enable, "Whether to enable noshake command", g_bEnableNoShake, false, false)
-float g_flMaxShakeAmp = -1.0;
-FAKE_FLOAT_CVAR(cs2f_maximum_shake_amplitude, "Shaking Amplitude bigger than this will be clamped", g_flMaxShakeAmp, -1.0, false)
+CConVar<bool> g_cvarEnableNoShake("cs2f_noshake_enable", FCVAR_NONE, "Whether to enable noshake command", false);
+CConVar<float> g_cvarMaxShakeAmp("cs2f_maximum_shake_amplitude", FCVAR_NONE, "Shaking Amplitude bigger than this will be clamped", -1.0f, true, -1.0f, true, 16.0f);
 CON_COMMAND_CHAT(noshake, "- toggle noshake")
 {
-	if (!g_bEnableNoShake)
+	if (!g_cvarEnableNoShake.Get())
 		return;
 
 	if (!player)
@@ -497,18 +428,14 @@ CON_COMMAND_CHAT(noshake, "- toggle noshake")
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你 %s 了无摇晃.", bSet ? "开启" : "关闭");
 }
 
-bool g_bEnableHide = false;
-int g_iDefaultHideDistance = 250;
-int g_iMaxHideDistance = 2000;
-
-FAKE_BOOL_CVAR(cs2f_hide_enable, "Whether to enable hide", g_bEnableHide, false, false)
-FAKE_INT_CVAR(cs2f_hide_distance_default, "The default distance for hide", g_iDefaultHideDistance, 250, false)
-FAKE_INT_CVAR(cs2f_hide_distance_max, "The max distance for hide", g_iMaxHideDistance, 2000, false)
+CConVar<bool> g_cvarEnableHide("cs2f_hide_enable", FCVAR_NONE, "Whether to enable hide (WARNING: randomly crashes clients since 2023-12-13 CS2 update)", false);
+CConVar<int> g_cvarDefaultHideDistance("cs2f_hide_distance_default", FCVAR_NONE, "The default distance for hide", 250, true, 0, false, 0);
+CConVar<int> g_cvarMaxHideDistance("cs2f_hide_distance_max", FCVAR_NONE, "The max distance for hide", 2000, true, 0, false, 0);
 
 CON_COMMAND_CHAT(hide, "<distance> - Hide nearby players")
 {
 	// Silently return so the command is completely hidden
-	if (!g_bEnableHide)
+	if (!g_cvarEnableHide.Get())
 		return;
 
 	if (!player)
@@ -520,17 +447,17 @@ CON_COMMAND_CHAT(hide, "<distance> - Hide nearby players")
 	int distance;
 
 	if (args.ArgC() < 2)
-		distance = g_iDefaultHideDistance;
+		distance = g_cvarDefaultHideDistance.Get();
 	else
 		distance = V_StringToInt32(args[1], -1);
 
-	if (distance > g_iMaxHideDistance || distance < 0)
+	if (distance > g_cvarMaxHideDistance.Get() || distance < 0)
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "隐藏的范围只能是 0 至 %i 之间.", g_iMaxHideDistance);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You can only hide players between 0 and %i units away.", g_cvarMaxHideDistance.Get());
 		return;
 	}
 
-	ZEPlayer *pZEPlayer = player->GetZEPlayer();
+	ZEPlayer* pZEPlayer = player->GetZEPlayer();
 
 	// Something has to really go wrong for this to happen
 	if (!pZEPlayer)
@@ -620,13 +547,13 @@ CON_COMMAND_CHAT(info, "<name> - Get a player's information")
 		return;
 
 	ZEPlayer* pPlayer = player ? player->GetZEPlayer() : nullptr;
-	bool bIsAdmin = pPlayer ? pPlayer->IsAdminFlagSet(ADMFLAG_GENERIC) : true;
+	bool bIsAdmin = pPlayer ? pPlayer->IsAdminFlagSet(ADMFLAG_RCON) : true;
 
 	for (int i = 0; i < iNumClients; i++)
 	{
 		CCSPlayerController* pTarget = CCSPlayerController::FromSlot(pSlots[i]);
 		ZEPlayer* zpTarget = pTarget->GetZEPlayer();
-		
+
 		ClientPrint(player, HUD_PRINTCONSOLE, "%s", pTarget->GetPlayerName());
 		ClientPrint(player, HUD_PRINTCONSOLE, "\tUser ID: %i", g_pEngineServer2->GetPlayerUserId(pTarget->GetPlayerSlot()).Get());
 
@@ -701,7 +628,7 @@ CON_COMMAND_CHAT(fl, "- Flashlight")
 	if (!player)
 		return;
 
-	CCSPlayerPawn *pPawn = (CCSPlayerPawn *)player->GetPawn();
+	CCSPlayerPawn* pPawn = (CCSPlayerPawn*)player->GetPawn();
 
 	auto ptr = pPawn->m_pMovementServices->m_nButtons().m_pButtonStates();
 
@@ -712,7 +639,7 @@ CON_COMMAND_CHAT(fl, "- Flashlight")
 	origin.z += 64.0f;
 	origin += forward * 54.0f; // The minimum distance such that an awp wouldn't block the light
 
-	CBarnLight *pLight = CreateEntityByName<CBarnLight>("light_barn");
+	CBarnLight* pLight = CreateEntityByName<CBarnLight>("light_barn");
 
 	pLight->m_bEnabled = true;
 	pLight->m_Color->SetColor(255, 255, 255, 255);
@@ -728,7 +655,7 @@ CON_COMMAND_CHAT(fl, "- Flashlight")
 	pLight->Teleport(&origin, &pPawn->m_angEyeAngles(), nullptr);
 
 	// Have to use keyvalues for this since the schema prop is a resource handle
-	CEntityKeyValues *pKeyValues = new CEntityKeyValues();
+	CEntityKeyValues* pKeyValues = new CEntityKeyValues();
 	pKeyValues->SetString("lightcookie", "materials/effects/lightcookies/flashlight.vtex");
 
 	pLight->DispatchSpawn(pKeyValues);
@@ -757,7 +684,6 @@ CON_COMMAND_CHAT(test_target, "<name> [blocked flag] [...] - Test string targett
 
 	uint64 iBlockedFlags = NO_TARGET_BLOCKS;
 	for (int i = 1; i < args.ArgC(); i++)
-	{
 		if (!V_stricmp(args[i], "NO_RANDOM"))
 			iBlockedFlags |= NO_RANDOM;
 		else if (!V_stricmp(args[i], "NO_MULTIPLE"))
@@ -782,7 +708,6 @@ CON_COMMAND_CHAT(test_target, "<name> [blocked flag] [...] - Test string targett
 			iBlockedFlags |= NO_SPECTATOR;
 		else if (!V_stricmp(args[i], "NO_IMMUNITY"))
 			iBlockedFlags |= NO_IMMUNITY;
-	}
 
 	int iNumClients = 0;
 	int pSlots[MAXPLAYERS];
@@ -810,7 +735,7 @@ CON_COMMAND_CHAT(particle, "- Spawn a particle")
 	Vector vecAbsOrigin = player->GetPawn()->GetAbsOrigin();
 	vecAbsOrigin.z += 64.0f;
 
-	CParticleSystem *particle = CreateEntityByName<CParticleSystem>("info_particle_system");
+	CParticleSystem* particle = CreateEntityByName<CParticleSystem>("info_particle_system");
 
 	particle->m_bStartActive(true);
 	particle->m_iszEffectName(args[1]);
@@ -830,9 +755,9 @@ CON_COMMAND_CHAT(particle_kv, "- Spawn a particle but using keyvalues to spawn")
 	Vector vecAbsOrigin = player->GetPawn()->GetAbsOrigin();
 	vecAbsOrigin.z += 64.0f;
 
-	CParticleSystem *particle = CreateEntityByName<CParticleSystem>("info_particle_system");
+	CParticleSystem* particle = CreateEntityByName<CParticleSystem>("info_particle_system");
 
-	CEntityKeyValues *pKeyValues = new CEntityKeyValues();
+	CEntityKeyValues* pKeyValues = new CEntityKeyValues();
 
 	pKeyValues->SetString("effect_name", args[1]);
 	pKeyValues->SetBool("start_active", true);
@@ -860,7 +785,7 @@ CON_COMMAND_CHAT(emitsound, "- Emit a sound from the entity under crosshair")
 	if (!player)
 		return;
 
-	CBaseEntity *pEntity = UTIL_FindPickerEntity(player);
+	CBaseEntity* pEntity = UTIL_FindPickerEntity(player);
 
 	if (!pEntity)
 	{
@@ -879,14 +804,14 @@ CON_COMMAND_CHAT(getstats, "- Get your stats")
 	if (!player)
 		return;
 
-	CSMatchStats_t *stats = &player->m_pActionTrackingServices->m_matchStats();
+	CSMatchStats_t* stats = &player->m_pActionTrackingServices->m_matchStats();
 
 	ClientPrint(player, HUD_PRINTCENTER,
-		"击杀: %i\n"
-		"死亡: %i\n"
-		"辅助: %i\n"
-		"伤害: %i"
-		, stats->m_iKills.Get(), stats->m_iDeaths.Get(), stats->m_iAssists.Get(), stats->m_iDamage.Get());
+				"Kills: %i\n"
+				"Deaths: %i\n"
+				"Assists: %i\n"
+				"Damage: %i",
+				stats->m_iKills.Get(), stats->m_iDeaths.Get(), stats->m_iAssists.Get(), stats->m_iDamage.Get());
 
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"击杀: %d", stats->m_iKills.Get());
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"死亡: %d", stats->m_iDeaths.Get());
@@ -971,18 +896,18 @@ CON_COMMAND_CHAT(setinteraction, "<flags> - Set a player's interaction flags")
 	}
 }
 
-void HttpCallback(HTTPRequestHandle request, json response)
+void HttpCallbackSuccess(HTTPRequestHandle request, json response)
 {
 	ClientPrintAll(HUD_PRINTTALK, response.dump().c_str());
 }
 
-CON_COMMAND_CHAT(http, "<get/post> <url> [content] - Test an HTTP request")
+void HttpCallbackError(HTTPRequestHandle request, EHTTPStatusCode statusCode, json response)
 {
-	if (!g_http)
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Steam HTTP interface is not available!");
-		return;
-	}
+	ClientPrintAll(HUD_PRINTTALK, response.dump().c_str());
+}
+
+CON_COMMAND_CHAT(http, "<get/post/patch/put/delete> <url> [content] - Test an HTTP request")
+{
 	if (args.ArgC() < 3)
 	{
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !http <get/post> <url> [content]");
@@ -990,9 +915,15 @@ CON_COMMAND_CHAT(http, "<get/post> <url> [content] - Test an HTTP request")
 	}
 
 	if (!V_strcmp(args[1], "get"))
-		g_HTTPManager.GET(args[2], &HttpCallback);
+		g_HTTPManager.Get(args[2], &HttpCallbackSuccess, &HttpCallbackError);
 	else if (!V_strcmp(args[1], "post"))
-		g_HTTPManager.POST(args[2], args[3], &HttpCallback);
+		g_HTTPManager.Post(args[2], args[3], &HttpCallbackSuccess, &HttpCallbackError);
+	else if (!V_strcmp(args[1], "patch"))
+		g_HTTPManager.Patch(args[2], args[3], &HttpCallbackSuccess, &HttpCallbackError);
+	else if (!V_strcmp(args[1], "put"))
+		g_HTTPManager.Put(args[2], args[3], &HttpCallbackSuccess, &HttpCallbackError);
+	else if (!V_strcmp(args[1], "delete"))
+		g_HTTPManager.Delete(args[2], args[3], &HttpCallbackSuccess, &HttpCallbackError);
 }
 
 CON_COMMAND_CHAT(discordbot, "<bot> <message> - Send a message to a discord webhook")
