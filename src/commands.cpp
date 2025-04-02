@@ -336,8 +336,9 @@ void ClientPrintAll(int hud_dest, const char* msg, ...)
 	g_gameEventSystem->PostEventAbstract(-1, false, &filter, pNetMsg, data, 0);
 
 	delete data;
-
-	ConMsg("%s\n", buf);
+	char bufReplaced[256];
+	V_StrSubst(buf, "\a", " ", bufReplaced, sizeof(bufReplaced), false);  // 阻止 print 的时候输出响铃字符
+	ConMsg("%s\n", bufReplaced);
 }
 
 void ClientPrint(CCSPlayerController* player, int hud_dest, const char* msg, ...)
