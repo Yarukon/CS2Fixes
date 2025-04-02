@@ -45,6 +45,16 @@ static bool StripPlayer(CCSPlayerPawn* pPawn)
 	if (!pItemServices)
 		return false;
 
+	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
+	if (pEvent)
+	{
+		pEvent->SetString("custom_event", "call_strip_player"); // 用我们自己的安全的 strip
+		pEvent->SetInt("player_index", pPawn->entindex());
+		pEvent->SetBool("all_weapons", true);
+		g_gameEventManager->FireEvent(pEvent, true);
+		return true;
+	}
+
 	pItemServices->StripPlayerWeapons(true);
 
 	return true;
@@ -58,6 +68,20 @@ static void StripPlayer(CCSPlayerPawn* pPawn, const std::unordered_set<uint32_t>
 
 	CUtlVector<CHandle<CBasePlayerWeapon>>* weapons = pWeaponService->m_hMyWeapons();
 	std::vector<CBasePlayerWeapon*> vecWeaponsToRemove;
+
+	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning", true);
+	if (pEvent)
+	{
+		pEvent->SetString("custom_event", "call_strip_player");  // 用我们自己的安全的 strip
+		pEvent->SetInt("player_index", pPawn->entindex());
+		for (const auto& num : slots) {
+			char buf[128];
+			snprintf(buf, sizeof(buf), "weapon_slot_%d", num);
+			pEvent->SetBool(buf, true);
+		}
+		g_gameEventManager->FireEvent(pEvent, true);
+		return;
+	}
 
 	FOR_EACH_VEC(*weapons, i)
 	{
@@ -81,6 +105,32 @@ static void StripPlayer(CCSPlayerPawn* pPawn, const std::unordered_set<uint32_t>
 		pWeapon->Remove();
 	}
 }
+
+// css 呼叫测试 cs2f strip 的入口
+GAME_EVENT_F2(choppers_incoming_warning, call_cs2f_strip)
+{
+	auto customEventName = pEvent->GetString("custom_event", "");
+	if (strcmp(customEventName, "call_cs2f_strip") != 0)
+		return;
+	int slot = pEvent->GetInt("player_index", -1);
+	if (slot < 0 || slot >= 64) return;
+	auto controller = CCSPlayerController::FromSlot(slot);
+	if (!controller) return;
+	auto pawn = controller->GetPlayerPawn();
+	if (!pawn) return;
+	int wepSlot = pEvent->GetInt("weapon_slot", -1);
+	Message("call trim: %s %d\n", controller->GetPlayerName(), wepSlot);
+	if (wepSlot < 0)
+	{
+		StripPlayer(pawn);
+	}
+	else {
+		std::unordered_set<uint32_t> ls;
+		ls.insert(wepSlot);
+		StripPlayer(pawn, ls);
+	}
+}
+
 
 // Must be called in GameFramePre
 static void DelayInput(CBaseEntity* pCaller, const char* input, const char* param = "")
