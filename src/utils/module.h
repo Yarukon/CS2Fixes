@@ -138,6 +138,16 @@ public:
 
 		if (!return_addr)
 			error = SIG_NOT_FOUND;
+		else
+		{
+			unsigned char insnByte = *(unsigned char*)return_addr;
+			if (insnByte == 0xE8 || insnByte == 0xE9)
+			{
+				uintptr_t addr = (uintptr_t) return_addr;
+				int jumpOffset = *(int*)(addr + 1);
+				return_addr = (void*)(addr + 5 + jumpOffset);
+			}
+		}
 
 		return return_addr;
 	}
