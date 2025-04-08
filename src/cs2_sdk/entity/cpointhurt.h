@@ -30,4 +30,5 @@ public:
 	SCHEMA_FIELD(int, m_nDamage)
 	SCHEMA_FIELD(int, m_bitsDamageType)
 	SCHEMA_FIELD(float, m_flRadius)
+	SCHEMA_FIELD(float, m_flDelay)
 };

@@ -431,6 +431,22 @@ static void AddOutputCustom_Case(CBaseEntity* pInstance,
 #endif
 	}
 }
+static void AddOutputCustom_PointHurtDamageDelay(CBaseEntity* pInstance,
+												 CEntityInstance* pActivator,
+												 CEntityInstance* pCaller,
+												 const std::vector<std::string>& vecArgs)
+{
+	if (V_stricmp(pInstance->GetClassname(), "point_hurt") != 0)
+		return;
+
+	const auto value = V_StringToFloat32(vecArgs[1].c_str(), 0.0f);
+
+	reinterpret_cast<CPointHurt*>(pInstance)->m_flDelay = value;
+
+#ifdef _DEBUG
+	Message("Set delay to %f for %s\n", value, pInstance->GetName());
+#endif
+}
 
 const std::vector<AddOutputInfo_t> s_AddOutputHandlers = {
 	{{"targetname", 2},		AddOutputCustom_Targetname	  },
@@ -453,7 +469,10 @@ const std::vector<AddOutputInfo_t> s_AddOutputHandlers = {
 	{{"damage", 2},			AddOutputCustom_Damage		  },
 	{{"damagetype", 2},		AddOutputCustom_DamageType	  },
 	{{"damageradius", 2},	  AddOutputCustom_DamageRadius  },
+	{{"radius", 2},			AddOutputCustom_DamageRadius	},
 	{{"Case", 2, true},		AddOutputCustom_Case			},
+	{{"damagedelay", 2},	 AddOutputCustom_PointHurtDamageDelay},
+	{{"delay", 2},		   AddOutputCustom_PointHurtDamageDelay},
 };
 
 inline std::vector<std::string> StringSplit(const char* str, const char* delimiter)
