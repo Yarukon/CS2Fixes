@@ -915,6 +915,7 @@ void CS2Fixes::Hook_GameFramePost(bool simulating, bool bFirstTick, bool bLastTi
 }
 
 extern CConVar<bool> g_cvarFlashLightTransmitOthers;
+extern CConVar<bool> g_cvarEnableHideDeadPlayer;
 
 int evClearTransmit[64][1024]; // 和 c# 搭配的 transmit 互通接口
 bool evAddTransmit[64][64];
@@ -976,6 +977,7 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo** ppInfoList, int infoCount
 			if (entIndex > 0)
 				pInfo->m_pTransmitEntity->Clear(entIndex);
 		}
+		bool hideDead = g_cvarEnableHideDeadPlayer.GetBool();
 		for (int j = 0; j < GetGlobals()->maxClients; j++)
 		{
 			CCSPlayerController* pController = CCSPlayerController::FromSlot(j);
@@ -1017,7 +1019,10 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo** ppInfoList, int infoCount
 			bool shouldHide = false;
 			if (!pPawn->IsAlive())
 			{
-				shouldHide = true; // 死亡的玩家一定不传输
+				if (hideDead)
+				{
+					shouldHide = true; // 死亡的玩家一定不传输
+				}
 			}
 			else if (evAddTransmit[iPlayerSlot][j])
 			{
