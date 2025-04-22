@@ -605,23 +605,23 @@ CON_COMMAND_CHAT_FLAGS(hsay, "<message> - Say something as a hud hint", ADMFLAG_
 	ClientPrintAll(HUD_PRINTCENTER, "%s", args.ArgS());
 }
 
-CON_COMMAND_CHAT_FLAGS(rcon, "<command> - Send a command to server console", ADMFLAG_RCON)
-{
-	if (!player)
-	{
-		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "你都在用控制台了还用这个干毛线呢.");
-		return;
-	}
-
-	if (args.ArgC() < 2)
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "指令格式: !rcon <command>");
-		return;
-	}
-
-	g_pEngineServer2->ServerCommand(args.ArgS());
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你发送了指令: %s", args.ArgS());
-}
+//CON_COMMAND_CHAT_FLAGS(rcon, "<command> - Send a command to server console", ADMFLAG_RCON)
+//{
+//	if (!player)
+//	{
+//		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "你都在用控制台了还用这个干毛线呢.");
+//		return;
+//	}
+//
+//	if (args.ArgC() < 2)
+//	{
+//		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "指令格式: !rcon <command>");
+//		return;
+//	}
+//
+//	g_pEngineServer2->ServerCommand(args.ArgS());
+//	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你发送了指令: %s", args.ArgS());
+//}
 
 CON_COMMAND_CHAT_FLAGS(extend, "<minutes> - Extend current map (negative value reduces map duration)", ADMFLAG_CHANGEMAP)
 {
