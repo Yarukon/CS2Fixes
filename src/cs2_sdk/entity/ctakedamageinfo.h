@@ -131,21 +131,21 @@ public:
 	float m_flDamageAbsorbed;
 
 private:
-	[[maybe_unused]] uint8_t __pad0074[0x8];
+	[[maybe_unused]] uint8_t __pad0074[0xc];
 
 public:
 	TakeDamageFlags_t m_nDamageFlags;
-
-private:
-	[[maybe_unused]] uint8_t __pad0084[0x4];
-
-public:
 	int32_t m_nNumObjectsPenetrated;
 	float m_flFriendlyFireDamageReductionRatio;
+
+private:
+	[[maybe_unused]] uint8_t __pad0090[0x58];
+
+public:
 	uint64_t m_hScriptInstance;
 	AttackerInfo_t m_AttackerInfo;
 	bool m_bInTakeDamageFlow;
 
 private:
-	[[maybe_unused]] uint8_t __pad00ad[0x4];
+	[[maybe_unused]] uint8_t __pad00105[0xb];
 };
