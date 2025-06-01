@@ -371,12 +371,18 @@ void ClientPrint(CCSPlayerController* player, int hud_dest, const char* msg, ...
 }
 
 CConVar<bool> g_cvarEnableStopSound("cs2f_stopsound_enable", FCVAR_NONE, "Whether to enable stopsound", false);
+CConVar<bool> g_cvarForceStopSound("cs2f_stopsound_force", FCVAR_NONE, "force everyone enable stopsound", false);
 
 CON_COMMAND_CHAT(stopsound, "- Toggle weapon sounds")
 {
 	if (!g_cvarEnableStopSound.Get())
 		return;
 
+	if (g_cvarForceStopSound.Get())
+	{
+		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "已经开启强制 stopsound.");
+		return;
+	}
 	if (!player)
 	{
 		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "你无法在控制台执行该指令.");

@@ -232,7 +232,9 @@ void ZEPlayer::ToggleFlashLight()
 		return;
 	}
 
-	pLight->AcceptInput(pLight->m_bEnabled() ? "Disable" : "Enable");
+	pLight->Remove(); // 直接删了手电筒实体
+	SetFlashLight(NULL);
+	// pLight->AcceptInput(pLight->m_bEnabled() ? "Disable" : "Enable");
 }
 
 CConVar<float> g_cvarFloodInterval("cs2f_flood_interval", FCVAR_NONE, "Amount of time allowed between chat messages acquiring flood tokens", 0.75f, true, 0.0f, false, 0.0f);
@@ -1706,8 +1708,13 @@ ZEPlayer* CPlayerManager::GetPlayerFromSteamId(uint64 steamid)
 	return nullptr;
 }
 
+extern CConVar<bool> g_cvarForceStopSound;
+
 void CPlayerManager::SetPlayerStopSound(int slot, bool set)
 {
+	if (!set && g_cvarForceStopSound.Get())
+		set = true;
+
 	if (set)
 		m_nUsingStopSound |= ((uint64)1 << slot);
 	else
