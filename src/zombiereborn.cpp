@@ -2024,9 +2024,9 @@ CON_COMMAND_CHAT_FLAGS(revive, "- Revive a player", ADMFLAG_GENERIC)
 		ZR_Cure(pTarget);
 		ZR_StripAndGiveKnife(pPawn);
 
-		if (iNumClients == 1)
+		if (iNumClients == 1 && player)
 			PrintSingleAdminAction(pszCommandPlayerName, pTarget->GetPlayerName(), "治愈了", "", ZR_PREFIX);
 	}
-	if (iNumClients > 1)
+	if (iNumClients > 1 && player)
 		PrintMultiAdminAction(nType, pszCommandPlayerName, "治愈了", "", ZR_PREFIX);
 }
