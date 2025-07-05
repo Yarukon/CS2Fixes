@@ -1046,7 +1046,7 @@ void ZR_OnRoundStart(IGameEvent* pEvent)
 void ZR_OnPlayerSpawn(CCSPlayerController* pController)
 {
 	// delay infection a bit
-	bool bInfect = g_ZRRoundState == EZRRoundState::POST_INFECTION;
+	bool bInfect = g_ZRRoundState == EZRRoundState::POST_INFECTION || g_ZRRoundState == EZRRoundState::ROUND_END;
 
 	if (g_pGameRules->m_bWarmupPeriod || g_pGameRules->m_bFreezePeriod) {
 		bInfect = false;
