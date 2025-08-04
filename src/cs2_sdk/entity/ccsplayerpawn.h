@@ -43,7 +43,7 @@ public:
 	SCHEMA_FIELD(QAngle, m_angEyeAngles)
 	SCHEMA_FIELD(CSPlayerState, m_iPlayerState)
 	SCHEMA_FIELD(CHandle<CCSPlayerController>, m_hOriginalController)
-	SCHEMA_FIELD(CCSPlayer_ViewModelServices*, m_pViewModelServices)
+	SCHEMA_FIELD(CCSPlayer_PingServices*, m_pPingServices)
 
 	CCSPlayerController* GetOriginalController()
 	{
@@ -52,7 +52,7 @@ public:
 
 	bool IsBot()
 	{
-		return m_fFlags() & FL_PAWN_FAKECLIENT;
+		return m_fFlags() & FL_BOT;
 	}
 };
 

@@ -36,6 +36,7 @@ class CGameRules;
 class CTakeDamageInfo;
 class CCSPlayer_WeaponServices;
 class CCSPlayer_MovementServices;
+class CCSPlayer_ItemServices;
 class CBasePlayerWeapon;
 class INetworkMessageInternal;
 class IEngineServiceMgr;
@@ -50,6 +51,28 @@ class CCSPlayer_UseServices;
 class CTraceFilter;
 class Vector;
 class QAngle;
+class CEconItemView;
+
+enum class AcquireMethod
+{
+	PickUp,
+	Buy,
+};
+
+enum class AcquireResult
+{
+	Allowed,
+	InvalidItem,
+	AlreadyOwned,
+	AlreadyPurchased,
+	ReachedGrenadeTypeLimit,
+	ReachedGrenadeTotalLimit,
+	NotAllowedByTeam,
+	NotAllowedByMap,
+	NotAllowedByMode,
+	NotAllowedForPurchase,
+	NotAllowedByProhibition,
+};
 
 bool InitDetours(CGameConfig* gameConfig);
 void FlushAllDetours();
@@ -77,7 +100,7 @@ CServerSideClient* FASTCALL Detour_GetFreeClient(int64_t unk1, const __m128i* un
 int64 FASTCALL Detour_FindUseEntity(CCSPlayer_UseServices* pThis, float);
 bool FASTCALL Detour_TraceFunc(int64*, int*, float*, uint64);
 bool FASTCALL Detour_TraceShape(int64*, int64, int64, int64, CTraceFilter*, int64);
-void FASTCALL Detour_CEntityIOOutput_FireOutputInternal(const CEntityIOOutput* pThis, CEntityInstance* pActivator, CEntityInstance* pCaller, const CVariant* value, float flDelay);
+void FASTCALL Detour_CEntityIOOutput_FireOutputInternal(const CEntityIOOutput* pThis, CEntityInstance* pActivator, CEntityInstance* pCaller, const CVariant* value, float flDelay, void*, void*);
 #ifdef PLATFORM_WINDOWS
 Vector* FASTCALL Detour_CBasePlayerPawn_GetEyePosition(CBasePlayerPawn*, Vector*);
 QAngle* FASTCALL Detour_CBasePlayerPawn_GetEyeAngles(CBasePlayerPawn*, QAngle*);
@@ -86,4 +109,5 @@ Vector FASTCALL Detour_CBasePlayerPawn_GetEyePosition(CBasePlayerPawn*);
 QAngle FASTCALL Detour_CBasePlayerPawn_GetEyeAngles(CBasePlayerPawn*);
 #endif
 void FASTCALL Detour_CBaseFilter_InputTestActivator(CBaseEntity* pThis, InputData_t& inputdata);
-// void FASTCALL Detour_GameSystem_Think_CheckSteamBan();
+void FASTCALL Detour_GameSystem_Think_CheckSteamBan();
+AcquireResult FASTCALL Detour_CCSPlayer_ItemServices_CanAcquire(CCSPlayer_ItemServices* pItemServices, CEconItemView* pEconItem, AcquireMethod iAcquireMethod, uint64_t unk4);

@@ -233,7 +233,7 @@ CON_COMMAND_CHAT(rtv, "- Vote to end the current map sooner")
 	if (pPlayer->GetRTVVoteTime() + 60.0f > GetGlobals()->curtime)
 	{
 		int iRemainingTime = (int)(pPlayer->GetRTVVoteTime() + 60.0f - GetGlobals()->curtime);
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Wait %i seconds before you can RTV again.", iRemainingTime);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Wait %i seconds before you can RTV.", iRemainingTime);
 		return;
 	}
 
@@ -268,12 +268,21 @@ CON_COMMAND_CHAT(unrtv, "- Remove your vote to end the current map sooner")
 
 	if (!pPlayer->GetRTVVote())
 	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You have not voted to RTV current map.");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You have not voted to RTV current map (%i voted, %i needed).", g_pVoteManager->GetCurrentRTVCount(), g_pVoteManager->GetNeededRTVCount());
+		return;
+	}
+
+	if (pPlayer->GetRTVVoteTime() + 60.0f > GetGlobals()->curtime)
+	{
+		int iRemainingTime = (int)(pPlayer->GetRTVVoteTime() + 60.0f - GetGlobals()->curtime);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Wait %i seconds before you can remove your RTV.", iRemainingTime);
 		return;
 	}
 
 	pPlayer->SetRTVVote(false);
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You no longer want to RTV current map.");
+	pPlayer->SetRTVVoteTime(GetGlobals()->curtime);
+
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You no longer want to RTV current map (%i voted, %i needed).", g_pVoteManager->GetCurrentRTVCount(), g_pVoteManager->GetNeededRTVCount());
 }
 
 CON_COMMAND_CHAT(ve, "- Vote to extend current map")
@@ -682,23 +691,10 @@ void CVoteManager::StartExtendVote(int iCaller)
 	});
 }
 
-void CVoteManager::OnRoundEnd()
+void CVoteManager::OnIntermission()
 {
-	if (!GetGlobals() || !g_pGameRules)
-		return;
-
-	static ConVarRefAbstract mp_timelimit("mp_timelimit");
-
-	float flTimelimit = mp_timelimit.GetFloat();
-
-	int iTimeleft = (int)((g_pGameRules->m_flGameStartTime + flTimelimit * 60.0f) - GetGlobals()->curtime);
-
-	// check for end of last round
-	if (iTimeleft < 0)
-	{
-		m_RTVState = ERTVState::POST_LAST_ROUND_END;
-		m_ExtendState = EExtendState::POST_LAST_ROUND_END;
-	}
+	m_RTVState = ERTVState::POST_LAST_ROUND_END;
+	m_ExtendState = EExtendState::POST_LAST_ROUND_END;
 }
 
 bool CVoteManager::CheckRTVStatus()

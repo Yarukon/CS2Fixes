@@ -1,4 +1,4 @@
-/**
+﻿/**
  * =============================================================================
  * CS2Fixes
  * Copyright (C) 2023-2025 Source2ZE
@@ -53,10 +53,12 @@ bool addresses::Initialize(CGameConfig* g_GameConfig)
 #endif
 
 	RESOLVE_SIG(g_GameConfig, "SetGroundEntity", addresses::SetGroundEntity);
+	RESOLVE_SIG(g_GameConfig, "CBaseEntity::SetGravityScale", addresses::SetGravityScale);
 	RESOLVE_SIG(g_GameConfig, "CCSPlayerController_SwitchTeam", addresses::CCSPlayerController_SwitchTeam);
 	RESOLVE_SIG(g_GameConfig, "CBasePlayerController_SetPawn", addresses::CBasePlayerController_SetPawn);
 	RESOLVE_SIG(g_GameConfig, "CBaseModelEntity_SetModel", addresses::CBaseModelEntity_SetModel);
 	RESOLVE_SIG(g_GameConfig, "UTIL_Remove", addresses::UTIL_Remove);
+	RESOLVE_SIG(g_GameConfig, "NetworkStateChanged", addresses::NetworkStateChanged);
 	RESOLVE_SIG(g_GameConfig, "CEntitySystem_AddEntityIOEvent", addresses::CEntitySystem_AddEntityIOEvent);
 	RESOLVE_SIG(g_GameConfig, "CEntityInstance_AcceptInput", addresses::CEntityInstance_AcceptInput);
 	RESOLVE_SIG(g_GameConfig, "CGameEntitySystem_FindEntityByClassName", addresses::CGameEntitySystem_FindEntityByClassName);
@@ -73,6 +75,7 @@ bool addresses::Initialize(CGameConfig* g_GameConfig)
 	RESOLVE_SIG(g_GameConfig, "CTakeDamageInfo", addresses::CTakeDamageInfo_Constructor);
 	RESOLVE_SIG(g_GameConfig, "CNetworkStringTable_DeleteAllStrings", addresses::CNetworkStringTable_DeleteAllStrings);
 	RESOLVE_SIG(g_GameConfig, "CCSPlayer_WeaponServices_EquipWeapon", addresses::CCSPlayer_WeaponServices_EquipWeapon);
+	RESOLVE_SIG(g_GameConfig, "GetSpawnGroups", addresses::GetSpawnGroups);
 
 	return InitializeBanMap(g_GameConfig);
 }

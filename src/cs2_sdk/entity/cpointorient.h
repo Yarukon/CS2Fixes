@@ -17,31 +17,35 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ccsplayerpawn.h"
-#include "../ctimer.h"
+#pragma once
 
-// Silly workaround for an animation bug that's been happening since 2024-11-06 CS2 update
-// Clients need to see the new playermodel with zero velocity for at least (two?) ticks to properly render animations
-void CCSPlayerPawn::FixPlayerModelAnimations()
+#include "cbaseentity.h"
+
+enum PointOrientGoalDirectionType_t : uint32_t
 {
-	if (m_nActualMoveType() < MOVETYPE_WALK)
-		return;
+	eAbsOrigin = 0,
+	eCenter = 1,
+	eHead = 2,
+	eForward = 3,
+	eEyesForward = 4,
+};
 
-	CHandle<CCSPlayerPawn> hPawn = GetHandle();
-	Vector originalVelocity = m_vecAbsVelocity;
+enum PointOrientConstraint_t : uint32_t
+{
+	eNone = 0,
+	ePreserveUpAxis = 1,
+};
 
-	Teleport(nullptr, nullptr, &vec3_origin);
-	SetMoveType(MOVETYPE_OBSOLETE);
+class CPointOrient : public CBaseEntity
+{
+public:
+	DECLARE_SCHEMA_CLASS(CPointOrient)
 
-	new CTimer(0.02f, false, false, [hPawn, originalVelocity]() {
-		CCSPlayerPawn* pPawn = hPawn.Get();
-
-		if (!pPawn || !pPawn->IsAlive())
-			return -1.0f;
-
-		pPawn->SetMoveType(MOVETYPE_WALK);
-		pPawn->Teleport(nullptr, nullptr, &originalVelocity);
-
-		return -1.0f;
-	});
-}
+	SCHEMA_FIELD(CUtlSymbolLarge, m_iszSpawnTargetName)
+	SCHEMA_FIELD(CHandle<CBaseEntity>, m_hTarget)
+	SCHEMA_FIELD(bool, m_bActive)
+	SCHEMA_FIELD(PointOrientGoalDirectionType_t, m_nGoalDirection)
+	SCHEMA_FIELD(PointOrientConstraint_t, m_nConstraint)
+	SCHEMA_FIELD(float32, m_flMaxTurnRate)
+	SCHEMA_FIELD(GameTime_t, m_flLastGameTime)
+};

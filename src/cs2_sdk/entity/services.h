@@ -19,7 +19,6 @@
 
 #pragma once
 #include "globaltypes.h"
-#include "viewmodels.h"
 #include "weapon.h"
 
 #include <entity/ccsweaponbase.h>
@@ -300,30 +299,13 @@ class CCSPlayer_CameraServices : public CCSPlayerBase_CameraServices
 	virtual ~CCSPlayer_CameraServices() = 0;
 };
 
-class CPlayer_ViewModelServices : public CPlayerPawnComponent
+class CCSPlayer_PingServices : public CPlayerPawnComponent
 {
-	virtual ~CPlayer_ViewModelServices() = 0;
+	virtual ~CCSPlayer_PingServices() = 0;
 
 public:
-	DECLARE_SCHEMA_CLASS(CPlayer_ViewModelServices)
-};
+	DECLARE_SCHEMA_CLASS(CCSPlayer_PingServices);
 
-class CCSPlayer_ViewModelServices : public CPlayer_ViewModelServices
-{
-	virtual ~CCSPlayer_ViewModelServices() = 0;
-
-public:
-	DECLARE_SCHEMA_CLASS(CCSPlayer_ViewModelServices)
-	SCHEMA_FIELD_POINTER(CHandle<CBaseViewModel>, m_hViewModel) // CHandle<CBaseViewModel> m_hViewModel[3]
-
-	CBaseViewModel* GetViewModel(int iIndex = 0)
-	{
-		return m_hViewModel()[iIndex].Get();
-	}
-
-	void SetViewModel(int iIndex, CBaseViewModel* pViewModel)
-	{
-		m_hViewModel()[iIndex].Set(pViewModel);
-		pViewModel->m_nViewModelIndex = iIndex;
-	}
+	SCHEMA_FIELD_POINTER(GameTime_t, m_flPlayerPingTokens)
+	SCHEMA_FIELD(CHandle<CBaseEntity>, m_hPlayerPing)
 };

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * =============================================================================
  * CS2Fixes
  * Copyright (C) 2023-2025 Source2ZE
@@ -154,6 +154,7 @@ public:
 	SCHEMA_FIELD(CUtlString, m_sUniqueHammerID);
 	SCHEMA_FIELD(CUtlSymbolLarge, m_target);
 	SCHEMA_FIELD(CUtlSymbolLarge, m_iGlobalname);
+	SCHEMA_FIELD(CHandle<CBaseEntity>, m_hOwnerEntity)
 
 	int entindex() { return m_pEntity->m_EHandle.GetEntryIndex(); }
 
@@ -210,7 +211,7 @@ public:
 
 	void AcceptInput(const char* pInputName, variant_t value = variant_t(""), CEntityInstance* pActivator = nullptr, CEntityInstance* pCaller = nullptr)
 	{
-		addresses::CEntityInstance_AcceptInput(this, pInputName, pActivator, pCaller, &value, 0);
+		addresses::CEntityInstance_AcceptInput(this, pInputName, pActivator, pCaller, &value, 0, nullptr);
 	}
 
 	bool IsAlive() { return m_lifeState == LifeState_t::LIFE_ALIVE; }
@@ -272,6 +273,11 @@ public:
 	void SetGroundEntity(CBaseEntity* pGround)
 	{
 		addresses::SetGroundEntity(this, pGround, nullptr);
+	}
+
+	void SetGravityScale(float flGravityScale)
+	{
+		addresses::SetGravityScale(this, flGravityScale);
 	}
 
 	const char* GetName() const { return m_pEntity->m_name.String(); }

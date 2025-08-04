@@ -45,6 +45,7 @@ extern CGameEntitySystem* g_pEntitySystem;
 extern CGlobalVars* GetGlobals();
 extern IGameEventSystem* g_gameEventSystem;
 extern CUtlVector<CServerSideClient*>* GetClientList();
+extern CSpawnGroupMgrGameSystem* g_pSpawnGroupMgr;
 
 CConVar<int> g_cvarAdminImmunityTargetting("cs2f_admin_immunity", FCVAR_NONE, "Mode for which admin immunity system targetting allows: 0 - strictly lower, 1 - equal to or lower, 2 - ignore immunity levels", 0, true, 0, true, 2);
 CConVar<bool> g_cvarEnableMapSteamIds("cs2f_map_steamids_enable", FCVAR_NONE, "Whether to make Steam ID's available to maps", false);
@@ -106,7 +107,10 @@ void ZEPlayer::OnSpawn()
 	ZEPlayerHandle handle = GetHandle();
 	new CTimer(0.0f, false, false, [handle] {
 		if (handle.Get())
+		{
+			handle.Get()->CreatePointOrient();
 			handle.Get()->CreateEntwatchHud();
+		}
 		return -1.0f;
 	});
 }
@@ -209,8 +213,8 @@ void ZEPlayer::SpawnFlashLight()
 	CEntityKeyValues* pKeyValues = new CEntityKeyValues();
 	pKeyValues->SetString("lightcookie", "materials/effects/lightcookies/flashlight.vtex");
 
-	pLight->DispatchSpawn();
-
+	pLight->DispatchSpawn(pKeyValues);
+	
 	pLight->SetParent(pPawn);
 	pLight->AcceptInput("SetParentAttachmentMaintainOffset", g_cvarFlashLightAttachment.Get().String());
 
@@ -240,7 +244,7 @@ void ZEPlayer::ToggleFlashLight()
 CConVar<float> g_cvarFloodInterval("cs2f_flood_interval", FCVAR_NONE, "Amount of time allowed between chat messages acquiring flood tokens", 0.75f, true, 0.0f, false, 0.0f);
 CConVar<int> g_cvarMaxFloodTokens("cs2f_max_flood_tokens", FCVAR_NONE, "Maximum number of flood tokens allowed before chat messages are blocked", 3, true, 0, false, 0);
 CConVar<float> g_cvarFloodCooldown("cs2f_flood_cooldown", FCVAR_NONE, "Amount of time to block messages for when a player floods", 3.0f, true, 0.0f, false, 0.0f);
-CConVar<CUtlString> g_cvarBeaconParticle("cs2f_beacon_particle", FCVAR_NONE, ".vpcf file to be precached and used for beacon", "particles/cs2fixes/player_beacon.vpcf");
+CConVar<CUtlString> g_cvarBeaconParticle("cs2f_beacon_particle", FCVAR_NONE, ".vpcf file to be precached and used for beacon", "particles/cs2fixes/admin_beacon.vpcf");
 
 bool ZEPlayer::IsFlooding()
 {
@@ -309,7 +313,7 @@ void ZEPlayer::StartBeacon(Color color, ZEPlayerHandle hGiver /* = 0*/)
 	if (pGiver && pGiver->IsLeader())
 		bLeaderBeacon = true;
 
-	new CTimer(1.0f, false, false, [hPlayer, hParticle, hGiver, iTeamNum, bLeaderBeacon]() {
+	new CTimer(0.0f, false, false, [hPlayer, hParticle, hGiver, iTeamNum, bLeaderBeacon]() {
 		CParticleSystem* pParticle = hParticle.Get();
 
 		if (!hPlayer.IsValid() || !pParticle)
@@ -322,6 +326,16 @@ void ZEPlayer::StartBeacon(Color color, ZEPlayerHandle hGiver /* = 0*/)
 			addresses::UTIL_Remove(pParticle);
 			return -1.0f;
 		}
+
+		pParticle->AcceptInput("Start");
+
+		// delayed DestroyImmediately input so particle effect can be replayed (and default particle doesn't bug out)
+		new CTimer(0.5f, false, false, [hParticle]() {
+			CParticleSystem* particle = hParticle.Get();
+			if (particle)
+				particle->AcceptInput("DestroyImmediately");
+			return -1.0f;
+		});
 
 		if (!bLeaderBeacon)
 			return 1.0f;
@@ -576,21 +590,35 @@ void ZEPlayer::ReplicateConVar(const char* pszName, const char* pszValue)
 	delete data;
 }
 
-CBaseViewModel* ZEPlayer::GetOrCreateCustomViewModel(CCSPlayerPawn* pPawn)
+void ZEPlayer::CreatePointOrient()
 {
-	CBaseViewModel* pViewmodel = pPawn->m_pViewModelServices()->GetViewModel(2);
-	if (pViewmodel)
-		return pViewmodel;
+	CPointOrient* pOrient = GetPointOrient();
+	if (pOrient)
+	{
+		pOrient->Remove();
+		pOrient = nullptr;
+	}
 
-	pViewmodel = CreateEntityByName<CBaseViewModel>("predicted_viewmodel");
-	if (!pViewmodel)
-		return nullptr;
+	CCSPlayerController* pController = CCSPlayerController::FromSlot(GetPlayerSlot());
+	if (!pController)
+		return;
 
-	pViewmodel->DispatchSpawn();
-	pViewmodel->SetOwner(pPawn);
-	pPawn->m_pViewModelServices()->SetViewModel(2, pViewmodel);
+	CCSPlayerPawn* pPawn = pController->GetPlayerPawn();
+	if (!pPawn)
+		return;
 
-	return pViewmodel;
+	pOrient = CreateEntityByName<CPointOrient>("point_orient");
+	pOrient->m_bActive(true);
+	pOrient->m_nGoalDirection(PointOrientGoalDirectionType_t::eEyesForward);
+
+	pOrient->DispatchSpawn();
+	SetPointOrient(pOrient);
+
+	Vector origin = pPawn->GetEyePosition();
+	pOrient->Teleport(&origin, nullptr, nullptr);
+
+	pOrient->AcceptInput("SetParent", "!activator", pPawn);
+	pOrient->AcceptInput("SetTarget", "!activator", pPawn);
 }
 
 void ZEPlayer::CreateEntwatchHud()
@@ -602,16 +630,10 @@ void ZEPlayer::CreateEntwatchHud()
 	CCSPlayerPawn* pPawn = pController->GetPlayerPawn();
 	if (!pPawn)
 		return;
-
-	if (!pPawn->m_pViewModelServices())
+	
+	CPointOrient* pOrient = GetPointOrient();
+	if (!pOrient)
 		return;
-
-	CBaseViewModel* pViewModel = GetOrCreateCustomViewModel(pPawn);
-	if (!pViewModel)
-	{
-		Panic("Failed to get or create custom viewmodel for entwatch hud.\n");
-		return;
-	}
 
 	CPointWorldText* pText = GetEntwatchHud();
 	if (pText)
@@ -644,10 +666,10 @@ void ZEPlayer::CreateEntwatchHud()
 	pText->DispatchSpawn();
 	SetEntwatchHud(pText);
 
-	pText->AcceptInput("SetParent", "!activator", pViewModel);
+	pText->AcceptInput("SetParent", "!activator", pOrient);
 
-	Vector origin = pViewModel->GetAbsOrigin();
-	QAngle vmangles = pViewModel->GetAbsRotation();
+	Vector origin = pOrient->GetAbsOrigin();
+	QAngle vmangles = pOrient->GetAbsRotation();
 
 	Vector forward;
 	Vector right;
@@ -800,11 +822,11 @@ void CPlayerManager::OnClientDisconnect(CPlayerSlot slot)
 	ResetPlayerFlags(slot.Get());
 
 	g_pMapVoteSystem->ClearPlayerInfo(slot.Get());
-	g_pMapVoteSystem->ClearInvalidNominations();
 
 	// One tick delay, to ensure player count decrements
 	new CTimer(0.01f, false, true, []() {
 		g_pVoteManager->CheckRTVStatus();
+		g_pMapVoteSystem->ClearInvalidNominations();
 		return -1.0f;
 	});
 
@@ -816,6 +838,17 @@ void CPlayerManager::OnClientPutInServer(CPlayerSlot slot)
 	ZEPlayer* pPlayer = m_vecPlayers[slot.Get()];
 
 	pPlayer->SetInGame(true);
+
+	if (!g_pSpawnGroupMgr)
+		return;
+
+	CUtlVector<SpawnGroupHandle_t> vecActualSpawnGroups;
+	addresses::GetSpawnGroups(g_pSpawnGroupMgr, &vecActualSpawnGroups);
+
+	CServerSideClient* pClient = GetClientBySlot(slot);
+
+	if (pClient && pClient->m_vecLoadedSpawnGroups.Count() != vecActualSpawnGroups.Count())
+		pClient->m_vecLoadedSpawnGroups = vecActualSpawnGroups;
 }
 
 void CPlayerManager::OnLateLoad()
