@@ -581,40 +581,32 @@ CON_COMMAND_CHAT_FLAGS(hsay, "<message> - Say something as a hud hint", ADMFLAG_
 //	g_pEngineServer2->ServerCommand(args.ArgS());
 //	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "你发送了指令: %s", args.ArgS());
 //}
-
-CON_COMMAND_CHAT_FLAGS(extend, "<minutes> - Extend current map (negative value reduces map duration)", ADMFLAG_CHANGEMAP)
-{
-	if (args.ArgC() < 2)
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "指令格式: !extend <minutes>");
-		return;
-	}
-
-	int iExtendTime = V_StringToInt32(args[1], 0);
-
-	if (iExtendTime == 0)
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Remaining map time has not been changed");
-		return;
-	}
-
-	int iExtendTime = V_StringToInt32(args[1], 0);
-
-	if (iExtendTime == 0)
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Remaining map time has not been changed");
-		return;
-	}
-
-	g_pVoteManager->ExtendMap(iExtendTime);
-
-	const char* pszCommandPlayerName = player ? player->GetPlayerName() : CONSOLE_NAME;
-
-	if (iExtendTime < 0)
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "缩减了 %i 分钟的地图时长.", pszCommandPlayerName, iExtendTime * -1);
-	else
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "延长了 %i 分钟的地图时长.", pszCommandPlayerName, iExtendTime);
-}
+// 
+//CON_COMMAND_CHAT_FLAGS(extend, "<minutes> - Extend current map (negative value reduces map duration)", ADMFLAG_CHANGEMAP)
+//{
+//	if (args.ArgC() < 2)
+//	{
+//		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "指令格式: !extend <minutes>");
+//		return;
+//	}
+//
+//	int iExtendTime = V_StringToInt32(args[1], 0);
+//
+//	if (iExtendTime == 0)
+//	{
+//		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Remaining map time has not been changed");
+//		return;
+//	}
+//
+//	g_pVoteManager->ExtendMap(iExtendTime);
+//
+//	const char* pszCommandPlayerName = player ? player->GetPlayerName() : CONSOLE_NAME;
+//
+//	if (iExtendTime < 0)
+//		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "缩减了 %i 分钟的地图时长.", pszCommandPlayerName, iExtendTime * -1);
+//	else
+//		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "延长了 %i 分钟的地图时长.", pszCommandPlayerName, iExtendTime);
+//}
 
 CON_COMMAND_CHAT_FLAGS(pm, "<name> <message> - Private message a player. This will also show to all online admins", ADMFLAG_GENERIC)
 {

@@ -209,7 +209,7 @@ void CUserPreferencesSystem::SetPreference(int iSlot, const char* sKey, const ch
 	}
 
 	// Override the key-value pair and insert
-	m_mPreferencesMaps[iSlot].InsertOrReplace(iKeyHash, *prefValue);
+	m_mPreferencesMaps[iSlot][iKeyHash] = prefValue;
 
 	IGameEvent* pEvent = g_gameEventManager->CreateEvent("choppers_incoming_warning");
 	if (pEvent) {

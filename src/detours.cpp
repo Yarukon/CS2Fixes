@@ -78,7 +78,7 @@ DECLARE_DETOUR(CGamePlayerEquip_InputTriggerForAllPlayers, Detour_CGamePlayerEqu
 DECLARE_DETOUR(CGamePlayerEquip_InputTriggerForActivatedPlayer, Detour_CGamePlayerEquip_InputTriggerForActivatedPlayer);
 DECLARE_DETOUR(GetFreeClient, Detour_GetFreeClient);
 // DECLARE_DETOUR(CCSPlayerPawn_GetMaxSpeed, Detour_CCSPlayerPawn_GetMaxSpeed);  // 和 css 的重复
-#endif
+
 DECLARE_DETOUR(FindUseEntity, Detour_FindUseEntity);
 DECLARE_DETOUR(TraceFunc, Detour_TraceFunc);
 DECLARE_DETOUR(TraceShape, Detour_TraceShape);

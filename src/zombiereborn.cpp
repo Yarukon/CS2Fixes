@@ -1609,15 +1609,20 @@ AcquireResult ZR_Detour_CCSPlayer_ItemServices_CanAcquire(CCSPlayer_ItemServices
 	CCSPlayerPawn* pPawn = pItemServices->__m_pChainEntity();
 
 	if (!pPawn)
-		return false;
-	const char* pszWeaponClassname = pPlayerWeapon->GetWeaponClassname();
-	if (pPawn->m_iTeamNum() == CS_TEAM_T && !CCSPlayer_ItemServices::IsAwsProcessing() && V_strncmp(pszWeaponClassname, "weapon_knife", 12) && V_strncmp(pszWeaponClassname, "weapon_c4", 9))
-		return false;
-	if (pPawn->m_iTeamNum() == CS_TEAM_CT && V_strlen(pszWeaponClassname) > 7 && !g_pZRWeaponConfig->FindWeapon(pszWeaponClassname + 7))
-		return false;
+		return AcquireResult::Allowed;
 
-	// doesn't guarantee the player will pick the weapon up, it just allows the original function to run
-	return true;
+	const WeaponInfo_t* pWeaponInfo = FindWeaponInfoByItemDefIndex(pEconItem->m_iItemDefinitionIndex);
+
+	if (!pWeaponInfo)
+		return AcquireResult::Allowed;
+
+	if (pPawn->m_iTeamNum() == CS_TEAM_T && !CCSPlayer_ItemServices::IsAwsProcessing() && V_strncmp(pWeaponInfo->m_pClass, "weapon_knife", 12) && V_strncmp(pWeaponInfo->m_pClass, "weapon_c4", 9))
+		return AcquireResult::NotAllowedByTeam;
+	if (pPawn->m_iTeamNum() == CS_TEAM_CT && !g_pZRWeaponConfig->FindWeapon(pWeaponInfo->m_pClass))
+		return AcquireResult::NotAllowedByProhibition;
+
+	// doesn't guarantee the player will acquire the weapon, it just allows the original function to run
+	return AcquireResult::Allowed;
 }
 
 void ZR_Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSymbolLarge* pInputName, CEntityInstance* pActivator, CEntityInstance* pCaller, variant_t* value, int nOutputID)
