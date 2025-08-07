@@ -70,10 +70,13 @@ public: // hooks
 	void Hook_OnClientConnected(CPlayerSlot slot, const char* pszName, uint64 xuid, const char* pszNetworkID, const char* pszAddress, bool bFakePlayer);
 	bool Hook_ClientConnect(CPlayerSlot slot, const char* pszName, uint64 xuid, const char* pszNetworkID, bool unk1, CBufferString* pRejectReason);
 	void Hook_ClientCommand(CPlayerSlot nSlot, const CCommand& _cmd);
-	void Hook_CheckTransmit(class ISource2GameEntities*, class CCheckTransmitInfoHack** ppInfoList, uint32_t infoCount, CBitVec<16384>& unionTransmitEdicts1, CBitVec<16384>& unionTransmitEdicts2, const Entity2Networkable_t** pNetworkables, const uint16* pEntityIndicies, uint32_t nEntities);
+	void Hook_CheckTransmit(CCheckTransmitInfo** ppInfoList, int infoCount, CBitVec<16384>& unionTransmitEdicts,
+							CBitVec<16384>&, const Entity2Networkable_t** pNetworkables, const uint16* pEntityIndicies, int nEntities);
 	void Hook_DispatchConCommand(ConCommandRef cmd, const CCommandContext& ctx, const CCommand& args);
 	void Hook_CGamePlayerEquipUse(class InputData_t*);
-	void Hook_CGamePlayerEquipPrecache(void**);
+	void Hook_CGamePlayerEquipPrecache(CEntityPrecacheContext*);
+	void Hook_CTriggerGravityPrecache(CEntityPrecacheContext* param);
+	void Hook_CTriggerGravityEndTouch(CBaseEntity* pOther);
 	void Hook_StartupServer(const GameSessionConfiguration_t& config, ISource2WorldSession*, const char*);
 	void Hook_ApplyGameSettings(KeyValues* pKV);
 	void Hook_CreateWorkshopMapGroup(const char* name, const CUtlStringList& mapList);

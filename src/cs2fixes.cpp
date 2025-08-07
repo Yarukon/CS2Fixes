@@ -99,19 +99,6 @@ void Panic(const char* msg, ...)
 class GameSessionConfiguration_t
 {};
 
-class CCheckTransmitInfoHack
-{
-public:
-	CBitVec<16384>* m_pTransmitEntity;
-
-private:
-	[[maybe_unused]] int8_t m_pad8[568];
-
-public:
-	int32_t m_nPlayerSlot;
-	bool m_bFullUpdate;
-};
-
 SH_DECL_HOOK3_void(IServerGameDLL, GameFrame, SH_NOATTRIB, 0, bool, bool, bool);
 SH_DECL_HOOK0_void(IServerGameDLL, GameServerSteamAPIActivated, SH_NOATTRIB, 0);
 SH_DECL_HOOK0_void(IServerGameDLL, GameServerSteamAPIDeactivated, SH_NOATTRIB, 0);
@@ -125,11 +112,13 @@ SH_DECL_HOOK6(IServerGameClients, ClientConnect, SH_NOATTRIB, 0, bool, CPlayerSl
 SH_DECL_HOOK8_void(IGameEventSystem, PostEventAbstract, SH_NOATTRIB, 0, CSplitScreenSlot, bool, int, const uint64*,
 				   INetworkMessageInternal*, const CNetMessage*, unsigned long, NetChannelBufType_t)
 	SH_DECL_HOOK3_void(INetworkServerService, StartupServer, SH_NOATTRIB, 0, const GameSessionConfiguration_t&, ISource2WorldSession*, const char*);
-SH_DECL_MANUALHOOK8_void(CheckTransmit, 0, 0, 0, ISource2GameEntities*, CCheckTransmitInfoHack**, uint32_t, CBitVec<16384>&, CBitVec<16384>&, const Entity2Networkable_t**, const uint16*, uint32_t);
+SH_DECL_HOOK7_void(ISource2GameEntities, CheckTransmit, SH_NOATTRIB, 0, CCheckTransmitInfo**, int, CBitVec<16384>&, CBitVec<16384>&, const Entity2Networkable_t**, const uint16*, int);
 SH_DECL_HOOK2_void(IServerGameClients, ClientCommand, SH_NOATTRIB, 0, CPlayerSlot, const CCommand&);
 SH_DECL_HOOK3_void(ICvar, DispatchConCommand, SH_NOATTRIB, 0, ConCommandRef, const CCommandContext&, const CCommand&);
 SH_DECL_MANUALHOOK1_void(CGamePlayerEquipUse, 0, 0, 0, InputData_t*);
-SH_DECL_MANUALHOOK1_void(CGamePlayerEquipPrecache, 0, 0, 0, void**);
+SH_DECL_MANUALHOOK1_void(CGamePlayerEquipPrecache, 0, 0, 0, CEntityPrecacheContext*);
+SH_DECL_MANUALHOOK1_void(CTriggerGravityPrecache, 0, 0, 0, CEntityPrecacheContext*);
+SH_DECL_MANUALHOOK1_void(CTriggerGravityEndTouch, 0, 0, 0, CBaseEntity*);
 SH_DECL_MANUALHOOK2_void(CreateWorkshopMapGroup, 0, 0, 0, const char*, const CUtlStringList&);
 SH_DECL_MANUALHOOK1(OnTakeDamage_Alive, 0, 0, 0, bool, CTakeDamageInfoContainer*);
 SH_DECL_MANUALHOOK1_void(CheckMovingGround, 0, 0, 0, double);
@@ -154,6 +143,8 @@ CCSGameRules* g_pGameRules = nullptr;				  // Will be null between map end & new
 CSpawnGroupMgrGameSystem* g_pSpawnGroupMgr = nullptr; // Will be null between map end & new map startup, null check if necessary!
 int g_iCGamePlayerEquipUseId = -1;
 int g_iCGamePlayerEquipPrecacheId = -1;
+int g_iCTriggerGravityPrecacheId = -1;
+int g_iCTriggerGravityEndTouchId = -1;
 int g_iCreateWorkshopMapGroupId = -1;
 int g_iOnTakeDamageAliveId = -1;
 int g_iCheckMovingGroundId = -1;
@@ -162,7 +153,6 @@ int g_iGoToIntermissionId = -1;
 int g_iPhysicsTouchShuffle = -1;
 int g_iWeaponServiceDropWeaponId = -1;
 int g_iSetGameSpawnGroupMgrId = -1;
-int g_iCheckTransmit = -1;
 
 CGameEntitySystem* GameEntitySystem()
 {
@@ -224,8 +214,8 @@ bool CS2Fixes::Load(PluginId id, ISmmAPI* ismm, char* error, size_t maxlen, bool
 		return false;
 	}
 
-	SH_MANUALHOOK_RECONFIGURE(CreateWorkshopMapGroup, g_GameConfig->GetOffset("IGameTypes_CreateWorkshopMapGroup"), 0, 0);
-	SH_MANUALHOOK_RECONFIGURE(CheckTransmit, g_GameConfig->GetOffset("ISource2GameEntities::CheckTransmit"), 0, 0);
+	int offset = g_GameConfig->GetOffset("IGameTypes_CreateWorkshopMapGroup");
+	SH_MANUALHOOK_RECONFIGURE(CreateWorkshopMapGroup, offset, 0, 0);
 
 	// offset = g_GameConfig->GetOffset("CCSGameRules_GoToIntermission");
 	// SH_MANUALHOOK_RECONFIGURE(GoToIntermission, offset, 0, 0);
@@ -243,9 +233,9 @@ bool CS2Fixes::Load(PluginId id, ISmmAPI* ismm, char* error, size_t maxlen, bool
 	SH_ADD_HOOK(IServerGameClients, ClientCommand, g_pSource2GameClients, SH_MEMBER(this, &CS2Fixes::Hook_ClientCommand), false);
 	SH_ADD_HOOK(IGameEventSystem, PostEventAbstract, g_gameEventSystem, SH_MEMBER(this, &CS2Fixes::Hook_PostEvent), false);
 	SH_ADD_HOOK(INetworkServerService, StartupServer, g_pNetworkServerService, SH_MEMBER(this, &CS2Fixes::Hook_StartupServer), true);
+	SH_ADD_HOOK(ISource2GameEntities, CheckTransmit, g_pSource2GameEntities, SH_MEMBER(this, &CS2Fixes::Hook_CheckTransmit), true);
 	SH_ADD_HOOK(ICvar, DispatchConCommand, g_pCVar, SH_MEMBER(this, &CS2Fixes::Hook_DispatchConCommand), false);
 	g_iCreateWorkshopMapGroupId = SH_ADD_MANUALVPHOOK(CreateWorkshopMapGroup, g_pGameTypes, SH_MEMBER(this, &CS2Fixes::Hook_CreateWorkshopMapGroup), false);
-	g_iCheckTransmit = SH_ADD_MANUALDVPHOOK(CheckTransmit, g_pSource2GameEntities, SH_MEMBER(this, &CS2Fixes::Hook_CheckTransmit), true);
 
 	META_CONPRINTF("All hooks started!\n");
 
@@ -262,8 +252,6 @@ bool CS2Fixes::Load(PluginId id, ISmmAPI* ismm, char* error, size_t maxlen, bool
 
 	if (!InitGameSystems())
 		bRequiredInitLoaded = false;
-
-	int offset;
 
 	const auto pCGamePlayerEquipVTable = modules::server->FindVirtualTable("CGamePlayerEquip");
 	if (!pCGamePlayerEquipVTable)
@@ -289,6 +277,31 @@ bool CS2Fixes::Load(PluginId id, ISmmAPI* ismm, char* error, size_t maxlen, bool
 	}
 	SH_MANUALHOOK_RECONFIGURE(CGamePlayerEquipPrecache, offset, 0, 0);
 	g_iCGamePlayerEquipPrecacheId = SH_ADD_MANUALDVPHOOK(CGamePlayerEquipPrecache, pCGamePlayerEquipVTable, SH_MEMBER(this, &CS2Fixes::Hook_CGamePlayerEquipPrecache), true);
+
+	const auto pTriggerGravityVTable = modules::server->FindVirtualTable("CTriggerGravity");
+	if (!pTriggerGravityVTable)
+	{
+		snprintf(error, maxlen, "Failed to find TriggerGravity vtable\n");
+		bRequiredInitLoaded = false;
+	}
+
+	offset = g_GameConfig->GetOffset("CBaseEntity::Precache");
+	if (offset == -1)
+	{
+		snprintf(error, maxlen, "Failed to find CBaseEntity::Precache\n");
+		bRequiredInitLoaded = false;
+	}
+	SH_MANUALHOOK_RECONFIGURE(CTriggerGravityPrecache, offset, 0, 0);
+	g_iCTriggerGravityPrecacheId = SH_ADD_MANUALDVPHOOK(CTriggerGravityPrecache, pTriggerGravityVTable, SH_MEMBER(this, &CS2Fixes::Hook_CTriggerGravityPrecache), true);
+
+	offset = g_GameConfig->GetOffset("CBaseEntity::EndTouch");
+	if (offset == -1)
+	{
+		snprintf(error, maxlen, "Failed to find CBaseEntity::EndTouch\n");
+		bRequiredInitLoaded = false;
+	}
+	SH_MANUALHOOK_RECONFIGURE(CTriggerGravityEndTouch, offset, 0, 0);
+	g_iCTriggerGravityEndTouchId = SH_ADD_MANUALDVPHOOK(CTriggerGravityEndTouch, pTriggerGravityVTable, SH_MEMBER(this, &CS2Fixes::Hook_CTriggerGravityEndTouch), true);
 
 	const auto pCCSPlayerPawnVTable = modules::server->FindVirtualTable("CCSPlayerPawn");
 	if (!pCCSPlayerPawnVTable)
@@ -448,6 +461,7 @@ bool CS2Fixes::Unload(char* error, size_t maxlen)
 	SH_REMOVE_HOOK(IServerGameClients, ClientCommand, g_pSource2GameClients, SH_MEMBER(this, &CS2Fixes::Hook_ClientCommand), false);
 	SH_REMOVE_HOOK(IGameEventSystem, PostEventAbstract, g_gameEventSystem, SH_MEMBER(this, &CS2Fixes::Hook_PostEvent), false);
 	SH_REMOVE_HOOK(INetworkServerService, StartupServer, g_pNetworkServerService, SH_MEMBER(this, &CS2Fixes::Hook_StartupServer), true);
+	SH_REMOVE_HOOK(ISource2GameEntities, CheckTransmit, g_pSource2GameEntities, SH_MEMBER(this, &CS2Fixes::Hook_CheckTransmit), true);
 	SH_REMOVE_HOOK(ICvar, DispatchConCommand, g_pCVar, SH_MEMBER(this, &CS2Fixes::Hook_DispatchConCommand), false);
 	SH_REMOVE_HOOK_ID(g_iLoadEventsFromFileId);
 	SH_REMOVE_HOOK_ID(g_iCreateWorkshopMapGroupId);
@@ -457,13 +471,12 @@ bool CS2Fixes::Unload(char* error, size_t maxlen)
 	SH_REMOVE_HOOK_ID(g_iWeaponServiceDropWeaponId);
 	SH_REMOVE_HOOK_ID(g_iGoToIntermissionId);
 	SH_REMOVE_HOOK_ID(g_iCGamePlayerEquipUseId);
-	SH_REMOVE_HOOK_ID(g_iCheckTransmit);
+	SH_REMOVE_HOOK_ID(g_iCGamePlayerEquipPrecacheId);
+	SH_REMOVE_HOOK_ID(g_iCTriggerGravityPrecacheId);
+	SH_REMOVE_HOOK_ID(g_iCTriggerGravityEndTouchId);
 
 	if (g_iSetGameSpawnGroupMgrId != -1)
 		SH_REMOVE_HOOK_ID(g_iSetGameSpawnGroupMgrId);
-
-	if (g_iCGamePlayerEquipPrecacheId != -1)
-		SH_REMOVE_HOOK_ID(g_iCGamePlayerEquipPrecacheId);
 
 	ConVar_Unregister();
 
@@ -627,18 +640,7 @@ void CS2Fixes::Hook_DispatchConCommand(ConCommandRef cmdHandle, const CCommandCo
 void CS2Fixes::Hook_StartupServer(const GameSessionConfiguration_t& config, ISource2WorldSession* pSession, const char* pszMapName)
 {
 	g_pEntitySystem = GameEntitySystem();
-
-	// Temporary hack until CGameEntitySystem is updated in the sdk
-#ifdef PLATFORM_LINUX
-	int offset = 8512;
-#else
-	int offset = 8480;
-#endif
-
-	auto pListeners = (CUtlVector<IEntityListener*>*)((byte*)g_pEntitySystem + offset);
-
-	if (pListeners->Find(g_pEntityListener) == -1)
-		pListeners->AddToTail(g_pEntityListener);
+	g_pEntitySystem->AddListenerEntity(g_pEntityListener);
 
 	if (g_pNetworkServerService->GetIGameServer())
 		g_iSetGameSpawnGroupMgrId = SH_ADD_HOOK(IServer, SetGameSpawnGroupMgr, g_pNetworkServerService->GetIGameServer(), SH_MEMBER(this, &CS2Fixes::Hook_SetGameSpawnGroupMgr), false);
@@ -664,13 +666,23 @@ void CS2Fixes::Hook_CGamePlayerEquipUse(InputData_t* pInput)
 	CGamePlayerEquipHandler::Use(META_IFACEPTR(CGamePlayerEquip), pInput);
 	RETURN_META(MRES_IGNORED);
 }
-void CS2Fixes::Hook_CGamePlayerEquipPrecache(void** param)
+void CS2Fixes::Hook_CGamePlayerEquipPrecache(CEntityPrecacheContext* param)
 {
-	const auto kv = reinterpret_cast<CEntityKeyValues*>(*param);
+	const auto kv = param->m_pKeyValues;
 	CGamePlayerEquipHandler::OnPrecache(META_IFACEPTR(CGamePlayerEquip), kv);
 	RETURN_META(MRES_IGNORED);
 }
-
+void CS2Fixes::Hook_CTriggerGravityPrecache(CEntityPrecacheContext* param)
+{
+	const auto kv = param->m_pKeyValues;
+	CTriggerGravityHandler::OnPrecache(META_IFACEPTR(CBaseEntity), kv);
+	RETURN_META(MRES_IGNORED);
+}
+void CS2Fixes::Hook_CTriggerGravityEndTouch(CBaseEntity* pOther)
+{
+	CTriggerGravityHandler::OnEndTouch(META_IFACEPTR(CBaseEntity), pOther);
+	RETURN_META(MRES_IGNORED);
+}
 void CS2Fixes::Hook_GameServerSteamAPIActivated()
 {
 	g_steamAPI.Init();
@@ -1058,18 +1070,22 @@ GAME_EVENT_F2(choppers_incoming_warning, pre_transmit_entity_clear)
 	}
 }
 
-void CS2Fixes::Hook_CheckTransmit(class ISource2GameEntities* pThis, class CCheckTransmitInfoHack** ppInfoList, uint32_t infoCount, CBitVec<16384>& unionTransmitEdicts1, CBitVec<16384>& unionTransmitEdicts2, const Entity2Networkable_t** pNetworkables, const uint16* pEntityIndicies, uint32_t nEntities)
+void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo** ppInfoList, int infoCount, CBitVec<16384>& unionTransmitEdicts,
+								  CBitVec<16384>&, const Entity2Networkable_t** pNetworkables, const uint16* pEntityIndicies, int nEntities)
 {
 	if (!g_pEntitySystem || !GetGlobals())
 		return;
 
 	VPROF("CS2Fixes::Hook_CheckTransmit");
 
-	for (auto i = 0u; i < infoCount; i++)
+	for (int i = 0; i < infoCount; i++)
 	{
-		const auto& pInfo = ppInfoList[i];
+		auto& pInfo = ppInfoList[i];
 
-		const auto iPlayerSlot = pInfo->m_nPlayerSlot;
+		// the offset happens to have a player index here,
+		// though this is probably part of the client class that contains the CCheckTransmitInfo
+		static int offset = g_GameConfig->GetOffset("CheckTransmitPlayerSlot");
+		int iPlayerSlot = (int)*((uint8*)pInfo + offset);
 
 		CCSPlayerController* pSelfController = CCSPlayerController::FromSlot(iPlayerSlot);
 
